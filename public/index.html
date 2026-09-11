@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>หมากล้อมออนไลน์ (Online Go / Baduk)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- LOBBY VIEW -->
+  <div id="lobbyView" class="lobby-container">
+    <div class="brand-header">
+      <div class="brand-logo">
+        <span>⚫⚪</span>
+        <span>Go Online</span>
+      </div>
+      <p class="brand-sub">เว็บเกมหมากล้อมออนไลน์ เล่นง่ายๆ กับเพื่อนหรือคนรู้ใจได้แบบเรียลไทม์</p>
+    </div>
+
+    <div class="lobby-cards">
+      <!-- Solo AI Practice Mode -->
+      <div class="card" style="border: 2px solid rgba(245, 158, 11, 0.4); background: linear-gradient(180deg, rgba(35, 40, 56, 0.95) 0%, rgba(26, 30, 42, 0.95) 100%);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h2 class="card-title" style="margin-bottom: 0;">🥋 ฝึกซ้อมแข่งคนเดียว (VS AI)</h2>
+          <span style="background: rgba(245, 158, 11, 0.2); color: var(--accent-gold); font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600;">แนะนำสำหรับแข่ง</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
+          เล่นคนเดียวพร้อมระบบ <b>AI Coach วิเคราะห์แท็กติก</b> บอกเหตุผลทุกครั้งที่มีการกินหมาก และทดสอบความเข้าใจ
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="botPlayerName">ชื่อของคุณ</label>
+          <input type="text" id="botPlayerName" class="form-input" placeholder="นักกีฬาโกะ, ผู้ท้าชิง" maxlength="16">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ระดับความยากของ AI (6 ระดับ)</label>
+          <select id="botLevelSelect" class="form-input" style="font-weight: 600; color: var(--accent-gold);">
+            <option value="1">🥉 1. เริ่มต้น (Beginner) - เข้าใจลมหายใจ</option>
+            <option value="2">🥈 2. มือใหม่ (Novice) - รู้จักกินอาตาริและหนี</option>
+            <option value="3" selected>🥇 3. มือโปร (Prodigy) - เชื่อมหมาก ตัดหมาก เปิดมุม</option>
+            <option value="4">🏆 4. มืออาชีพ (Professional) - คำนวณพื้นที่และรูปทรง 2 ห้อง</option>
+            <option value="5">🥋 5. ปรมาจารย์ (Master) - อ่านล่วงหน้า บันได ตาข่าย หมากกลืนหาง</option>
+            <option value="6">💀 6. โคตรพ่อโคตรแม่มึงเอ้ย - ไร้ความปรานี คำนวณแบบ AlphaGo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ขนาดกระดาน</label>
+          <div class="board-options">
+            <label>
+              <input type="radio" name="botBoardSize" value="9" checked>
+              <div class="board-option-label">
+                <div>9 × 9</div>
+                <small style="opacity: 0.7; font-size: 0.75rem;">จบไว ซ้อมเร็ว</small>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="botBoardSize" value="13">
+              <div class="board-option-label">
+                <div>13 × 13</div>
+                <small style="opacity: 0.7; font-size: 0.75rem;">ขนาดกลาง</small>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="botBoardSize" value="19">
+              <div class="board-option-label">
+                <div>19 × 19</div>
+                <small style="opacity: 0.7; font-size: 0.75rem;">มาตรฐานแข่ง</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <button id="btnStartBotGame" class="btn btn-primary" style="margin-top: auto;">
+          🥋 เริ่มฝึกซ้อมกับ AI & โค้ช
+        </button>
+      </div>
+
+      <!-- Create Room (Multiplayer) -->
+      <div class="card">
+        <h2 class="card-title">✨ สร้างห้องเล่นกับเพื่อน/แฟน</h2>
+        
+        <div class="form-group">
+          <label class="form-label" for="createPlayerName">ชื่อของคุณ</label>
+          <input type="text" id="createPlayerName" class="form-input" placeholder="เช่น แฟนสุดน่ารัก, เซียนโกะ" maxlength="16">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ขนาดกระดาน</label>
+          <div class="board-options">
+            <label>
+              <input type="radio" name="boardSize" value="9" checked>
+              <div class="board-option-label">
+                <div>9 × 9</div>
+                <small style="opacity: 0.7; font-size: 0.75rem;">จบไว</small>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="boardSize" value="13">
+              <div class="board-option-label">
+                <div>13 × 13</div>
+                <small style="opacity: 0.7; font-size: 0.75rem;">ขนาดกลาง</small>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="boardSize" value="19">
+              <div class="board-option-label">
+                <div>19 × 19</div>
+                <small style="opacity: 0.7; font-size: 0.75rem;">มาตรฐาน</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">เวลาต่อฝ่าย</label>
+          <select id="timeLimitSelect" class="form-input">
+            <option value="0">ไม่จำกัดเวลา (เล่นสบายๆ)</option>
+            <option value="5">5 นาที</option>
+            <option value="10" selected>10 นาที</option>
+            <option value="15">15 นาที</option>
+          </select>
+        </div>
+
+        <button id="btnCreateRoom" class="btn btn-secondary" style="margin-top: auto;">
+          🎮 สร้างห้องและรับลิงก์ชวน
+        </button>
+      </div>
+
+      <!-- Join Room -->
+      <div class="card">
+        <h2 class="card-title">🔑 เข้าร่วมห้องเพื่อน</h2>
+
+        <div class="form-group">
+          <label class="form-label" for="joinPlayerName">ชื่อของคุณ</label>
+          <input type="text" id="joinPlayerName" class="form-input" placeholder="ใส่ชื่อของคุณ..." maxlength="16">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="joinRoomCode">รหัสห้อง (6 ตัวอักษร)</label>
+          <input type="text" id="joinRoomCode" class="form-input" placeholder="เช่น AB3XY9" maxlength="6" style="text-transform: uppercase; font-weight: 700; letter-spacing: 2px;">
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end;">
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.25rem;">
+            💡 หากเพื่อนส่งลิงก์ห้องมาให้ สามารถกดเปิดลิงก์เพื่อเข้าห้องได้ทันทีโดยไม่ต้องกรอกรหัส!
+          </p>
+          <button id="btnJoinRoom" class="btn btn-secondary">
+            🚪 เข้าร่วมห้อง
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN VIEW -->
+  <div id="gameView" class="game-screen">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="room-info">
+        <span style="font-size: 0.9rem; color: var(--text-secondary);">ห้อง:</span>
+        <div id="displayRoomId" class="room-badge">------</div>
+        <button id="btnShareModal" class="btn btn-share">
+          💌 ชวนเพื่อน/แฟน
+        </button>
+      </div>
+
+      <div id="gameStatusBanner" style="font-weight: 600; font-size: 1.05rem;">
+        กำลังรอผู้เล่นอีกคน...
+      </div>
+
+      <button id="btnLeaveRoom" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+        🏠 กลับล็อบบี้
+      </button>
+    </div>
+
+    <!-- Main Game Section -->
+    <div class="game-main">
+      <!-- Board Area -->
+      <div class="board-wrapper">
+        <!-- 1. Top Alert: Non-blocking Coach Notification when Bot captures (never covers board!) -->
+        <div id="boardTopAlert" class="board-top-alert" style="display: none;">
+          <div class="alert-icon-box">🥋</div>
+          <div class="alert-body">
+            <div class="alert-top-row">
+              <span id="topAlertTitle" class="alert-title">คุณโดนบ็อตกินหมาก!</span>
+              <span id="topAlertBadge" class="alert-badge">แท็กติก</span>
+              <button id="btnCloseTopAlert" class="btn-alert-close" title="ปิดการแจ้งเตือน">✕</button>
+            </div>
+            <div id="topAlertExplanation" class="alert-text"></div>
+            <div id="topAlertTip" class="alert-tip-text"></div>
+          </div>
+        </div>
+
+        <!-- 2. Training Quiz Dock: Non-blocking card when User captures (never covers board!) -->
+        <div id="boardQuizDock" class="board-quiz-dock" style="display: none;">
+          <div class="quiz-dock-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.35rem;">🎯</span>
+              <div>
+                <b style="color: var(--accent-gold); font-size: 0.92rem;">คุณกินหมากบ็อตสำเร็จ (<span id="quizCapturedCount">0</span> เม็ด)! ไหนลองบอกซิว่ากินเพราะอะไร?</b>
+                <div style="color: var(--text-secondary); font-size: 0.76rem;">มองดูกระดานด้านล่าง แล้วพิมพ์หรือเลือกเหตุผลเพื่อฝึกอ่านหมากสำหรับไปแข่ง</div>
+              </div>
+            </div>
+            <button id="btnCloseQuizDock" class="btn-alert-close" title="ปิด">✕</button>
+          </div>
+
+          <div class="quiz-dock-body">
+            <div class="tactic-chips" id="tacticChipsContainer">
+              <button type="button" class="tactic-chip active" data-tactic="atari_neglect">⚡ ตัดลมหายใจ (Atari)</button>
+              <button type="button" class="tactic-chip" data-tactic="ladder">🪜 ไล่บันได (Ladder)</button>
+              <button type="button" class="tactic-chip" data-tactic="corner_trap">🪤 ติดมุมกระดาน (Corner)</button>
+              <button type="button" class="tactic-chip" data-tactic="death_line">☠️ เส้นมรณะ (1st Line)</button>
+              <button type="button" class="tactic-chip" data-tactic="eye_deprivation">👁️ ไร้ 2 ห้องจริง (No Eyes)</button>
+            </div>
+
+            <div class="quiz-input-row" style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+              <input type="text" id="quizExplanationInput" class="form-input" placeholder="พิมพ์เหตุผล เช่น ดักปิดลมหายใจตรงมุม เพราะเห็นหมากขาวไม่มีทางหนี..." style="font-size: 0.88rem; padding: 0.5rem 0.75rem;">
+              <button id="btnSubmitQuiz" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.88rem; white-space: nowrap;">
+                🎓 ตรวจคำตอบ
+              </button>
+            </div>
+
+            <!-- Result inside dock -->
+            <div id="quizResultBox" class="quiz-result-box" style="display: none; margin-top: 0.5rem; padding: 0.6rem 0.8rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem;">
+                <span id="quizStarsDisplay" style="font-size: 1.15rem;">⭐⭐⭐</span>
+                <span id="quizTacticTitle" style="font-size: 0.82rem; color: var(--accent-gold); font-weight: 600;"></span>
+              </div>
+              <div id="quizFeedbackText" style="font-size: 0.85rem; margin-bottom: 0.3rem; color: #fff;"></div>
+              <div id="quizTipText" style="font-size: 0.8rem; color: #fbbf24; background: rgba(245,158,11,0.12); padding: 0.4rem 0.6rem; border-radius: 0.4rem; line-height: 1.35;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="board-container">
+          <canvas id="goCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- AI Coach Banner -->
+        <div id="coachBanner" class="coach-banner" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+            <span style="font-size: 1.3rem;">🥋</span>
+            <span style="font-weight: 700; color: var(--accent-gold); font-size: 0.95rem;">โค้ชวิเคราะห์แท็กติก (AI Sensei)</span>
+          </div>
+          <div id="coachBannerContent" style="font-size: 0.85rem; line-height: 1.45; color: #e2e8f0;"></div>
+        </div>
+
+        <!-- Black Player Card -->
+        <div id="blackPlayerCard" class="player-card">
+          <div class="player-meta">
+            <div class="stone-avatar black"></div>
+            <div>
+              <div id="blackPlayerName" class="player-name">ผู้เล่นสีดำ</div>
+              <div class="player-sub">เดินก่อน (หมากดำ)</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
+            <div id="blackTimer" class="timer-box">--:--</div>
+            <div id="blackCaptures" class="captures-badge">กินได้: 0</div>
+          </div>
+        </div>
+
+        <!-- White Player Card -->
+        <div id="whitePlayerCard" class="player-card">
+          <div class="player-meta">
+            <div class="stone-avatar white"></div>
+            <div>
+              <div id="whitePlayerName" class="player-name">ผู้เล่นสีขาว</div>
+              <div class="player-sub">คอมิ <span id="komiValue">+6.5</span> แต้ม</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
+            <div id="whiteTimer" class="timer-box">--:--</div>
+            <div id="whiteCaptures" class="captures-badge">กินได้: 0</div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button id="btnPass" class="btn btn-pass">
+            ⏭️ ผ่านตา (Pass)
+          </button>
+          <button id="btnUndo" class="btn btn-secondary">
+            ↩️ ขอย้อนหมาก
+          </button>
+          <button id="btnResign" class="btn btn-danger">
+            🏳️ ยอมแพ้
+          </button>
+          <button id="btnRestart" class="btn btn-secondary">
+            🔄 เริ่มเกมใหม่
+          </button>
+        </div>
+
+        <!-- Chat & Emojis -->
+        <div class="chat-container">
+          <div class="chat-header">
+            <span>💬 แชท & ส่งรีแอคชัน</span>
+            <span id="roleIndicator" style="color: var(--accent-gold);">คุณเป็น: -</span>
+          </div>
+
+          <div id="chatMessages" class="chat-messages">
+            <div class="chat-msg system">ยินดีต้อนรับสู่ห้องเล่นหมากล้อม!</div>
+          </div>
+
+          <!-- Quick Emojis -->
+          <div class="quick-emojis">
+            <button class="emoji-btn" data-emoji="❤️" title="ส่งหัวใจ">❤️</button>
+            <button class="emoji-btn" data-emoji="🥰" title="น่ารัก">🥰</button>
+            <button class="emoji-btn" data-emoji="👏" title="ปรบมือ">👏</button>
+            <button class="emoji-btn" data-emoji="🤔" title="คิดหนัก">🤔</button>
+            <button class="emoji-btn" data-emoji="🥺" title="อ้อน">🥺</button>
+            <button class="emoji-btn" data-emoji="🎉" title="เย้!">🎉</button>
+            <button class="emoji-btn" data-emoji="☕" title="ชิลๆ">☕</button>
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="พิมพ์ข้อความคุยกัน..." maxlength="100">
+            <button id="btnSendChat">ส่ง</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Share Invite Link -->
+  <div id="shareModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem;">💌</div>
+      <h3 class="modal-title">ชวนเพื่อนหรือแฟนมาเล่น!</h3>
+      <p class="modal-body">
+        ส่งรหัสห้องหรือคัดลอกลิงก์ด้านล่างนี้ให้เพื่อนหรือแฟนเปิดบนเบราว์เซอร์ได้เลย
+      </p>
+
+      <div class="form-group">
+        <label class="form-label">ลิงก์เข้าห้องโดยตรง</label>
+        <input type="text" id="shareLinkInput" class="form-input" readonly style="font-size: 0.85rem; background: rgba(0,0,0,0.5);">
+      </div>
+
+      <div class="modal-actions">
+        <button id="btnCopyShareLink" class="btn btn-primary" style="flex: 1;">
+          📋 คัดลอกลิงก์
+        </button>
+        <button id="btnCloseShareModal" class="btn btn-secondary">
+          ปิด
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Game Over / Score Result -->
+  <div id="gameOverModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div id="winIcon" style="font-size: 3.5rem; margin-bottom: 0.5rem;">🏆</div>
+      <h3 id="modalWinnerTitle" class="modal-title">จบเกมแล้ว!</h3>
+      <p id="modalWinReason" class="modal-body" style="color: var(--accent-gold); font-weight: 600;"></p>
+
+      <div id="scoreDetailsBox" style="background: rgba(0,0,0,0.3); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.9rem; text-align: left; display: none;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+          <span>⚫ หมากดำ (พื้นที่ + กินได้):</span>
+          <span id="scoreBlackDetail" style="font-weight: 700;">0 แต้ม</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+          <span>⚪ หมากขาว (พื้นที่ + กินได้ + คอมิ):</span>
+          <span id="scoreWhiteDetail" style="font-weight: 700;">0 แต้ม</span>
+        </div>
+        <hr style="border: 0; border-top: 1px solid var(--panel-border); margin: 0.5rem 0;">
+        <div style="display: flex; justify-content: space-between; font-weight: 700; color: var(--accent-gold);">
+          <span>ผลต่างคะแนน:</span>
+          <span id="scoreDiffDetail">0 แต้ม</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btnPlayAgain" class="btn btn-primary" style="flex: 1;">
+          🔄 เล่นใหม่อีกเกม
+        </button>
+        <button id="btnCloseGameOverModal" class="btn btn-secondary">
+          ดูกระดาน
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Undo Request Confirmation -->
+  <div id="undoModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem;">↩️</div>
+      <h3 class="modal-title">คำขอย้อนหมาก</h3>
+      <p id="undoMessage" class="modal-body">
+        ฝ่ายตรงข้ามขอถอยหมากตาที่เพิ่งวางไป 1 ตา คุณยินยอมหรือไม่?
+      </p>
+      <div class="modal-actions">
+        <button id="btnAcceptUndo" class="btn btn-primary" style="flex: 1;">
+          👍 ยินยอม
+        </button>
+        <button id="btnRejectUndo" class="btn btn-secondary" style="flex: 1;">
+          ❌ ไม่อนุญาต
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="audio.js"></script>
+  <script src="gameClient.js"></script>
+</body>
+</html>

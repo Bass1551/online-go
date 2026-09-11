@@ -1,0 +1,943 @@
+/**
+ * Go Game Client - Frontend Controller & Canvas Renderer
+ */
+
+const socket = io();
+
+// State
+let myRole = null; // 1 = Black, 2 = White, 'spectator'
+let currentRoomId = null;
+let roomState = null;
+let hoverCoord = null;
+let boardSize = 9;
+let cellSize = 40;
+let margin = 35;
+let canvasSize = 500;
+
+// Elements
+const lobbyView = document.getElementById('lobbyView');
+const gameView = document.getElementById('gameView');
+const canvas = document.getElementById('goCanvas');
+const ctx = canvas.getContext('2d');
+
+const btnCreateRoom = document.getElementById('btnCreateRoom');
+const btnJoinRoom = document.getElementById('btnJoinRoom');
+const createPlayerName = document.getElementById('createPlayerName');
+const joinPlayerName = document.getElementById('joinPlayerName');
+const joinRoomCode = document.getElementById('joinRoomCode');
+const timeLimitSelect = document.getElementById('timeLimitSelect');
+
+const displayRoomId = document.getElementById('displayRoomId');
+const gameStatusBanner = document.getElementById('gameStatusBanner');
+const btnLeaveRoom = document.getElementById('btnLeaveRoom');
+const btnShareModal = document.getElementById('btnShareModal');
+
+const blackPlayerCard = document.getElementById('blackPlayerCard');
+const whitePlayerCard = document.getElementById('whitePlayerCard');
+const blackPlayerName = document.getElementById('blackPlayerName');
+const whitePlayerName = document.getElementById('whitePlayerName');
+const blackTimer = document.getElementById('blackTimer');
+const whiteTimer = document.getElementById('whiteTimer');
+const blackCaptures = document.getElementById('blackCaptures');
+const whiteCaptures = document.getElementById('whiteCaptures');
+const komiValue = document.getElementById('komiValue');
+const roleIndicator = document.getElementById('roleIndicator');
+
+const btnPass = document.getElementById('btnPass');
+const btnUndo = document.getElementById('btnUndo');
+const btnResign = document.getElementById('btnResign');
+const btnRestart = document.getElementById('btnRestart');
+
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const btnSendChat = document.getElementById('btnSendChat');
+
+// Modals
+const shareModal = document.getElementById('shareModal');
+const shareLinkInput = document.getElementById('shareLinkInput');
+const btnCopyShareLink = document.getElementById('btnCopyShareLink');
+const btnCloseShareModal = document.getElementById('btnCloseShareModal');
+
+const gameOverModal = document.getElementById('gameOverModal');
+const modalWinnerTitle = document.getElementById('modalWinnerTitle');
+const modalWinReason = document.getElementById('modalWinReason');
+const scoreDetailsBox = document.getElementById('scoreDetailsBox');
+const scoreBlackDetail = document.getElementById('scoreBlackDetail');
+const scoreWhiteDetail = document.getElementById('scoreWhiteDetail');
+const scoreDiffDetail = document.getElementById('scoreDiffDetail');
+const btnPlayAgain = document.getElementById('btnPlayAgain');
+const btnCloseGameOverModal = document.getElementById('btnCloseGameOverModal');
+
+const undoModal = document.getElementById('undoModal');
+const undoMessage = document.getElementById('undoMessage');
+const btnAcceptUndo = document.getElementById('btnAcceptUndo');
+const btnRejectUndo = document.getElementById('btnRejectUndo');
+
+// Solo Bot & Coach Elements
+const btnStartBotGame = document.getElementById('btnStartBotGame');
+const botPlayerName = document.getElementById('botPlayerName');
+const botLevelSelect = document.getElementById('botLevelSelect');
+
+const coachBanner = document.getElementById('coachBanner');
+const coachBannerContent = document.getElementById('coachBannerContent');
+
+// Non-blocking Top Alert (when Bot captures player)
+const boardTopAlert = document.getElementById('boardTopAlert');
+const topAlertTitle = document.getElementById('topAlertTitle');
+const topAlertBadge = document.getElementById('topAlertBadge');
+const topAlertExplanation = document.getElementById('topAlertExplanation');
+const topAlertTip = document.getElementById('topAlertTip');
+const btnCloseTopAlert = document.getElementById('btnCloseTopAlert');
+
+// Non-blocking Quiz Dock (when Player captures bot)
+const boardQuizDock = document.getElementById('boardQuizDock');
+const btnCloseQuizDock = document.getElementById('btnCloseQuizDock');
+const quizCapturedCount = document.getElementById('quizCapturedCount');
+const quizExplanationInput = document.getElementById('quizExplanationInput');
+const btnSubmitQuiz = document.getElementById('btnSubmitQuiz');
+const quizResultBox = document.getElementById('quizResultBox');
+const quizStarsDisplay = document.getElementById('quizStarsDisplay');
+const quizTacticTitle = document.getElementById('quizTacticTitle');
+const quizFeedbackText = document.getElementById('quizFeedbackText');
+const quizTipText = document.getElementById('quizTipText');
+let selectedQuizTactic = 'atari_neglect';
+
+// Visual highlight for recent captures on board
+let recentCaptures = null;
+
+const toastContainer = document.getElementById('toastContainer');
+
+// Coordinate letters (Standard Go notation skips 'I' to prevent confusion with 'J' or '1')
+const COORD_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
+
+// Star points (Hoshi) definitions
+const STAR_POINTS = {
+  9: [[2, 2], [2, 6], [6, 2], [6, 6], [4, 4]],
+  13: [[3, 3], [3, 9], [9, 3], [9, 9], [6, 6]],
+  19: [
+    [3, 3], [3, 9], [3, 15],
+    [9, 3], [9, 9], [9, 15],
+    [15, 3], [15, 9], [15, 15]
+  ]
+};
+
+// --- INITIALIZATION ---
+function init() {
+  setupEventListeners();
+  checkUrlParams();
+  setupCanvas();
+}
+
+function checkUrlParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomParam = urlParams.get('room');
+  if (roomParam) {
+    joinRoomCode.value = roomParam.toUpperCase();
+    showToast(`พบรหัสห้อง ${roomParam.toUpperCase()} ใส่ชื่อของคุณแล้วกดเข้าร่วมได้เลย!`);
+  }
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerText = msg;
+  toastContainer.appendChild(toast);
+  setTimeout(() => toast.remove(), 3200);
+}
+
+function spawnFloatingEmoji(emoji, x, y) {
+  const el = document.createElement('div');
+  el.className = 'floating-emoji';
+  el.innerText = emoji;
+  el.style.left = (x || (window.innerWidth / 2 + (Math.random() * 80 - 40))) + 'px';
+  el.style.top = (y || (window.innerHeight / 2 + 50)) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// Format seconds into MM:SS
+function formatTime(sec) {
+  if (sec === undefined || sec === null || sec <= 0) return '00:00';
+  const m = Math.floor(sec / 60).toString().padStart(2, '0');
+  const s = (sec % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+// --- CANVAS SETUP & DRAWING ---
+function setupCanvas() {
+  // Determine size based on screen width
+  const containerWidth = Math.min(window.innerWidth - 30, 620);
+  canvasSize = Math.max(300, containerWidth);
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvasSize * dpr;
+  canvas.height = canvasSize * dpr;
+  canvas.style.width = canvasSize + 'px';
+  canvas.style.height = canvasSize + 'px';
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  margin = Math.max(24, Math.floor(canvasSize * 0.065));
+  cellSize = (canvasSize - margin * 2) / (boardSize - 1);
+
+  renderBoard();
+}
+
+window.addEventListener('resize', () => {
+  if (gameView.style.display !== 'none') {
+    setupCanvas();
+  }
+});
+
+function renderBoard() {
+  if (!ctx) return;
+  ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+  // 1. Grid Lines
+  ctx.strokeStyle = '#3d2511';
+  ctx.lineWidth = 1.2;
+
+  for (let i = 0; i < boardSize; i++) {
+    const p = margin + i * cellSize;
+
+    // Horizontal line
+    ctx.beginPath();
+    ctx.moveTo(margin, p);
+    ctx.lineTo(canvasSize - margin, p);
+    ctx.stroke();
+
+    // Vertical line
+    ctx.beginPath();
+    ctx.moveTo(p, margin);
+    ctx.lineTo(p, canvasSize - margin);
+    ctx.stroke();
+  }
+
+  // 2. Coordinate labels
+  ctx.fillStyle = '#5c3818';
+  ctx.font = `600 ${Math.max(10, Math.floor(cellSize * 0.32))}px Prompt, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let i = 0; i < boardSize; i++) {
+    const pos = margin + i * cellSize;
+    const colName = COORD_LETTERS[i];
+    const rowName = boardSize - i;
+
+    // Top & Bottom (Columns)
+    ctx.fillText(colName, pos, margin * 0.45);
+    ctx.fillText(colName, pos, canvasSize - margin * 0.45);
+
+    // Left & Right (Rows)
+    ctx.fillText(rowName, margin * 0.45, pos);
+    ctx.fillText(rowName, canvasSize - margin * 0.45, pos);
+  }
+
+  // 3. Star points (Hoshi)
+  const hoshi = STAR_POINTS[boardSize] || [];
+  ctx.fillStyle = '#3d2511';
+  const hoshiRadius = Math.max(2.5, cellSize * 0.085);
+
+  for (const [r, c] of hoshi) {
+    const x = margin + c * cellSize;
+    const y = margin + r * cellSize;
+    ctx.beginPath();
+    ctx.arc(x, y, hoshiRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 4. Stones & Territory
+  const board = roomState?.game?.board;
+  const radius = cellSize * 0.46;
+
+  if (board) {
+    for (let r = 0; r < boardSize; r++) {
+      for (let c = 0; c < boardSize; c++) {
+        const stone = board[r][c];
+        const x = margin + c * cellSize;
+        const y = margin + r * cellSize;
+
+        if (stone === 1 || stone === 2) {
+          drawStone(x, y, radius, stone);
+        }
+      }
+    }
+  }
+
+  // 5. Territory markers if game over with score
+  if (roomState?.game?.scoreResult?.territoryMap) {
+    const tMap = roomState.game.scoreResult.territoryMap;
+    for (let r = 0; r < boardSize; r++) {
+      for (let c = 0; c < boardSize; c++) {
+        const owner = tMap[r][c];
+        if (owner === 1 || owner === 2) {
+          const x = margin + c * cellSize;
+          const y = margin + r * cellSize;
+          const markSize = cellSize * 0.28;
+          ctx.fillStyle = owner === 1 ? 'rgba(0, 0, 0, 0.75)' : 'rgba(255, 255, 255, 0.9)';
+          ctx.fillRect(x - markSize / 2, y - markSize / 2, markSize, markSize);
+        }
+      }
+    }
+  }
+
+  // 6. Highlight recently captured stones
+  if (recentCaptures && (Date.now() - recentCaptures.time < 5000)) {
+    const elapsed = Date.now() - recentCaptures.time;
+    const alpha = Math.max(0.2, (5000 - elapsed) / 5000);
+    ctx.save();
+    for (const stone of recentCaptures.stones) {
+      const x = margin + stone.c * cellSize;
+      const y = margin + stone.r * cellSize;
+
+      // Red dashed glowing ring where stones were taken
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 0.7, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(239, 68, 68, ${alpha})`;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+
+      // Small X inside
+      ctx.strokeStyle = `rgba(239, 68, 68, ${alpha * 0.9})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - radius * 0.3, y - radius * 0.3);
+      ctx.lineTo(x + radius * 0.3, y + radius * 0.3);
+      ctx.moveTo(x + radius * 0.3, y - radius * 0.3);
+      ctx.lineTo(x - radius * 0.3, y + radius * 0.3);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 7. Last move marker
+  const lastMove = roomState?.game?.lastMove;
+  if (lastMove && !lastMove.pass && lastMove.r !== undefined) {
+    const x = margin + lastMove.c * cellSize;
+    const y = margin + lastMove.r * cellSize;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.25, 0, Math.PI * 2);
+    ctx.fillStyle = lastMove.player === 1 ? '#ff4d4f' : '#1890ff';
+    ctx.fill();
+  }
+
+  // 8. Hover Preview Stone
+  if (hoverCoord && myRole && (myRole === 1 || myRole === 2) && roomState?.game?.turn === myRole && !roomState?.game?.isGameOver) {
+    const { r, c } = hoverCoord;
+    if (board && board[r][c] === 0) {
+      const x = margin + c * cellSize;
+      const y = margin + r * cellSize;
+      ctx.globalAlpha = 0.45;
+      drawStone(x, y, radius, myRole);
+      ctx.globalAlpha = 1.0;
+    }
+  }
+}
+
+function drawStone(x, y, radius, color) {
+  ctx.save();
+
+  // Shadow
+  ctx.beginPath();
+  ctx.arc(x + 2, y + 3, radius, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.fill();
+
+  // Stone Body Gradient
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+
+  const grad = ctx.createRadialGradient(
+    x - radius * 0.3,
+    y - radius * 0.3,
+    radius * 0.1,
+    x,
+    y,
+    radius
+  );
+
+  if (color === 1) {
+    // Black Stone (slate/obsidian sheen)
+    grad.addColorStop(0, '#555555');
+    grad.addColorStop(0.3, '#262626');
+    grad.addColorStop(1, '#0c0c0c');
+  } else {
+    // White Stone (shell/ivory sheen)
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.65, '#f0f0f0');
+    grad.addColorStop(1, '#d0d0d0');
+  }
+
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Subtle White Stone Border for definition
+  if (color === 2) {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// Convert screen mouse/touch coordinate to (r, c)
+function getGridCoord(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+
+  const col = Math.round((x - margin) / cellSize);
+  const row = Math.round((y - margin) / cellSize);
+
+  if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
+    return { r: row, c: col };
+  }
+  return null;
+}
+
+// --- EVENT LISTENERS ---
+function setupEventListeners() {
+  // Canvas Mouse & Touch
+  canvas.addEventListener('mousemove', (e) => {
+    const coord = getGridCoord(e);
+    if (!coord && !hoverCoord) return;
+    if (coord && hoverCoord && coord.r === hoverCoord.r && coord.c === hoverCoord.c) return;
+    hoverCoord = coord;
+    renderBoard();
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    hoverCoord = null;
+    renderBoard();
+  });
+
+  canvas.addEventListener('click', (e) => {
+    window.goAudio.init();
+    const coord = getGridCoord(e);
+    if (coord) {
+      handleBoardClick(coord.r, coord.c);
+    }
+  });
+
+  // Touch Support
+  canvas.addEventListener('touchstart', (e) => {
+    window.goAudio.init();
+    const coord = getGridCoord(e);
+    if (coord) {
+      hoverCoord = coord;
+      renderBoard();
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', (e) => {
+    if (hoverCoord) {
+      handleBoardClick(hoverCoord.r, hoverCoord.c);
+      hoverCoord = null;
+    }
+  });
+
+  // Lobby Buttons
+  if (btnStartBotGame) {
+    btnStartBotGame.addEventListener('click', () => {
+      window.goAudio.init();
+      const size = document.querySelector('input[name="botBoardSize"]:checked')?.value || 9;
+      const level = botLevelSelect.value || 1;
+      const name = botPlayerName.value.trim() || 'ผู้เล่น';
+
+      socket.emit('start_bot_game', { size: parseInt(size, 10), botLevel: parseInt(level, 10), playerName: name });
+    });
+  }
+
+  btnCreateRoom.addEventListener('click', () => {
+    window.goAudio.init();
+    const size = document.querySelector('input[name="boardSize"]:checked')?.value || 9;
+    const name = createPlayerName.value.trim() || 'ผู้เล่น 1';
+    const timeLimit = parseInt(timeLimitSelect.value, 10) || 0;
+
+    socket.emit('create_room', { size: parseInt(size, 10), playerName: name, timeLimit });
+  });
+
+  btnJoinRoom.addEventListener('click', () => {
+    window.goAudio.init();
+    const roomId = joinRoomCode.value.trim().toUpperCase();
+    const name = joinPlayerName.value.trim() || 'ผู้เล่น 2';
+
+    if (!roomId) {
+      showToast('กรุณากรอกรหัสห้อง 6 ตัวอักษร');
+      return;
+    }
+
+    socket.emit('join_room', { roomId, playerName: name });
+  });
+
+  // Action Buttons
+  btnPass.addEventListener('click', () => {
+    window.goAudio.init();
+    if (!currentRoomId) return;
+    socket.emit('pass_turn', { roomId: currentRoomId });
+  });
+
+  btnUndo.addEventListener('click', () => {
+    if (!currentRoomId) return;
+    socket.emit('request_undo', { roomId: currentRoomId });
+    showToast('ส่งคำขอย้อนหมากไปยังอีกฝ่ายแล้ว...');
+  });
+
+  btnResign.addEventListener('click', () => {
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการยอมแพ้ในเกมนี้?')) {
+      socket.emit('resign', { roomId: currentRoomId });
+    }
+  });
+
+  btnRestart.addEventListener('click', () => {
+    if (confirm('ต้องการเริ่มเล่นเกมใหม่หรือไม่?')) {
+      socket.emit('restart_game', { roomId: currentRoomId });
+    }
+  });
+
+  btnLeaveRoom.addEventListener('click', () => {
+    if (confirm('ต้องการออกจากห้องและกลับไปยังหน้าหลักหรือไม่?')) {
+      window.location.href = window.location.pathname;
+    }
+  });
+
+  // Share Modal
+  btnShareModal.addEventListener('click', () => {
+    const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
+    shareLinkInput.value = inviteUrl;
+    shareModal.style.display = 'flex';
+  });
+
+  btnCloseShareModal.addEventListener('click', () => {
+    shareModal.style.display = 'none';
+  });
+
+  btnCopyShareLink.addEventListener('click', () => {
+    shareLinkInput.select();
+    navigator.clipboard.writeText(shareLinkInput.value).then(() => {
+      showToast('คัดลอกลิงก์สำเร็จแล้ว! ส่งให้เพื่อนหรือแฟนได้เลย 💖');
+    }).catch(() => {
+      showToast('คัดลอกลิงก์เรียบร้อย');
+    });
+  });
+
+  // Game Over Modal
+  btnCloseGameOverModal.addEventListener('click', () => {
+    gameOverModal.style.display = 'none';
+  });
+
+  btnPlayAgain.addEventListener('click', () => {
+    gameOverModal.style.display = 'none';
+    socket.emit('restart_game', { roomId: currentRoomId });
+  });
+
+  // Undo Modal
+  btnAcceptUndo.addEventListener('click', () => {
+    socket.emit('respond_undo', { roomId: currentRoomId, accepted: true });
+    undoModal.style.display = 'none';
+  });
+
+  btnRejectUndo.addEventListener('click', () => {
+    socket.emit('respond_undo', { roomId: currentRoomId, accepted: false });
+    undoModal.style.display = 'none';
+  });
+
+  // Quiz Dock Listeners
+  document.querySelectorAll('.tactic-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.tactic-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedQuizTactic = chip.getAttribute('data-tactic');
+    });
+  });
+
+  if (btnSubmitQuiz) {
+    btnSubmitQuiz.addEventListener('click', () => {
+      const explanation = quizExplanationInput.value.trim();
+      socket.emit('submit_quiz_explanation', {
+        roomId: currentRoomId,
+        explanation,
+        selectedTactic: selectedQuizTactic
+      });
+    });
+  }
+
+  if (btnCloseQuizDock) {
+    btnCloseQuizDock.addEventListener('click', () => {
+      if (boardQuizDock) boardQuizDock.style.display = 'none';
+    });
+  }
+
+  // Top Alert Close Listener
+  if (btnCloseTopAlert) {
+    btnCloseTopAlert.addEventListener('click', () => {
+      if (boardTopAlert) boardTopAlert.style.display = 'none';
+    });
+  }
+
+  // Chat
+  btnSendChat.addEventListener('click', sendChatMessage);
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendChatMessage();
+  });
+
+  // Quick Emoji Buttons
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.goAudio.init();
+      const emoji = btn.getAttribute('data-emoji');
+      if (currentRoomId && emoji) {
+        socket.emit('send_message', { roomId: currentRoomId, text: emoji, type: 'emoji' });
+        spawnFloatingEmoji(emoji);
+      }
+    });
+  });
+}
+
+function handleBoardClick(r, c) {
+  if (!currentRoomId || !roomState) return;
+
+  if (myRole !== 1 && myRole !== 2) {
+    showToast('คุณกำลังรับชมเกมในฐานะผู้ชม');
+    return;
+  }
+
+  if (roomState.game.turn !== myRole) {
+    showToast('ยังไม่ใช่ตาของคุณ รออีกฝ่ายวางก่อนนะ');
+    return;
+  }
+
+  socket.emit('play_move', { roomId: currentRoomId, r, c });
+}
+
+function sendChatMessage() {
+  const text = chatInput.value.trim();
+  if (!text || !currentRoomId) return;
+
+  socket.emit('send_message', { roomId: currentRoomId, text, type: 'chat' });
+  chatInput.value = '';
+}
+
+function addChatMessage(msg) {
+  const div = document.createElement('div');
+  if (msg.type === 'emoji') {
+    div.className = 'chat-msg emoji-burst';
+    div.innerHTML = `<span class="sender" style="font-size:0.85rem; display:block; color:var(--text-secondary);">${msg.sender}:</span> ${msg.text}`;
+    spawnFloatingEmoji(msg.text);
+    window.goAudio.playEmoji();
+  } else if (msg.type === 'system') {
+    div.className = 'chat-msg system';
+    div.innerText = msg.text;
+  } else {
+    div.className = 'chat-msg';
+    const colorStyle = msg.senderColor === 'black' ? 'color:#a5b4fc;' : (msg.senderColor === 'white' ? 'color:#fbcfe8;' : '');
+    div.innerHTML = `<span class="sender" style="${colorStyle}">${msg.sender} (${msg.time}):</span> <span>${escapeHtml(msg.text)}</span>`;
+  }
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.innerText = text;
+  return div.innerHTML;
+}
+
+// --- SYNC UI WITH STATE ---
+function updateRoomUI(state) {
+  roomState = state;
+  boardSize = state.size || 9;
+  setupCanvas();
+
+  displayRoomId.innerText = state.id;
+
+  // Players
+  if (state.black) {
+    blackPlayerName.innerText = state.black.name;
+  } else {
+    blackPlayerName.innerText = 'กำลังรอ...';
+  }
+
+  if (state.white) {
+    whitePlayerName.innerText = state.white.name;
+  } else {
+    whitePlayerName.innerText = 'กำลังรอผู้เล่นหมากขาว...';
+  }
+
+  // Turn active highlight
+  const currentTurn = state.game.turn; // 1 or 2
+  if (currentTurn === 1) {
+    blackPlayerCard.classList.add('active-turn');
+    whitePlayerCard.classList.remove('active-turn');
+  } else {
+    whitePlayerCard.classList.add('active-turn');
+    blackPlayerCard.classList.remove('active-turn');
+  }
+
+  // Captures
+  blackCaptures.innerText = `กินได้: ${state.game.captures[1] || 0}`;
+  whiteCaptures.innerText = `กินได้: ${state.game.captures[2] || 0}`;
+  komiValue.innerText = `+${state.game.komi}`;
+
+  // Role Indicator
+  if (myRole === 1) {
+    roleIndicator.innerHTML = 'คุณเป็น: <b style="color:#fff;">หมากดำ ⚫</b>';
+  } else if (myRole === 2) {
+    roleIndicator.innerHTML = 'คุณเป็น: <b style="color:#fff;">หมากขาว ⚪</b>';
+  } else {
+    roleIndicator.innerHTML = 'คุณเป็น: <b>ผู้ชม 👁️</b>';
+  }
+
+  // Status Banner
+  if (state.game.isGameOver) {
+    gameStatusBanner.innerText = `จบเกม: ${state.game.winReason}`;
+    gameStatusBanner.style.color = 'var(--accent-gold)';
+  } else if (!state.white) {
+    gameStatusBanner.innerText = 'รอเพื่อนหรือแฟนเข้าร่วมห้อง...';
+    gameStatusBanner.style.color = 'var(--accent-pink)';
+  } else {
+    const isMyTurn = state.game.turn === myRole;
+    if (isMyTurn) {
+      gameStatusBanner.innerText = '✨ ตาของคุณแล้ว วางหมากได้เลย!';
+      gameStatusBanner.style.color = 'var(--accent-gold)';
+    } else {
+      const turnName = state.game.turn === 1 ? (state.black?.name || 'หมากดำ') : (state.white?.name || 'หมากขาว');
+      gameStatusBanner.innerText = `กำลังรอตาของ ${turnName}...`;
+      gameStatusBanner.style.color = 'var(--text-secondary)';
+    }
+  }
+
+  // Bot Coach Banner
+  if (state.isBotGame) {
+    if (coachBanner) coachBanner.style.display = 'block';
+    if (btnShareModal) btnShareModal.style.display = 'none';
+    if (coachBannerContent && !coachBannerContent.innerText) {
+      coachBannerContent.innerHTML = `🥋 ยินดีต้อนรับสู่โหมดซ้อมแข่ง! คุณกำลังประลองกับ <b>${state.white?.name}</b> ทุกครั้งที่มีการกินหมาก โค้ชจะช่วยวิเคราะห์แท็กติกให้คุณ`;
+    }
+  } else {
+    if (coachBanner) coachBanner.style.display = 'none';
+    if (btnShareModal) btnShareModal.style.display = 'inline-flex';
+  }
+
+  // Timers
+  if (state.timers) {
+    blackTimer.innerText = formatTime(state.timers[1]);
+    whiteTimer.innerText = formatTime(state.timers[2]);
+  }
+
+  renderBoard();
+}
+
+// Switch between Lobby and Game screen
+function enterGameView() {
+  lobbyView.style.display = 'none';
+  gameView.style.display = 'flex';
+  setupCanvas();
+}
+
+// --- SOCKET.IO EVENT HANDLERS ---
+socket.on('room_created', (data) => {
+  currentRoomId = data.roomId;
+  myRole = data.role;
+  enterGameView();
+  updateRoomUI(data.room);
+  showToast(`เข้าห้อง ${data.roomId} สำเร็จแล้ว!`);
+  // Automatically show share modal only on human multiplayer room
+  if (!data.room.isBotGame) {
+    btnShareModal.click();
+  }
+});
+
+socket.on('room_joined', (data) => {
+  currentRoomId = data.roomId;
+  myRole = data.role;
+  enterGameView();
+  updateRoomUI(data.room);
+  showToast(`เข้าห้อง ${data.roomId} เรียบร้อยแล้ว!`);
+});
+
+socket.on('join_error', (data) => {
+  showToast(`⚠️ ${data.message}`);
+});
+
+socket.on('room_updated', (data) => {
+  updateRoomUI(data.room);
+  if (data.announcement) {
+    addChatMessage({ type: 'system', text: data.announcement });
+  }
+});
+
+socket.on('move_played', (data) => {
+  if (data.capturedStones && data.capturedStones.length > 0) {
+    recentCaptures = {
+      stones: data.capturedStones,
+      player: data.player,
+      time: Date.now()
+    };
+    // Re-render over 5 seconds to animate fade
+    let animCount = 0;
+    const animInterval = setInterval(() => {
+      renderBoard();
+      animCount++;
+      if (animCount > 25 || !recentCaptures || (Date.now() - recentCaptures.time >= 5000)) {
+        clearInterval(animInterval);
+        recentCaptures = null;
+        renderBoard();
+      }
+    }, 200);
+  }
+
+  if (roomState) {
+    roomState.game.board = data.board;
+    roomState.game.turn = data.turn;
+    roomState.game.captures = data.captures;
+    roomState.game.lastMove = data.lastMove;
+    updateRoomUI(roomState);
+  }
+
+  if (data.sound === 'capture') {
+    window.goAudio.playCapture();
+  } else {
+    window.goAudio.playStoneClick();
+  }
+});
+
+socket.on('move_error', (data) => {
+  showToast(`⚠️ ${data.message}`);
+});
+
+socket.on('turn_passed', (data) => {
+  window.goAudio.playPass();
+  if (roomState) {
+    roomState.game.turn = data.turn;
+    roomState.game.consecutivePasses = data.consecutivePasses;
+    updateRoomUI(roomState);
+  }
+  if (data.announcement) {
+    addChatMessage({ type: 'system', text: data.announcement });
+  }
+});
+
+socket.on('timer_update', (data) => {
+  if (roomState) {
+    roomState.timers = data.timers;
+    blackTimer.innerText = formatTime(data.timers[1]);
+    whiteTimer.innerText = formatTime(data.timers[2]);
+  }
+});
+
+socket.on('game_over', (data) => {
+  window.goAudio.playWin();
+  if (data.room) {
+    updateRoomUI(data.room);
+  }
+
+  const isMeWinner = data.winner === myRole;
+  if (myRole === 1 || myRole === 2) {
+    modalWinnerTitle.innerText = isMeWinner ? '🎉 ยินดีด้วย คุณเป็นฝ่ายชนะ! 🎉' : 'เกมจบลงแล้ว!';
+  } else {
+    modalWinnerTitle.innerText = 'เกมจบลงแล้ว!';
+  }
+  modalWinReason.innerText = data.winReason;
+
+  if (data.scoreResult) {
+    scoreDetailsBox.style.display = 'block';
+    scoreBlackDetail.innerText = `${data.scoreResult.blackTotal} แต้ม (พื้นที่ ${data.scoreResult.blackTerritory} + กินได้ ${data.scoreResult.blackCaptures})`;
+    scoreWhiteDetail.innerText = `${data.scoreResult.whiteTotal} แต้ม (พื้นที่ ${data.scoreResult.whiteTerritory} + กินได้ ${data.scoreResult.whiteCaptures} + คอมิ ${data.scoreResult.komi})`;
+    scoreDiffDetail.innerText = `${data.scoreResult.margin} แต้ม`;
+  } else {
+    scoreDetailsBox.style.display = 'none';
+  }
+
+  gameOverModal.style.display = 'flex';
+  addChatMessage({ type: 'system', text: `🏆 เกมจบแล้ว: ${data.winReason}` });
+});
+
+socket.on('undo_requested', (data) => {
+  undoMessage.innerText = `${data.requesterName} ต้องการขอย้อนหมาก 1 ตา คุณยินยอมหรือไม่?`;
+  undoModal.style.display = 'flex';
+});
+
+socket.on('undo_rejected', (data) => {
+  showToast(data.message);
+});
+
+socket.on('undo_completed', (data) => {
+  updateRoomUI(data.room);
+  addChatMessage({ type: 'system', text: data.announcement });
+  showToast('ย้อนหมากเรียบร้อยแล้ว');
+});
+
+socket.on('game_restarted', (data) => {
+  gameOverModal.style.display = 'none';
+  updateRoomUI(data.room);
+  addChatMessage({ type: 'system', text: data.announcement });
+  showToast('เริ่มเกมใหม่เรียบร้อยแล้ว');
+});
+
+socket.on('quiz_prompt', (data) => {
+  if (quizCapturedCount) quizCapturedCount.innerText = data.capturedCount;
+  if (quizExplanationInput) quizExplanationInput.value = '';
+  if (quizResultBox) quizResultBox.style.display = 'none';
+
+  // Set default tactic chip matching backend guess
+  document.querySelectorAll('.tactic-chip').forEach(chip => {
+    if (chip.getAttribute('data-tactic') === data.analysis.tacticKey) {
+      chip.classList.add('active');
+      selectedQuizTactic = data.analysis.tacticKey;
+    } else {
+      chip.classList.remove('active');
+    }
+  });
+
+  // Display dock above the board (NEVER blocks the board)
+  if (boardQuizDock) {
+    boardQuizDock.style.display = 'block';
+  }
+});
+
+socket.on('quiz_result', (data) => {
+  const stars = data.stars === 3 ? '⭐⭐⭐ ยอดเยี่ยมมาก!' : (data.stars === 2 ? '⭐⭐ ดีมาก!' : '⭐ พยายามอีกนิด!');
+  if (quizStarsDisplay) quizStarsDisplay.innerText = stars;
+  if (quizTacticTitle) quizTacticTitle.innerText = data.tacticTitle;
+  if (quizFeedbackText) quizFeedbackText.innerText = data.feedback;
+  if (quizTipText) quizTipText.innerText = data.competitionTip;
+  if (quizResultBox) quizResultBox.style.display = 'block';
+
+  if (data.stars >= 2) {
+    window.goAudio.playWin();
+  }
+
+  // Update Coach banner on sidebar as well
+  if (coachBannerContent) {
+    coachBannerContent.innerHTML = `<b>🎯 คุณกินหมากสำเร็จ:</b> ${data.tacticTitle}<br>${data.competitionTip}`;
+  }
+});
+
+socket.on('bot_captured_advice', (data) => {
+  // Show non-blocking alert banner ABOVE the board (Never covers the board)
+  if (boardTopAlert) {
+    topAlertTitle.innerText = `คุณโดนบ็อตกินหมาก (${data.analysis.count} เม็ด)!`;
+    topAlertBadge.innerText = data.analysis.title;
+    topAlertExplanation.innerText = data.analysis.explanation;
+    topAlertTip.innerText = data.analysis.competitionTip;
+    boardTopAlert.style.display = 'flex';
+  }
+
+  // Update Coach banner on sidebar
+  if (coachBannerContent) {
+    coachBannerContent.innerHTML = `<b>⚠️ คุณโดนบ็อตกินหมาก:</b> ${data.analysis.title}<br>${data.analysis.competitionTip}`;
+  }
+});
+
+socket.on('new_message', (data) => {
+  addChatMessage(data);
+});
+
+// Boot
+init();
