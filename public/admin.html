@@ -518,7 +518,7 @@
     <!-- Tab Navigation -->
     <nav class="tab-bar">
       <button class="tab-btn active" data-tab="overview">📊 ภาพรวมระบบ</button>
-      <button class="tab-btn" data-tab="users">👥 บัญชีผู้ใช้ & ดูรหัสผ่าน (<span id="userCountBadge">0</span>)</button>
+      <button class="tab-btn" data-tab="users">👥 บัญชีผู้ใช้ & ดูรหัสผ่าน (<span id="userCountBadge">0</span>) <span id="resetBadge" style="display: none; background: #ef4444; color: #fff; font-size: 0.72rem; padding: 2px 7px; border-radius: 999px; font-weight: 700; margin-left: 4px;">0</span></button>
       <button class="tab-btn" data-tab="rooms">🎮 ห้องที่กำลังเล่นสด (<span id="roomCountBadge">0</span>)</button>
       <button class="tab-btn" data-tab="games">📜 ประวัติเกมทั้งหมด (<span id="gameCountBadge">0</span>)</button>
       <button class="tab-btn" data-tab="broadcast">📢 ส่งประกาศเซิร์ฟเวอร์</button>
@@ -584,6 +584,34 @@
 
     <!-- TAB 2: USERS & PASSWORDS -->
     <section id="tab-users" class="tab-content">
+      <!-- PENDING RESET REQUESTS PANEL -->
+      <div id="resetRequestsBox" style="margin-bottom: 1.5rem; display: none;">
+        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="margin: 0; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;">
+              <span>📩</span> คำขอรีเซ็ตรหัสผ่านจากผู้เล่น (<span id="resetRequestsCount">0</span>)
+            </h4>
+            <button id="btnRefreshResetRequests" class="btn-sm btn-outline" style="font-size: 0.78rem; padding: 0.25rem 0.6rem;">🔄 รีเฟรชคำขอ</button>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table" style="margin: 0; font-size: 0.85rem;">
+              <thead>
+                <tr>
+                  <th>เวลาที่ขอ</th>
+                  <th>ชื่อผู้ใช้</th>
+                  <th>หมายเหตุ / ช่องทางติดต่อ</th>
+                  <th>สถานะ</th>
+                  <th>การดำเนินการ</th>
+                </tr>
+              </thead>
+              <tbody id="resetRequestsTableBody">
+                <tr><td colspan="5" style="text-align: center; color: #8b949e;">ไม่มีคำขอรีเซ็ตรหัสผ่านค้างอยู่</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div class="admin-panel">
         <div class="panel-header">
           <h3>👥 รายชื่อผู้ใช้ทั้งหมด & รหัสผ่าน (Users & Passwords)</h3>
@@ -593,7 +621,7 @@
           </div>
         </div>
         <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 1rem;">
-          💡 <strong>สำหรับเจ้าของระบบ:</strong> ตารางด้านล่างแสดง <strong>รหัสผ่านจริง (Password)</strong> ที่ผู้เล่นแต่ละคนใช้ล็อกอินเข้าเล่น สามารถกดปุ่ม 📋 เพื่อคัดลอก หรือกดปุ่ม <strong>"🔑 เปลี่ยนรหัส"</strong> เพื่อตั้งรหัสผ่านใหม่ให้ผู้ใช้ได้ทันที
+          💡 <strong>สำหรับเจ้าของระบบ:</strong> ตารางด้านล่างแสดง <strong>รหัสผ่านจริง (Password)</strong> และ <strong>PIN กู้คืน</strong> ที่ผู้เล่นตั้งไว้ สามารถกดปุ่ม 📋 เพื่อคัดลอก หรือกดปุ่ม <strong>"🔑 เปลี่ยนรหัส"</strong> เพื่อตั้งรหัสผ่านใหม่ให้ผู้ใช้ได้ทันที
         </p>
         <div class="table-responsive">
           <table class="admin-table" id="usersTable">
@@ -602,6 +630,7 @@
                 <th>ลำดับ</th>
                 <th>ชื่อผู้ใช้ (Username)</th>
                 <th>🔑 รหัสผ่าน (Password)</th>
+                <th>🛡️ PIN กู้คืน</th>
                 <th>User ID</th>
                 <th>วันที่ลงทะเบียน</th>
                 <th>สถิติเล่น (ชนะ/แพ้)</th>
@@ -609,7 +638,7 @@
               </tr>
             </thead>
             <tbody id="usersTableBody">
-              <tr><td colspan="7" style="text-align: center; color: #8b949e;">กำลังโหลดข้อมูล...</td></tr>
+              <tr><td colspan="8" style="text-align: center; color: #8b949e;">กำลังโหลดข้อมูล...</td></tr>
             </tbody>
           </table>
         </div>

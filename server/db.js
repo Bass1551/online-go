@@ -11,6 +11,7 @@ const DATA_DIR = path.join(__dirname, '..', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const GAMES_FILE = path.join(DATA_DIR, 'games.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
+const RESET_REQUESTS_FILE = path.join(DATA_DIR, 'reset_requests.json');
 
 // Ensure data directory and files exist
 if (!fs.existsSync(DATA_DIR)) {
@@ -47,6 +48,7 @@ function saveJSON(filePath, data) {
 let users = loadJSON(USERS_FILE, {});
 let games = loadJSON(GAMES_FILE, []);
 let sessions = loadJSON(SESSIONS_FILE, {});
+let resetRequests = loadJSON(RESET_REQUESTS_FILE, []);
 
 function hashPassword(password, salt) {
   return crypto.scryptSync(password, salt, 64).toString('hex');
@@ -56,7 +58,7 @@ class Database {
   /**
    * Register a new user
    */
-  static register(username, password) {
+  static register(username, password, recoveryPin = '') {
     const cleanUsername = (username || '').trim();
     if (!cleanUsername || cleanUsername.length < 2 || cleanUsername.length > 20) {
       return { success: false, message: 'ชื่อผู้ใช้ต้องมีความยาว 2-20 ตัวอักษร' };
@@ -73,6 +75,7 @@ class Database {
     const salt = crypto.randomBytes(16).toString('hex');
     const passwordHash = hashPassword(password, salt);
     const userId = 'usr_' + crypto.randomBytes(8).toString('hex');
+    const cleanPin = recoveryPin ? String(recoveryPin).trim() : '';
 
     const newUser = {
       id: userId,
@@ -80,6 +83,7 @@ class Database {
       salt,
       passwordHash,
       plainPassword: password, // เก็บตัวรหัสผ่านจริงสำหรับเจ้าของระบบ
+      recoveryPin: cleanPin,
       createdAt: new Date().toISOString()
     };
 
@@ -153,6 +157,156 @@ class Database {
       delete sessions[token];
       saveJSON(SESSIONS_FILE, sessions);
     }
+  }
+
+  /**
+   * Self-service reset password using recovery PIN
+   */
+  static resetPasswordWithPin(username, pin, newPassword) {
+    const cleanUsername = (username || '').trim();
+    if (!cleanUsername) {
+      return { success: false, message: 'กรุณาระบุชื่อผู้ใช้' };
+    }
+    const cleanPin = String(pin || '').trim();
+    if (!cleanPin) {
+      return { success: false, message: 'กรุณาระบุ PIN กู้คืน 4 หลัก' };
+    }
+    if (!newPassword || newPassword.length < 4) {
+      return { success: false, message: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 4 ตัวอักษร' };
+    }
+
+    const lowerKey = cleanUsername.toLowerCase();
+    const user = users[lowerKey];
+    if (!user) {
+      return { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้ในระบบ กรุณาตรวจสอบชื่อผู้ใช้' };
+    }
+
+    if (!user.recoveryPin) {
+      return {
+        success: false,
+        noPin: true,
+        message: 'บัญชีนี้ยังไม่ได้ตั้ง PIN กู้คืน กรุณากดเลือก "ส่งคำขอให้แอดมินช่วยรีเซ็ต"'
+      };
+    }
+
+    if (user.recoveryPin !== cleanPin) {
+      return { success: false, message: 'PIN กู้คืนไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง' };
+    }
+
+    const newSalt = crypto.randomBytes(16).toString('hex');
+    const newHash = hashPassword(newPassword, newSalt);
+
+    user.salt = newSalt;
+    user.passwordHash = newHash;
+    user.plainPassword = newPassword;
+    user.updatedAt = new Date().toISOString();
+    saveJSON(USERS_FILE, users);
+
+    // Invalidate existing sessions
+    for (const token of Object.keys(sessions)) {
+      if (sessions[token].userId === user.id) {
+        delete sessions[token];
+      }
+    }
+    saveJSON(SESSIONS_FILE, sessions);
+
+    return {
+      success: true,
+      message: 'รีเซ็ตรหัสผ่านสำเร็จเรียบร้อย! คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที'
+    };
+  }
+
+  /**
+   * Set or update recovery PIN for authenticated user
+   */
+  static setRecoveryPin(userId, pin) {
+    if (!userId) return { success: false, message: 'Unauthorized' };
+    const cleanPin = String(pin || '').trim();
+    if (!cleanPin || cleanPin.length < 4 || cleanPin.length > 6) {
+      return { success: false, message: 'PIN กู้คืนต้องเป็นตัวเลข 4-6 หลัก' };
+    }
+    const user = Object.values(users).find(u => u.id === userId);
+    if (!user) return { success: false, message: 'ไม่พบข้อมูลผู้ใช้' };
+
+    user.recoveryPin = cleanPin;
+    saveJSON(USERS_FILE, users);
+    return { success: true, message: 'บันทึก PIN กู้คืนเรียบร้อยแล้ว' };
+  }
+
+  /**
+   * Submit reset password request to Admin
+   */
+  static createResetRequest(username, note = '') {
+    const cleanUsername = (username || '').trim();
+    if (!cleanUsername) return { success: false, message: 'กรุณาระบุชื่อผู้ใช้' };
+
+    const lowerKey = cleanUsername.toLowerCase();
+    const user = users[lowerKey];
+    if (!user) {
+      return { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้ในระบบ กรุณาตรวจสอบชื่อผู้ใช้' };
+    }
+
+    // Check if pending request exists
+    const existing = resetRequests.find(r => r.userId === user.id && r.status === 'pending');
+    if (existing) {
+      return {
+        success: true,
+        message: 'มีคำขอรีเซ็ตรหัสผ่านของคุณอยู่ในระบบแล้ว เจ้าของระบบกำลังตรวจสอบและดำเนินการให้ครับ',
+        requestId: existing.id
+      };
+    }
+
+    const request = {
+      id: 'req_' + crypto.randomBytes(6).toString('hex'),
+      userId: user.id,
+      username: user.username,
+      note: (note || '').trim(),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+
+    resetRequests.unshift(request);
+    if (resetRequests.length > 200) resetRequests = resetRequests.slice(0, 200);
+    saveJSON(RESET_REQUESTS_FILE, resetRequests);
+
+    return {
+      success: true,
+      message: `ส่งคำขอรีเซ็ตรหัสผ่านสำหรับ "${user.username}" ถึงผู้ดูแลระบบเรียบร้อยแล้ว!`,
+      requestId: request.id
+    };
+  }
+
+  static getResetRequests() {
+    return resetRequests;
+  }
+
+  static adminResolveResetRequest(requestId, newPassword) {
+    const req = resetRequests.find(r => r.id === requestId);
+    if (!req) return { success: false, message: 'ไม่พบคำขอนี้' };
+
+    if (newPassword && newPassword.trim()) {
+      const resetResult = Database.adminResetPassword(req.userId, newPassword.trim());
+      if (!resetResult.success) return resetResult;
+      req.tempPassword = newPassword.trim();
+    }
+
+    req.status = 'resolved';
+    req.resolvedAt = new Date().toISOString();
+    saveJSON(RESET_REQUESTS_FILE, resetRequests);
+
+    return {
+      success: true,
+      message: `ดำเนินการรีเซ็ตรหัสผ่านให้ "${req.username}" เรียบร้อยแล้ว`,
+      request: req
+    };
+  }
+
+  static adminDeleteResetRequest(requestId) {
+    const idx = resetRequests.findIndex(r => r.id === requestId);
+    if (idx === -1) return { success: false, message: 'ไม่พบคำขอนี้' };
+    resetRequests.splice(idx, 1);
+    saveJSON(RESET_REQUESTS_FILE, resetRequests);
+    return { success: true, message: 'ลบรายการคำขอเรียบร้อยแล้ว' };
   }
 
   /**
@@ -246,6 +400,7 @@ class Database {
         id: u.id,
         username: u.username,
         plainPassword: u.plainPassword || '(ไม่ได้บันทึก)',
+        recoveryPin: u.recoveryPin || '-',
         salt: u.salt,
         passwordHash: u.passwordHash,
         createdAt: u.createdAt || 'ไม่ระบุ',

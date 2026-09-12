@@ -72,6 +72,13 @@ const userSearchInput = document.getElementById('userSearchInput');
 const roomsTableBody = document.getElementById('roomsTableBody');
 const gamesTableBody = document.getElementById('gamesTableBody');
 
+// Password Reset Requests Elements
+const resetBadge = document.getElementById('resetBadge');
+const resetRequestsBox = document.getElementById('resetRequestsBox');
+const resetRequestsCount = document.getElementById('resetRequestsCount');
+const resetRequestsTableBody = document.getElementById('resetRequestsTableBody');
+const btnRefreshResetRequests = document.getElementById('btnRefreshResetRequests');
+
 // Reset Password Modal
 const resetPasswordModal = document.getElementById('resetPasswordModal');
 const resetPasswordForm = document.getElementById('resetPasswordForm');
@@ -157,6 +164,7 @@ async function loadAllAdminData() {
     await Promise.all([
       loadStats(),
       loadUsers(),
+      loadResetRequests(),
       loadRooms(),
       loadGames(),
       refreshActiveBroadcastStatus()
@@ -198,10 +206,114 @@ async function loadUsers() {
   }
 }
 
+// Password Reset Requests Management
+async function loadResetRequests() {
+  try {
+    const res = await adminFetch('/api/admin/reset-requests');
+    if (res && res.success) {
+      renderResetRequests(res.requests || []);
+    }
+  } catch (err) {
+    console.error('Error loading reset requests:', err);
+  }
+}
+
+function renderResetRequests(requests) {
+  if (!resetRequestsTableBody) return;
+  const pending = requests.filter(r => r.status === 'pending');
+
+  if (resetBadge) {
+    if (pending.length > 0) {
+      resetBadge.textContent = `${pending.length} ขอรีเซ็ต`;
+      resetBadge.style.display = 'inline-block';
+    } else {
+      resetBadge.style.display = 'none';
+    }
+  }
+
+  if (resetRequestsCount) {
+    resetRequestsCount.textContent = pending.length;
+  }
+
+  if (resetRequestsBox) {
+    resetRequestsBox.style.display = requests.length > 0 ? 'block' : 'none';
+  }
+
+  resetRequestsTableBody.innerHTML = '';
+  if (requests.length === 0) {
+    resetRequestsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #8b949e; padding: 1rem;">ไม่มีคำขอรีเซ็ตรหัสผ่านค้างอยู่</td></tr>';
+    return;
+  }
+
+  requests.forEach(r => {
+    const tr = document.createElement('tr');
+    const isPending = r.status === 'pending';
+    const dateStr = new Date(r.createdAt).toLocaleString('th-TH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const statusBadge = isPending 
+      ? '<span class="badge-pill badge-yellow">รอดำเนินการ</span>'
+      : `<span class="badge-pill badge-green">ดำเนินการแล้ว (${escapeHtml(r.tempPassword || 'สำเร็จ')})</span>`;
+
+    const actions = isPending ? `
+      <div style="display: flex; gap: 0.4rem;">
+        <button class="btn-sm btn-sm-primary" onclick="handleResolveResetPrompt('${escapeHtml(r.id)}', '${escapeHtml(r.username)}')">🔑 ตั้งรหัสให้</button>
+        <button class="btn-sm btn-sm-danger" onclick="handleDeleteResetRequest('${escapeHtml(r.id)}')">ลบ</button>
+      </div>
+    ` : `
+      <button class="btn-sm btn-outline" onclick="handleDeleteResetRequest('${escapeHtml(r.id)}')">ลบ</button>
+    `;
+
+    tr.innerHTML = `
+      <td>${dateStr}</td>
+      <td><strong style="color: var(--admin-accent); font-size: 0.92rem;">${escapeHtml(r.username)}</strong></td>
+      <td>${escapeHtml(r.note || '-')}</td>
+      <td>${statusBadge}</td>
+      <td>${actions}</td>
+    `;
+    resetRequestsTableBody.appendChild(tr);
+  });
+}
+
+window.handleResolveResetPrompt = function(requestId, username) {
+  const newPass = prompt(`กำหนดรหัสผ่านใหม่ให้กับผู้เล่น "${username}":`, '123456');
+  if (!newPass || newPass.trim().length < 4) {
+    if (newPass !== null) alert('รหัสผ่านต้องมีความยาวอย่างน้อย 4 ตัวอักษร');
+    return;
+  }
+
+  adminFetch(`/api/admin/reset-requests/${requestId}/resolve`, {
+    method: 'POST',
+    body: JSON.stringify({ newPassword: newPass.trim() })
+  }).then(res => {
+    if (res.success) {
+      showToast(`🔑 รีเซ็ตรหัสผ่านให้ "${username}" เป็น "${newPass.trim()}" เรียบร้อยแล้ว!`);
+      loadResetRequests();
+      loadUsers();
+      navigator.clipboard.writeText(newPass.trim()).catch(() => {});
+      alert(`รีเซ็ตรหัสผ่านให้คุณ "${username}" สำเร็จ!\nรหัสผ่านใหม่คือ: ${newPass.trim()}\n(คัดลอกลงคลิปบอร์ดแล้ว สามารถส่งต่อให้ผู้เล่นได้ทันที)`);
+    } else {
+      showToast(res.message || 'เกิดข้อผิดพลาด', true);
+    }
+  }).catch(err => showToast(err.message, true));
+};
+
+window.handleDeleteResetRequest = function(requestId) {
+  if (!confirm('ต้องการลบรายการคำขอนี้หรือไม่?')) return;
+  adminFetch(`/api/admin/reset-requests/${requestId}`, {
+    method: 'DELETE'
+  }).then(res => {
+    if (res.success) {
+      showToast('ลบรายการคำขอเรียบร้อยแล้ว');
+      loadResetRequests();
+    } else {
+      showToast(res.message || 'ลบไม่สำเร็จ', true);
+    }
+  }).catch(err => showToast(err.message, true));
+};
+
 function renderUsersTable(usersToRender) {
   usersTableBody.innerHTML = '';
   if (!usersToRender || usersToRender.length === 0) {
-    usersTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #8b949e; padding: 2rem;">ไม่พบข้อมูลผู้ใช้</td></tr>';
+    usersTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #8b949e; padding: 2rem;">ไม่พบข้อมูลผู้ใช้</td></tr>';
     return;
   }
 
@@ -225,6 +337,11 @@ function renderUsersTable(usersToRender) {
           <span style="font-family: 'Fira Code', monospace; color: #ffd166; font-weight: 600; font-size: 0.9rem;" id="pwd_val_${index}">${escapeHtml(displayPassword)}</span>
           <button type="button" class="btn-sm" style="padding: 0.15rem 0.35rem; font-size: 0.75rem; background: rgba(88, 166, 255, 0.15); color: #58a6ff; border: none; border-radius: 4px; cursor: pointer;" title="คัดลอกรหัสผ่าน" onclick="copyToClipboard('${escapeHtml(displayPassword)}', 'คัดลอกรหัสผ่านแล้ว')">📋</button>
         </div>
+      </td>
+      <td>
+        ${u.recoveryPin && u.recoveryPin !== '-' 
+          ? `<span class="badge-pill badge-yellow" style="font-family: monospace; font-size: 0.88rem; letter-spacing: 1px;">${escapeHtml(u.recoveryPin)}</span>` 
+          : '<span style="color: #6e7681;">-</span>'}
       </td>
       <td><span class="code-box" title="คลิกเพื่อคัดลอก User ID" onclick="copyToClipboard('${u.id}', 'คัดลอก User ID แล้ว')">${u.id}</span></td>
       <td><span style="font-size: 0.85rem; color: #8b949e;">${created}</span></td>
@@ -617,11 +734,19 @@ if (adminKey) {
   showLogin();
 }
 
+if (btnRefreshResetRequests) {
+  btnRefreshResetRequests.addEventListener('click', () => {
+    loadResetRequests();
+    showToast('🔄 รีเฟรชคำขอรีเซ็ตรหัสผ่านแล้ว');
+  });
+}
+
 // Auto refresh fallback every 3 seconds if tab is active
 setInterval(() => {
   if (adminKey && mainDashboard.style.display !== 'none') {
     loadStats();
     loadRooms();
     loadUsers();
+    loadResetRequests();
   }
 }, 3000);

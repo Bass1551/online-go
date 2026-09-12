@@ -63,6 +63,20 @@
           <input type="password" id="gatePassword" class="form-input" placeholder="ใส่รหัสผ่าน..." autocomplete="current-password" maxlength="32" required>
         </div>
 
+        <div id="gateForgotRow" style="text-align: right; margin-top: -0.35rem; margin-bottom: 0.85rem;">
+          <button type="button" id="btnOpenForgotModal" style="background: none; border: none; color: var(--accent-gold); font-size: 0.82rem; cursor: pointer; text-decoration: underline;">
+            ลืมรหัสผ่าน? (Forgot Password)
+          </button>
+        </div>
+
+        <div id="gateRecoveryPinGroup" class="form-group" style="text-align: left; display: none;">
+          <label class="form-label" for="gateRecoveryPin">
+            🛡️ PIN กู้คืนรหัสผ่าน 4 หลัก <span style="font-size: 0.78rem; color: var(--accent-gold);">(ใช้เมื่อลืมรหัสผ่าน)</span>
+          </label>
+          <input type="text" id="gateRecoveryPin" class="form-input" placeholder="เช่น 1234 หรือเลข 4 หลัก (แนะนำ)" maxlength="6" inputmode="numeric">
+          <small style="font-size: 0.75rem; color: var(--text-secondary);">ตั้งไว้เผื่อลืมรหัส จะสามารถรีเซ็ตรหัสผ่านได้เองทันที</small>
+        </div>
+
         <p id="gateNoteText" style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1.25rem; text-align: left;">
           🔒 ระบบจะบันทึกประวัติการแข่งขัน สถิติ และวิเคราะห์การกินหมากแยกเฉพาะบัญชีของคุณ 100%
         </p>
@@ -85,6 +99,9 @@
       <div style="display: flex; gap: 0.6rem; margin-left: auto; align-items: center;">
         <button id="btnInstallPwa" class="btn btn-install-pwa" style="display: none;" title="ติดตั้งเป็นไอคอนแอปบนมือถือ">
           📲 ติดตั้งแอป
+        </button>
+        <button id="btnSetPin" class="btn btn-history-sm" title="ตั้งค่าหรือเปลี่ยน PIN กู้คืนรหัสผ่าน">
+          🛡️ PIN กู้คืน
         </button>
         <button id="btnOpenHistory" class="btn btn-history-sm">
           📜 ประวัติการเล่นของฉัน
@@ -742,6 +759,83 @@
           เข้าใจแล้ว!
         </button>
       </div>
+    </div>
+  <!-- MODAL: Forgot Password / Account Recovery -->
+  <div id="forgotPasswordModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog" style="max-width: 440px; text-align: left;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 class="modal-title" style="margin: 0; font-size: 1.25rem;">🔑 กู้คืนรหัสผ่าน</h3>
+        <button id="btnCloseForgotModal" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- Recovery Method Tabs -->
+      <div class="auth-tabs" style="margin-bottom: 1.25rem;">
+        <button id="tabForgotPin" class="auth-tab active" style="font-size: 0.88rem;">⚡ ใช้ PIN กู้คืน 4 หลัก</button>
+        <button id="tabForgotAdmin" class="auth-tab" style="font-size: 0.88rem;">📩 ขอให้แอดมินช่วย</button>
+      </div>
+
+      <div id="forgotErrorMessage" class="auth-error" style="display: none; margin-bottom: 1rem;"></div>
+      <div id="forgotSuccessMessage" class="auth-success" style="display: none; margin-bottom: 1rem; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 0.75rem; border-radius: 8px; font-size: 0.88rem;"></div>
+
+      <!-- Option 1: Reset with PIN -->
+      <form id="formForgotWithPin">
+        <div class="form-group" style="margin-bottom: 0.9rem;">
+          <label class="form-label" for="forgotUsernamePin">ชื่อผู้ใช้ (Username)</label>
+          <input type="text" id="forgotUsernamePin" class="form-input" placeholder="ใส่ชื่อผู้ใช้ของคุณ..." required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0.9rem;">
+          <label class="form-label" for="forgotPinInput">🛡️ PIN กู้คืน 4-6 หลัก</label>
+          <input type="text" id="forgotPinInput" class="form-input" placeholder="ใส่ PIN ที่คุณเคยตั้งไว้..." maxlength="6" inputmode="numeric" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" for="forgotNewPassword">รหัสผ่านใหม่ที่ต้องการตั้ง</label>
+          <input type="password" id="forgotNewPassword" class="form-input" placeholder="ตั้งรหัสผ่านใหม่ (อย่างน้อย 4 ตัว)..." minlength="4" required>
+        </div>
+        <button type="submit" id="btnSubmitForgotPin" class="btn btn-primary" style="width: 100%;">
+          ยืนยันการตั้งรหัสผ่านใหม่ 🚀
+        </button>
+      </form>
+
+      <!-- Option 2: Request Admin Help -->
+      <form id="formForgotWithAdmin" style="display: none;">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
+          หากคุณไม่ได้ตั้ง PIN ไว้ หรือลืม PIN สามารถส่งชื่อผู้ใช้เพื่อให้เจ้าของระบบช่วยรีเซ็ตรหัสผ่านให้จากหลังบ้านได้ครับ
+        </p>
+        <div class="form-group" style="margin-bottom: 0.9rem;">
+          <label class="form-label" for="forgotUsernameAdmin">ชื่อผู้ใช้ (Username)</label>
+          <input type="text" id="forgotUsernameAdmin" class="form-input" placeholder="ใส่ชื่อผู้ใช้ที่ต้องการรีเซ็ต..." required>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" for="forgotNoteAdmin">หมายเหตุ / ข้อมูลติดต่อ (ถ้ามี)</label>
+          <input type="text" id="forgotNoteAdmin" class="form-input" placeholder="เช่น 'ทักไลน์มาบอกรหัสที' หรือข้อความ">
+        </div>
+        <button type="submit" id="btnSubmitForgotAdmin" class="btn btn-secondary" style="width: 100%; border-color: var(--accent-gold); color: var(--accent-gold);">
+          📩 ส่งคำขอรีเซ็ตให้ผู้ดูแลระบบ
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Set Recovery PIN (For logged-in user) -->
+  <div id="setPinModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog" style="max-width: 400px; text-align: left;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 class="modal-title" style="margin: 0; font-size: 1.2rem;">🛡️ ตั้งค่า PIN กู้คืนรหัสผ่าน</h3>
+        <button id="btnCloseSetPinModal" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.2rem; line-height: 1.5;">
+        กำหนด PIN ตัวเลข 4-6 หลัก (เช่น วันเกิด หรือเลขจำง่าย) เพื่อใช้ยืนยันตัวตนเมื่อคุณลืมรหัสผ่านในอนาคต
+      </p>
+      <form id="formSetPin">
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" for="inputUserPin">PIN กู้คืน (ตัวเลข 4-6 หลัก)</label>
+          <input type="text" id="inputUserPin" class="form-input" placeholder="เช่น 1234 หรือ 9876" maxlength="6" inputmode="numeric" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="btnCancelSetPin" class="btn btn-secondary" style="flex: 1;">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary" style="flex: 1;">บันทึก PIN</button>
+        </div>
+      </form>
     </div>
   </div>
 

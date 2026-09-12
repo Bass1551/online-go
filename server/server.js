@@ -35,12 +35,45 @@ function getAuthUser(req) {
 
 // REST API Endpoints
 app.post('/api/register', (req, res) => {
-  const { username, password } = req.body || {};
-  const result = Database.register(username, password);
+  const { username, password, recoveryPin } = req.body || {};
+  const result = Database.register(username, password, recoveryPin);
   if (!result.success) {
     return res.status(400).json(result);
   }
   io.emit('admin_event', { type: 'user_registered', user: result.user });
+  res.json(result);
+});
+
+// Self-service reset password using 4-digit PIN
+app.post('/api/auth/reset-with-pin', (req, res) => {
+  const { username, pin, newPassword } = req.body || {};
+  const result = Database.resetPasswordWithPin(username, pin, newPassword);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  io.emit('admin_event', { type: 'user_password_reset', username });
+  res.json(result);
+});
+
+// Submit password reset request to Admin
+app.post('/api/auth/request-reset', (req, res) => {
+  const { username, note } = req.body || {};
+  const result = Database.createResetRequest(username, note);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  io.emit('admin_event', { type: 'new_reset_request', username });
+  res.json(result);
+});
+
+// Set or update recovery PIN for authenticated user
+app.post('/api/auth/set-pin', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  const { pin } = req.body || {};
+  const result = Database.setRecoveryPin(user.id, pin);
+  if (!result.success) return res.status(400).json(result);
+  io.emit('admin_event', { type: 'user_pin_updated', username: user.username });
   res.json(result);
 });
 
@@ -209,6 +242,28 @@ app.get('/api/admin/games/:id', verifyAdmin, (req, res) => {
     return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลเกมนี้' });
   }
   res.json({ success: true, game });
+});
+
+// Admin Password Reset Requests Management
+app.get('/api/admin/reset-requests', verifyAdmin, (req, res) => {
+  res.json({ success: true, requests: Database.getResetRequests() });
+});
+
+app.post('/api/admin/reset-requests/:id/resolve', verifyAdmin, (req, res) => {
+  const { id } = req.params;
+  const { newPassword } = req.body || {};
+  const result = Database.adminResolveResetRequest(id, newPassword);
+  if (!result.success) return res.status(400).json(result);
+  io.emit('admin_event', { type: 'reset_request_resolved', id });
+  res.json(result);
+});
+
+app.delete('/api/admin/reset-requests/:id', verifyAdmin, (req, res) => {
+  const { id } = req.params;
+  const result = Database.adminDeleteResetRequest(id);
+  if (!result.success) return res.status(400).json(result);
+  io.emit('admin_event', { type: 'reset_request_deleted', id });
+  res.json(result);
 });
 
 let activeBroadcast = null;

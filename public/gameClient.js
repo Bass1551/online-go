@@ -144,6 +144,34 @@ const btnGateSubmit = document.getElementById('btnGateSubmit');
 const gateNoteText = document.getElementById('gateNoteText');
 let gateMode = 'login'; // 'login' or 'register'
 
+const gateRecoveryPinGroup = document.getElementById('gateRecoveryPinGroup');
+const gateRecoveryPin = document.getElementById('gateRecoveryPin');
+const gateForgotRow = document.getElementById('gateForgotRow');
+const btnOpenForgotModal = document.getElementById('btnOpenForgotModal');
+
+// Forgot Password Modal Elements
+const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+const btnCloseForgotModal = document.getElementById('btnCloseForgotModal');
+const tabForgotPin = document.getElementById('tabForgotPin');
+const tabForgotAdmin = document.getElementById('tabForgotAdmin');
+const formForgotWithPin = document.getElementById('formForgotWithPin');
+const formForgotWithAdmin = document.getElementById('formForgotWithAdmin');
+const forgotErrorMessage = document.getElementById('forgotErrorMessage');
+const forgotSuccessMessage = document.getElementById('forgotSuccessMessage');
+const forgotUsernamePin = document.getElementById('forgotUsernamePin');
+const forgotPinInput = document.getElementById('forgotPinInput');
+const forgotNewPassword = document.getElementById('forgotNewPassword');
+const forgotUsernameAdmin = document.getElementById('forgotUsernameAdmin');
+const forgotNoteAdmin = document.getElementById('forgotNoteAdmin');
+
+// Set PIN Modal Elements
+const btnSetPin = document.getElementById('btnSetPin');
+const setPinModal = document.getElementById('setPinModal');
+const btnCloseSetPinModal = document.getElementById('btnCloseSetPinModal');
+const btnCancelSetPin = document.getElementById('btnCancelSetPin');
+const formSetPin = document.getElementById('formSetPin');
+const inputUserPin = document.getElementById('inputUserPin');
+
 const currentUserName = document.getElementById('currentUserName');
 const btnLogout = document.getElementById('btnLogout');
 
@@ -828,6 +856,40 @@ function setupEventListeners() {
     btnLogout.addEventListener('click', handleLogout);
   }
 
+  // --- Forgot Password & PIN Listeners ---
+  if (btnOpenForgotModal) {
+    btnOpenForgotModal.addEventListener('click', openForgotModal);
+  }
+  if (btnCloseForgotModal) {
+    btnCloseForgotModal.addEventListener('click', closeForgotModal);
+  }
+  if (tabForgotPin) {
+    tabForgotPin.addEventListener('click', () => switchForgotSubtab('pin'));
+  }
+  if (tabForgotAdmin) {
+    tabForgotAdmin.addEventListener('click', () => switchForgotSubtab('admin'));
+  }
+  if (formForgotWithPin) {
+    formForgotWithPin.addEventListener('submit', handleForgotWithPinSubmit);
+  }
+  if (formForgotWithAdmin) {
+    formForgotWithAdmin.addEventListener('submit', handleForgotWithAdminSubmit);
+  }
+
+  // Set PIN Listeners
+  if (btnSetPin) {
+    btnSetPin.addEventListener('click', openSetPinModal);
+  }
+  if (btnCloseSetPinModal) {
+    btnCloseSetPinModal.addEventListener('click', closeSetPinModal);
+  }
+  if (btnCancelSetPin) {
+    btnCancelSetPin.addEventListener('click', closeSetPinModal);
+  }
+  if (formSetPin) {
+    formSetPin.addEventListener('submit', handleSetPinSubmit);
+  }
+
   // --- History Event Listeners ---
   if (btnOpenHistory) {
     btnOpenHistory.addEventListener('click', openHistoryModal);
@@ -961,11 +1023,15 @@ function switchGateTab(mode) {
     gateTabRegister.classList.remove('active');
     btnGateSubmit.innerText = 'เข้าสู่ระบบและเริ่มเล่น';
     gateNoteText.innerText = '🔒 เข้าสู่ระบบเพื่อบันทึกประวัติการแข่งและดูรีเพลย์ย้อนหลังเฉพาะบัญชีของคุณ 100%';
+    if (gateRecoveryPinGroup) gateRecoveryPinGroup.style.display = 'none';
+    if (gateForgotRow) gateForgotRow.style.display = 'block';
   } else {
     gateTabRegister.classList.add('active');
     gateTabLogin.classList.remove('active');
     btnGateSubmit.innerText = 'สมัครสมาชิกและเริ่มเล่น';
     gateNoteText.innerText = '✨ สมัครสมาชิกใหม่ ตรวจสอบชื่อไม่ให้ซ้ำ และบันทึกประวัติการแข่งขันแยกเฉพาะบัญชีคุณ 100%';
+    if (gateRecoveryPinGroup) gateRecoveryPinGroup.style.display = 'block';
+    if (gateForgotRow) gateForgotRow.style.display = 'none';
   }
   gateErrorMessage.style.display = 'none';
 }
@@ -974,6 +1040,7 @@ async function handleGateSubmit(e) {
   if (e) e.preventDefault();
   const username = gateUsername.value.trim();
   const password = gatePassword.value;
+  const recoveryPin = gateRecoveryPin ? gateRecoveryPin.value.trim() : '';
 
   gateErrorMessage.style.display = 'none';
   gateErrorMessage.innerText = '';
@@ -985,11 +1052,15 @@ async function handleGateSubmit(e) {
   }
 
   const endpoint = gateMode === 'register' ? '/api/register' : '/api/login';
+  const bodyPayload = gateMode === 'register' 
+    ? { username, password, recoveryPin } 
+    : { username, password };
+
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify(bodyPayload)
     });
     const data = await res.json();
     if (data.success) {
@@ -1044,6 +1115,180 @@ async function handleLogout() {
   currentUser = null;
   renderUserBar();
   showToast('ออกจากระบบเรียบร้อยแล้ว');
+}
+
+// --- FORGOT PASSWORD & RECOVERY PIN LOGIC ---
+function openForgotModal() {
+  if (forgotPasswordModal) {
+    if (forgotErrorMessage) forgotErrorMessage.style.display = 'none';
+    if (forgotSuccessMessage) forgotSuccessMessage.style.display = 'none';
+    if (gateUsername && gateUsername.value.trim()) {
+      if (forgotUsernamePin) forgotUsernamePin.value = gateUsername.value.trim();
+      if (forgotUsernameAdmin) forgotUsernameAdmin.value = gateUsername.value.trim();
+    }
+    switchForgotSubtab('pin');
+    forgotPasswordModal.style.display = 'flex';
+  }
+}
+
+function closeForgotModal() {
+  if (forgotPasswordModal) forgotPasswordModal.style.display = 'none';
+}
+
+function switchForgotSubtab(mode) {
+  if (forgotErrorMessage) forgotErrorMessage.style.display = 'none';
+  if (forgotSuccessMessage) forgotSuccessMessage.style.display = 'none';
+  if (mode === 'pin') {
+    if (tabForgotPin) tabForgotPin.classList.add('active');
+    if (tabForgotAdmin) tabForgotAdmin.classList.remove('active');
+    if (formForgotWithPin) formForgotWithPin.style.display = 'block';
+    if (formForgotWithAdmin) formForgotWithAdmin.style.display = 'none';
+  } else {
+    if (tabForgotAdmin) tabForgotAdmin.classList.add('active');
+    if (tabForgotPin) tabForgotPin.classList.remove('active');
+    if (formForgotWithAdmin) formForgotWithAdmin.style.display = 'block';
+    if (formForgotWithPin) formForgotWithPin.style.display = 'none';
+  }
+}
+
+async function handleForgotWithPinSubmit(e) {
+  e.preventDefault();
+  const username = forgotUsernamePin.value.trim();
+  const pin = forgotPinInput.value.trim();
+  const newPassword = forgotNewPassword.value;
+
+  if (forgotErrorMessage) forgotErrorMessage.style.display = 'none';
+  if (forgotSuccessMessage) forgotSuccessMessage.style.display = 'none';
+
+  if (!username || !pin || !newPassword) {
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'กรุณากรอกข้อมูลให้ครบถ้วน';
+      forgotErrorMessage.style.display = 'block';
+    }
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/reset-with-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, pin, newPassword })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (forgotSuccessMessage) {
+        forgotSuccessMessage.innerText = data.message || 'รีเซ็ตรหัสผ่านสำเร็จ!';
+        forgotSuccessMessage.style.display = 'block';
+      }
+      formForgotWithPin.reset();
+      showToast('🎉 รีเซ็ตรหัสผ่านสำเร็จเรียบร้อย! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
+      setTimeout(() => {
+        closeForgotModal();
+        if (gateUsername) gateUsername.value = username;
+        if (gatePassword) {
+          gatePassword.value = '';
+          gatePassword.focus();
+        }
+        switchGateTab('login');
+      }, 1400);
+    } else {
+      if (forgotErrorMessage) {
+        forgotErrorMessage.innerText = data.message || 'รีเซ็ตรหัสผ่านไม่สำเร็จ';
+        forgotErrorMessage.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+      forgotErrorMessage.style.display = 'block';
+    }
+  }
+}
+
+async function handleForgotWithAdminSubmit(e) {
+  e.preventDefault();
+  const username = forgotUsernameAdmin.value.trim();
+  const note = forgotNoteAdmin.value.trim();
+
+  if (forgotErrorMessage) forgotErrorMessage.style.display = 'none';
+  if (forgotSuccessMessage) forgotSuccessMessage.style.display = 'none';
+
+  if (!username) {
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'กรุณาระบุชื่อผู้ใช้ที่ต้องการรีเซ็ต';
+      forgotErrorMessage.style.display = 'block';
+    }
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/request-reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, note })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (forgotSuccessMessage) {
+        forgotSuccessMessage.innerHTML = `✅ ${data.message}<br><small style="color: #93c5fd;">เจ้าของระบบจะเห็นคำขอของคุณในหน้าหลังบ้านทันทีครับ</small>`;
+        forgotSuccessMessage.style.display = 'block';
+      }
+      formForgotWithAdmin.reset();
+      showToast('📩 ส่งคำขอรีเซ็ตถึงผู้ดูแลระบบแล้ว');
+    } else {
+      if (forgotErrorMessage) {
+        forgotErrorMessage.innerText = data.message || 'ส่งคำขอไม่สำเร็จ';
+        forgotErrorMessage.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+      forgotErrorMessage.style.display = 'block';
+    }
+  }
+}
+
+function openSetPinModal() {
+  if (setPinModal) {
+    if (inputUserPin) inputUserPin.value = '';
+    setPinModal.style.display = 'flex';
+  }
+}
+
+function closeSetPinModal() {
+  if (setPinModal) setPinModal.style.display = 'none';
+}
+
+async function handleSetPinSubmit(e) {
+  e.preventDefault();
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return;
+  const pin = inputUserPin.value.trim();
+  if (!pin || pin.length < 4 || pin.length > 6) {
+    showToast('⚠️ PIN ต้องเป็นตัวเลข 4-6 หลัก');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/set-pin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ pin })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🛡️ บันทึก PIN กู้คืนรหัสผ่านเรียบร้อยแล้ว!');
+      closeSetPinModal();
+    } else {
+      showToast(data.message || 'บันทึก PIN ไม่สำเร็จ');
+    }
+  } catch (err) {
+    showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+  }
 }
 
 // --- MATCH HISTORY ---
