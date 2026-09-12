@@ -152,8 +152,17 @@ class GoGame {
     this.history.push(newBoardSerial);
     this.consecutivePasses = 0;
     this.turn = opponent;
-    this.lastMove = { r, c, player, captured: capturedStones.length };
-    this.moveHistory.push({ r, c, player, captured: capturedStones.length });
+    this.lastMove = { r, c, player, captured: capturedStones.length, capturedStones: [...capturedStones] };
+    this.moveHistory.push({
+      step: this.moveHistory.length + 1,
+      r,
+      c,
+      player,
+      captured: capturedStones.length,
+      capturedStones: [...capturedStones],
+      boardState: this.cloneBoard(this.board),
+      captures: { ...this.captures }
+    });
 
     return {
       success: true,
@@ -178,9 +187,15 @@ class GoGame {
 
     this.consecutivePasses += 1;
     this.history.push(this.serializeBoard());
-    this.moveHistory.push({ pass: true, player });
-    this.turn = player === 1 ? 2 : 1;
     this.lastMove = { pass: true, player };
+    this.moveHistory.push({
+      step: this.moveHistory.length + 1,
+      pass: true,
+      player,
+      boardState: this.cloneBoard(this.board),
+      captures: { ...this.captures }
+    });
+    this.turn = player === 1 ? 2 : 1;
 
     if (this.consecutivePasses >= 2) {
       this.isGameOver = true;
@@ -333,7 +348,14 @@ class GoGame {
     this.winner = null;
     this.winReason = null;
     this.scoreResult = null;
-    this.lastMove = this.moveHistory.length > 0 ? this.moveHistory[this.moveHistory.length - 1] : null;
+    
+    if (this.moveHistory.length > 0) {
+      this.lastMove = this.moveHistory[this.moveHistory.length - 1];
+      this.captures = { ...this.lastMove.captures };
+    } else {
+      this.lastMove = null;
+      this.captures = { 1: 0, 2: 0 };
+    }
 
     return {
       success: true,

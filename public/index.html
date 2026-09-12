@@ -13,6 +13,28 @@
 
   <!-- LOBBY VIEW -->
   <div id="lobbyView" class="lobby-container">
+    <!-- User Bar / Auth Navigation -->
+    <div class="user-bar">
+      <div id="userGuestSection" style="display: flex; gap: 0.6rem; align-items: center;">
+        <span style="font-size: 0.9rem; color: var(--text-secondary);">👤 ผู้เล่นทั่วไป</span>
+        <button id="btnOpenAuth" class="btn btn-auth-sm">
+          🔑 เข้าสู่ระบบ / สมัครสมาชิก
+        </button>
+      </div>
+      <div id="userLoggedInSection" style="display: none; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <div class="user-profile-badge">
+          <span style="font-size: 1.1rem;">👤</span>
+          <span id="currentUserName" style="font-weight: 600; color: var(--accent-gold);">ผู้ใช้</span>
+        </div>
+        <button id="btnOpenHistory" class="btn btn-history-sm">
+          📜 ประวัติการเล่นของฉัน
+        </button>
+        <button id="btnLogout" class="btn btn-logout-sm" title="ออกจากระบบ">
+          🚪 ออกจากระบบ
+        </button>
+      </div>
+    </div>
+
     <div class="brand-header">
       <div class="brand-logo">
         <span>⚫⚪</span>
@@ -386,6 +408,146 @@
         <button id="btnCloseGameOverModal" class="btn btn-secondary">
           ดูกระดาน
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: User Auth (Login / Register) -->
+  <div id="authModal" class="modal-backdrop">
+    <div class="modal-dialog auth-modal-dialog">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 class="modal-title" style="margin-bottom: 0;">🔐 บัญชีผู้ใช้</h3>
+        <button id="btnCloseAuthModal" class="btn-alert-close" title="ปิด">✕</button>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active">เข้าสู่ระบบ</button>
+        <button id="tabRegister" class="auth-tab">สมัครสมาชิกใหม่</button>
+      </div>
+
+      <div id="authErrorMessage" class="auth-error" style="display: none;"></div>
+
+      <form id="authForm" onsubmit="return false;" style="margin-top: 1.25rem;">
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="authUsername">ชื่อผู้ใช้ (Username)</label>
+          <input type="text" id="authUsername" class="form-input" placeholder="ใส่ชื่อผู้ใช้..." autocomplete="username" maxlength="20" required>
+        </div>
+
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="authPassword">รหัสผ่าน (Password)</label>
+          <input type="password" id="authPassword" class="form-input" placeholder="ใส่รหัสผ่าน..." autocomplete="current-password" maxlength="32" required>
+        </div>
+
+        <p id="authNoteText" style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1.25rem; text-align: left;">
+          💡 บัญชีนี้จะใช้บันทึกประวัติการแข่งขันและผลลัพธ์แยกเฉพาะของคุณเท่านั้น
+        </p>
+
+        <button type="submit" id="btnSubmitAuth" class="btn btn-primary" style="width: 100%;">
+          เข้าสู่ระบบ
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Match History -->
+  <div id="historyModal" class="modal-backdrop">
+    <div class="modal-dialog history-modal-dialog">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <div>
+          <h3 class="modal-title" style="margin-bottom: 0.2rem; text-align: left;">📜 ประวัติการเล่นของคุณ</h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; text-align: left;">
+            บันทึกเกมทั้งหมดเฉพาะบัญชีของคุณ ดูย้อนหลังทีละก้าวพร้อมเหตุผลการกินหมาก
+          </p>
+        </div>
+        <button id="btnCloseHistoryModal" class="btn-alert-close" title="ปิด">✕</button>
+      </div>
+
+      <!-- Stats Banner -->
+      <div class="history-stats-bar">
+        <div class="stat-pill">
+          <span class="stat-num" id="statTotalGames">0</span>
+          <span class="stat-lbl">เกมทั้งหมด</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="statWins" style="color: #4ade80;">0</span>
+          <span class="stat-lbl">ชนะ</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="statLosses" style="color: #f87171;">0</span>
+          <span class="stat-lbl">แพ้</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="statWinRate" style="color: var(--accent-gold);">0%</span>
+          <span class="stat-lbl">อัตราชนะ</span>
+        </div>
+      </div>
+
+      <!-- Games List Container -->
+      <div id="historyListContainer" class="history-list-container">
+        <!-- Dynamically injected game items -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Interactive Replay & Reviewer -->
+  <div id="replayModal" class="modal-backdrop">
+    <div class="modal-dialog replay-modal-dialog">
+      <div class="replay-header">
+        <div style="text-align: left;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span class="replay-badge" id="replayModeBadge">โหมด</span>
+            <span class="replay-badge-size" id="replaySizeBadge">9×9</span>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);" id="replayDateText">วันที่</span>
+          </div>
+          <div style="font-weight: 700; font-size: 1.15rem; margin-top: 0.25rem;" id="replayPlayersText">
+            ⚫ ผู้เล่น 1 vs ⚪ ผู้เล่น 2
+          </div>
+          <div style="font-size: 0.88rem; color: var(--accent-gold); margin-top: 0.1rem;" id="replayResultText">
+            ผลการแข่งขัน
+          </div>
+        </div>
+        <button id="btnCloseReplayModal" class="btn-alert-close" title="ปิดหน้ารีเพลย์">✕</button>
+      </div>
+
+      <!-- Replay Board & Tactical Coach Layout -->
+      <div class="replay-main-layout">
+        <div class="replay-board-wrapper">
+          <canvas id="replayCanvas"></canvas>
+        </div>
+
+        <div class="replay-sidebar">
+          <!-- Step Controls -->
+          <div class="replay-control-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-secondary);">เดินหมากทีละก้าว:</span>
+              <span id="replayStepDisplay" style="font-weight: 700; color: var(--accent-gold); font-size: 0.95rem;">ก้าวที่ 0 / 0</span>
+            </div>
+            
+            <input type="range" id="replaySlider" class="replay-slider" min="0" max="0" value="0">
+
+            <div class="replay-buttons-row">
+              <button id="btnReplayFirst" class="btn-replay-nav" title="ก้าวแรก">⏮️</button>
+              <button id="btnReplayPrev" class="btn-replay-nav" title="ย้อนกลับ (ลูกศรซ้าย)">◀️ ถอย</button>
+              <button id="btnReplayAuto" class="btn-replay-nav" title="เล่นอัตโนมัติ">▶️ เล่น</button>
+              <button id="btnReplayNext" class="btn-replay-nav" title="ก้าวถัดไป (ลูกศรขวา)">ถัดไป ▶️</button>
+              <button id="btnReplayLast" class="btn-replay-nav" title="ก้าวสุดท้าย">⏭️</button>
+            </div>
+          </div>
+
+          <!-- Tactical Review Card (Why stones were captured!) -->
+          <div id="replayTacticBox" class="replay-tactic-card">
+            <div class="tactic-header">
+              <span class="tactic-icon">🎯</span>
+              <span id="replayTacticTitle" class="tactic-title">วิเคราะห์ก้าวเดินนี้</span>
+              <span id="replayTacticBadge" class="tactic-badge" style="display:none;"></span>
+            </div>
+            <div id="replayTacticDesc" class="tactic-desc">
+              ยังไม่มีการเดินหมาก เลื่อนแถบหรือกดปุ่มเพื่อดูการเดินย้อนหลัง
+            </div>
+            <div id="replayCoachTip" class="tactic-tip" style="display:none;"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -107,6 +107,67 @@ let recentCaptures = null;
 
 const toastContainer = document.getElementById('toastContainer');
 
+// --- Auth State & Elements ---
+const TOKEN_KEY = 'online_go_token';
+let currentUser = null;
+
+const userGuestSection = document.getElementById('userGuestSection');
+const userLoggedInSection = document.getElementById('userLoggedInSection');
+const currentUserName = document.getElementById('currentUserName');
+const btnOpenAuth = document.getElementById('btnOpenAuth');
+const btnCloseAuthModal = document.getElementById('btnCloseAuthModal');
+const authModal = document.getElementById('authModal');
+const authForm = document.getElementById('authForm');
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const authUsername = document.getElementById('authUsername');
+const authPassword = document.getElementById('authPassword');
+const btnSubmitAuth = document.getElementById('btnSubmitAuth');
+const authErrorMessage = document.getElementById('authErrorMessage');
+const authNoteText = document.getElementById('authNoteText');
+const btnLogout = document.getElementById('btnLogout');
+let authMode = 'login'; // 'login' or 'register'
+
+// --- Match History Elements ---
+const btnOpenHistory = document.getElementById('btnOpenHistory');
+const btnCloseHistoryModal = document.getElementById('btnCloseHistoryModal');
+const historyModal = document.getElementById('historyModal');
+const statTotalGames = document.getElementById('statTotalGames');
+const statWins = document.getElementById('statWins');
+const statLosses = document.getElementById('statLosses');
+const statWinRate = document.getElementById('statWinRate');
+const historyListContainer = document.getElementById('historyListContainer');
+
+// --- Interactive Replay Elements ---
+const replayModal = document.getElementById('replayModal');
+const btnCloseReplayModal = document.getElementById('btnCloseReplayModal');
+const replayCanvas = document.getElementById('replayCanvas');
+const replayCtx = replayCanvas ? replayCanvas.getContext('2d') : null;
+const replayModeBadge = document.getElementById('replayModeBadge');
+const replaySizeBadge = document.getElementById('replaySizeBadge');
+const replayDateText = document.getElementById('replayDateText');
+const replayPlayersText = document.getElementById('replayPlayersText');
+const replayResultText = document.getElementById('replayResultText');
+const replaySlider = document.getElementById('replaySlider');
+const replayStepDisplay = document.getElementById('replayStepDisplay');
+const btnReplayFirst = document.getElementById('btnReplayFirst');
+const btnReplayPrev = document.getElementById('btnReplayPrev');
+const btnReplayAuto = document.getElementById('btnReplayAuto');
+const btnReplayNext = document.getElementById('btnReplayNext');
+const btnReplayLast = document.getElementById('btnReplayLast');
+const replayTacticBox = document.getElementById('replayTacticBox');
+const replayTacticTitle = document.getElementById('replayTacticTitle');
+const replayTacticBadge = document.getElementById('replayTacticBadge');
+const replayTacticDesc = document.getElementById('replayTacticDesc');
+const replayCoachTip = document.getElementById('replayCoachTip');
+
+let activeReplay = null;
+let replayStep = 0;
+let replayAutoTimer = null;
+let replayCanvasSize = 420;
+let replayCellSize = 40;
+let replayMargin = 30;
+
 // Coordinate letters (Standard Go notation skips 'I' to prevent confusion with 'J' or '1')
 const COORD_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
 
@@ -126,6 +187,7 @@ function init() {
   setupEventListeners();
   checkUrlParams();
   setupCanvas();
+  checkAuth();
 }
 
 function checkUrlParams() {
@@ -335,20 +397,21 @@ function renderBoard() {
   }
 }
 
-function drawStone(x, y, radius, color) {
-  ctx.save();
+function drawStone(x, y, radius, color, targetCtx = ctx) {
+  if (!targetCtx) return;
+  targetCtx.save();
 
   // Shadow
-  ctx.beginPath();
-  ctx.arc(x + 2, y + 3, radius, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-  ctx.fill();
+  targetCtx.beginPath();
+  targetCtx.arc(x + 2, y + 3, radius, 0, Math.PI * 2);
+  targetCtx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  targetCtx.fill();
 
   // Stone Body Gradient
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  targetCtx.beginPath();
+  targetCtx.arc(x, y, radius, 0, Math.PI * 2);
 
-  const grad = ctx.createRadialGradient(
+  const grad = targetCtx.createRadialGradient(
     x - radius * 0.3,
     y - radius * 0.3,
     radius * 0.1,
@@ -369,17 +432,17 @@ function drawStone(x, y, radius, color) {
     grad.addColorStop(1, '#d0d0d0');
   }
 
-  ctx.fillStyle = grad;
-  ctx.fill();
+  targetCtx.fillStyle = grad;
+  targetCtx.fill();
 
   // Subtle White Stone Border for definition
   if (color === 2) {
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    targetCtx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    targetCtx.lineWidth = 1;
+    targetCtx.stroke();
   }
 
-  ctx.restore();
+  targetCtx.restore();
 }
 
 // Convert screen mouse/touch coordinate to (r, c)
@@ -597,6 +660,616 @@ function setupEventListeners() {
       }
     });
   });
+
+  // --- Auth Event Listeners ---
+  if (btnOpenAuth) {
+    btnOpenAuth.addEventListener('click', () => openAuthModal('login'));
+  }
+
+  if (btnCloseAuthModal) {
+    btnCloseAuthModal.addEventListener('click', () => {
+      authModal.style.display = 'none';
+    });
+  }
+
+  if (tabLogin) {
+    tabLogin.addEventListener('click', () => switchAuthTab('login'));
+  }
+
+  if (tabRegister) {
+    tabRegister.addEventListener('click', () => switchAuthTab('register'));
+  }
+
+  if (authForm) {
+    authForm.addEventListener('submit', handleAuthSubmit);
+  }
+
+  if (btnLogout) {
+    btnLogout.addEventListener('click', handleLogout);
+  }
+
+  // --- History Event Listeners ---
+  if (btnOpenHistory) {
+    btnOpenHistory.addEventListener('click', openHistoryModal);
+  }
+
+  if (btnCloseHistoryModal) {
+    btnCloseHistoryModal.addEventListener('click', () => {
+      historyModal.style.display = 'none';
+    });
+  }
+
+  // --- Replay Event Listeners ---
+  if (btnCloseReplayModal) {
+    btnCloseReplayModal.addEventListener('click', closeReplayModal);
+  }
+
+  if (replaySlider) {
+    replaySlider.addEventListener('input', (e) => {
+      replayStep = parseInt(e.target.value, 10) || 0;
+      renderReplay();
+    });
+  }
+
+  if (btnReplayFirst) {
+    btnReplayFirst.addEventListener('click', () => {
+      replayStep = 0;
+      renderReplay();
+    });
+  }
+
+  if (btnReplayPrev) {
+    btnReplayPrev.addEventListener('click', () => {
+      if (replayStep > 0) {
+        replayStep--;
+        renderReplay();
+      }
+    });
+  }
+
+  if (btnReplayNext) {
+    btnReplayNext.addEventListener('click', () => {
+      const max = (activeReplay?.moves || []).length;
+      if (replayStep < max) {
+        replayStep++;
+        renderReplay();
+      }
+    });
+  }
+
+  if (btnReplayLast) {
+    btnReplayLast.addEventListener('click', () => {
+      replayStep = (activeReplay?.moves || []).length;
+      renderReplay();
+    });
+  }
+
+  if (btnReplayAuto) {
+    btnReplayAuto.addEventListener('click', toggleReplayAuto);
+  }
+
+  // Keyboard navigation for Replay
+  window.addEventListener('keydown', (e) => {
+    if (replayModal && replayModal.style.display === 'flex') {
+      if (e.key === 'ArrowLeft') {
+        if (replayStep > 0) {
+          replayStep--;
+          renderReplay();
+        }
+      } else if (e.key === 'ArrowRight') {
+        const max = (activeReplay?.moves || []).length;
+        if (replayStep < max) {
+          replayStep++;
+          renderReplay();
+        }
+      } else if (e.key === ' ' && document.activeElement !== chatInput) {
+        e.preventDefault();
+        toggleReplayAuto();
+      } else if (e.key === 'Escape') {
+        closeReplayModal();
+      }
+    }
+  });
+}
+
+// --- AUTHENTICATION & SESSIONS ---
+async function checkAuth() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) {
+    currentUser = null;
+    renderUserBar();
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentUser = data.user;
+      renderUserBar();
+      socket.emit('auth_session', { token });
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+      currentUser = null;
+      renderUserBar();
+    }
+  } catch (err) {
+    console.error('Auth check error:', err);
+  }
+}
+
+function renderUserBar() {
+  if (currentUser) {
+    if (userGuestSection) userGuestSection.style.display = 'none';
+    if (userLoggedInSection) userLoggedInSection.style.display = 'flex';
+    if (currentUserName) currentUserName.innerText = currentUser.username;
+    if (botPlayerName && !botPlayerName.value) botPlayerName.value = currentUser.username;
+    if (createPlayerName && !createPlayerName.value) createPlayerName.value = currentUser.username;
+    if (joinPlayerName && !joinPlayerName.value) joinPlayerName.value = currentUser.username;
+  } else {
+    if (userGuestSection) userGuestSection.style.display = 'flex';
+    if (userLoggedInSection) userLoggedInSection.style.display = 'none';
+  }
+}
+
+function openAuthModal(mode = 'login') {
+  authMode = mode;
+  switchAuthTab(mode);
+  authErrorMessage.style.display = 'none';
+  authErrorMessage.innerText = '';
+  authModal.style.display = 'flex';
+  authUsername.focus();
+}
+
+function switchAuthTab(mode) {
+  authMode = mode;
+  if (mode === 'login') {
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    btnSubmitAuth.innerText = 'เข้าสู่ระบบ';
+    authNoteText.innerText = '💡 เข้าสู่ระบบเพื่อบันทึกประวัติการแข่งและดูรีเพลย์ย้อนหลังเฉพาะบัญชีของคุณ';
+  } else {
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    btnSubmitAuth.innerText = 'สมัครสมาชิกใหม่';
+    authNoteText.innerText = '✨ สมัครสมาชิกฟรี บันทึกประวัติการแข่งขันและคำอธิบายแท็กติกแยกเฉพาะของคุณ 100%';
+  }
+  authErrorMessage.style.display = 'none';
+}
+
+async function handleAuthSubmit(e) {
+  if (e) e.preventDefault();
+  const username = authUsername.value.trim();
+  const password = authPassword.value;
+
+  authErrorMessage.style.display = 'none';
+  authErrorMessage.innerText = '';
+
+  if (!username || !password) {
+    authErrorMessage.innerText = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน';
+    authErrorMessage.style.display = 'block';
+    return;
+  }
+
+  const endpoint = authMode === 'register' ? '/api/register' : '/api/login';
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem(TOKEN_KEY, data.token);
+      currentUser = data.user;
+      renderUserBar();
+      socket.emit('auth_session', { token: data.token });
+      authModal.style.display = 'none';
+      authPassword.value = '';
+      showToast(authMode === 'register' ? `🎉 สมัครสมาชิกสำเร็จ! ยินดีต้อนรับคุณ ${currentUser.username}` : `👋 เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับคุณ ${currentUser.username}`);
+    } else {
+      authErrorMessage.innerText = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+      authErrorMessage.style.display = 'block';
+    }
+  } catch (err) {
+    authErrorMessage.innerText = 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ กรุณาลองใหม่';
+    authErrorMessage.style.display = 'block';
+  }
+}
+
+async function handleLogout() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (e) {}
+  }
+  localStorage.removeItem(TOKEN_KEY);
+  currentUser = null;
+  renderUserBar();
+  showToast('ออกจากระบบเรียบร้อยแล้ว');
+}
+
+// --- MATCH HISTORY ---
+async function openHistoryModal() {
+  if (!currentUser) {
+    openAuthModal('login');
+    showToast('กรุณาเข้าสู่ระบบเพื่อดูประวัติการแข่งขันของคุณ');
+    return;
+  }
+
+  historyModal.style.display = 'flex';
+  historyListContainer.innerHTML = '<div style="text-align: center; padding: 2.5rem; color: var(--text-secondary);">กำลังโหลดประวัติ...</div>';
+
+  try {
+    const token = localStorage.getItem(TOKEN_KEY);
+    // 1. Fetch user stats
+    const meRes = await fetch('/api/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const meData = await meRes.json();
+    if (meData.success && meData.stats) {
+      statTotalGames.innerText = meData.stats.totalGames;
+      statWins.innerText = meData.stats.wins;
+      statLosses.innerText = meData.stats.losses;
+      statWinRate.innerText = `${meData.stats.winRate}%`;
+    }
+
+    // 2. Fetch user games
+    const histRes = await fetch('/api/history', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const histData = await histRes.json();
+
+    if (!histData.success || !histData.games || histData.games.length === 0) {
+      historyListContainer.innerHTML = `
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📜</div>
+          <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.3rem;">ยังไม่มีประวัติการเล่น</div>
+          <p style="font-size: 0.85rem;">เมื่อคุณเล่นจบเกมกับบ็อตหรือเพื่อน ระบบจะบันทึกประวัติการเดินหมากทุกก้าวไว้ที่นี่ให้คุณโดยอัตโนมัติ</p>
+        </div>
+      `;
+      return;
+    }
+
+    historyListContainer.innerHTML = '';
+    histData.games.forEach(game => {
+      const card = document.createElement('div');
+      card.className = 'history-card';
+
+      const dateStr = new Date(game.date).toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'short',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const isWin = game.isWinner;
+      const badgeResult = isWin 
+        ? `<span class="badge-win">🟢 ชนะ</span>`
+        : (game.winner ? `<span class="badge-loss">🔴 แพ้</span>` : `<span class="badge-draw">⚪ เสมอ</span>`);
+
+      const modeBadge = game.isBotGame
+        ? `<span class="badge-mode">🤖 ซ้อมกับบ็อต ${game.botLevel ? `(ระดับ ${game.botLevel})` : ''}</span>`
+        : `<span class="badge-mode" style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.4); background: rgba(59, 130, 246, 0.15);">⚔️ แข่งกับผู้เล่น</span>`;
+
+      const opponentName = game.myColor === 1 ? (game.whitePlayer?.name || 'สีขาว') : (game.blackPlayer?.name || 'สีดำ');
+      const myColorName = game.myColor === 1 ? 'หมากดำ ⚫' : 'หมากขาว ⚪';
+
+      card.innerHTML = `
+        <div class="history-card-left">
+          <div class="history-tags-row">
+            ${badgeResult}
+            ${modeBadge}
+            <span class="badge-size">${game.size}×${game.size}</span>
+            <span style="font-size: 0.78rem; color: var(--text-secondary); margin-left: auto;">${dateStr}</span>
+          </div>
+          <div class="history-match-title">
+            คุณ (${myColorName}) vs ${opponentName}
+          </div>
+          <div class="history-match-sub">
+            ${game.winReason || 'จบเกม'} • เดินทั้งหมด ${game.totalMoves} ตา
+          </div>
+        </div>
+        <div>
+          <button class="btn-view-replay" data-game-id="${game.id}">
+            🔍 ดูรีเพลย์ & แท็กติก
+          </button>
+        </div>
+      `;
+
+      card.querySelector('.btn-view-replay').addEventListener('click', () => {
+        loadAndOpenReplay(game.id);
+      });
+
+      historyListContainer.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error('Fetch history error:', err);
+    historyListContainer.innerHTML = '<div style="color: #fca5a5; padding: 2rem; text-align: center;">เกิดข้อผิดพลาดในการโหลดประวัติ</div>';
+  }
+}
+
+// --- INTERACTIVE REPLAY REVIEWER ---
+async function loadAndOpenReplay(gameId) {
+  const token = localStorage.getItem(TOKEN_KEY);
+  try {
+    const res = await fetch(`/api/games/${gameId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!data.success || !data.game) {
+      showToast(data.message || 'ไม่สามารถเปิดรีเพลย์เกมนี้ได้');
+      return;
+    }
+
+    activeReplay = data.game;
+    replayStep = 0;
+    if (replayAutoTimer) {
+      clearInterval(replayAutoTimer);
+      replayAutoTimer = null;
+      btnReplayAuto.innerText = '▶️ เล่น';
+    }
+
+    // Set header info
+    const modeName = activeReplay.isBotGame
+      ? `🤖 AI ฝึกซ้อม ${activeReplay.botLevel ? `(ระดับ ${activeReplay.botLevel})` : ''}`
+      : '⚔️ แข่งขันระหว่างผู้เล่น';
+    replayModeBadge.innerText = modeName;
+    replaySizeBadge.innerText = `${activeReplay.size}×${activeReplay.size}`;
+
+    const dateStr = new Date(activeReplay.date).toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    replayDateText.innerText = dateStr;
+
+    replayPlayersText.innerText = `⚫ ${activeReplay.blackPlayer?.name || 'หมากดำ'} vs ⚪ ${activeReplay.whitePlayer?.name || 'หมากขาว'}`;
+    replayResultText.innerText = `🏆 ผล: ${activeReplay.winReason || 'จบเกม'}`;
+
+    // Setup slider
+    const totalMoves = (activeReplay.moves || []).length;
+    replaySlider.min = 0;
+    replaySlider.max = totalMoves;
+    replaySlider.value = 0;
+
+    // Show modal & setup canvas
+    replayModal.style.display = 'flex';
+    setupReplayCanvas();
+    renderReplay();
+
+  } catch (err) {
+    console.error('Error loading replay:', err);
+    showToast('โหลดรีเพลย์ไม่สำเร็จ');
+  }
+}
+
+function closeReplayModal() {
+  if (replayAutoTimer) {
+    clearInterval(replayAutoTimer);
+    replayAutoTimer = null;
+  }
+  if (replayModal) replayModal.style.display = 'none';
+}
+
+function toggleReplayAuto() {
+  if (replayAutoTimer) {
+    clearInterval(replayAutoTimer);
+    replayAutoTimer = null;
+    btnReplayAuto.innerText = '▶️ เล่น';
+  } else {
+    const max = (activeReplay?.moves || []).length;
+    if (replayStep >= max) replayStep = 0;
+    btnReplayAuto.innerText = '⏸️ หยุด';
+    replayAutoTimer = setInterval(() => {
+      const total = (activeReplay?.moves || []).length;
+      if (replayStep < total) {
+        replayStep++;
+        renderReplay();
+      } else {
+        clearInterval(replayAutoTimer);
+        replayAutoTimer = null;
+        btnReplayAuto.innerText = '▶️ เล่น';
+      }
+    }, 1200);
+  }
+}
+
+function setupReplayCanvas() {
+  if (!replayCanvas) return;
+  const isMobile = window.innerWidth < 600;
+  replayCanvasSize = isMobile ? Math.min(window.innerWidth - 60, 320) : 400;
+
+  const dpr = window.devicePixelRatio || 1;
+  replayCanvas.width = replayCanvasSize * dpr;
+  replayCanvas.height = replayCanvasSize * dpr;
+  replayCanvas.style.width = replayCanvasSize + 'px';
+  replayCanvas.style.height = replayCanvasSize + 'px';
+
+  replayCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const bSize = activeReplay?.size || 9;
+  replayMargin = Math.max(22, Math.floor(replayCanvasSize * 0.07));
+  replayCellSize = (replayCanvasSize - replayMargin * 2) / (bSize - 1);
+}
+
+function renderReplay() {
+  if (!replayCtx || !activeReplay) return;
+  const bSize = activeReplay.size || 9;
+  const totalMoves = (activeReplay.moves || []).length;
+
+  replayStepDisplay.innerText = `ก้าวที่ ${replayStep} / ${totalMoves}`;
+  replaySlider.value = replayStep;
+
+  replayCtx.clearRect(0, 0, replayCanvasSize, replayCanvasSize);
+
+  // 1. Grid lines
+  replayCtx.strokeStyle = '#3d2511';
+  replayCtx.lineWidth = 1.2;
+
+  for (let i = 0; i < bSize; i++) {
+    const p = replayMargin + i * replayCellSize;
+
+    // Horizontal
+    replayCtx.beginPath();
+    replayCtx.moveTo(replayMargin, p);
+    replayCtx.lineTo(replayCanvasSize - replayMargin, p);
+    replayCtx.stroke();
+
+    // Vertical
+    replayCtx.beginPath();
+    replayCtx.moveTo(p, replayMargin);
+    replayCtx.lineTo(p, replayCanvasSize - replayMargin);
+    replayCtx.stroke();
+  }
+
+  // 2. Coordinate labels
+  replayCtx.fillStyle = '#5c3818';
+  replayCtx.font = `600 ${Math.max(9, Math.floor(replayCellSize * 0.32))}px Prompt, sans-serif`;
+  replayCtx.textAlign = 'center';
+  replayCtx.textBaseline = 'middle';
+
+  for (let i = 0; i < bSize; i++) {
+    const pos = replayMargin + i * replayCellSize;
+    const colName = COORD_LETTERS[i];
+    const rowName = bSize - i;
+
+    replayCtx.fillText(colName, pos, replayMargin * 0.45);
+    replayCtx.fillText(colName, pos, replayCanvasSize - replayMargin * 0.45);
+    replayCtx.fillText(rowName, replayMargin * 0.45, pos);
+    replayCtx.fillText(rowName, replayCanvasSize - replayMargin * 0.45, pos);
+  }
+
+  // 3. Star points (Hoshi)
+  const hoshi = STAR_POINTS[bSize] || [];
+  replayCtx.fillStyle = '#3d2511';
+  const hoshiRadius = Math.max(2.5, replayCellSize * 0.085);
+  for (const [r, c] of hoshi) {
+    const x = replayMargin + c * replayCellSize;
+    const y = replayMargin + r * replayCellSize;
+    replayCtx.beginPath();
+    replayCtx.arc(x, y, hoshiRadius, 0, Math.PI * 2);
+    replayCtx.fill();
+  }
+
+  // 4. Board State at step
+  let currentBoard = null;
+  let currentMove = null;
+
+  if (replayStep === 0) {
+    currentBoard = Array.from({ length: bSize }, () => Array(bSize).fill(0));
+  } else {
+    currentMove = activeReplay.moves[replayStep - 1];
+    currentBoard = currentMove?.boardState;
+  }
+
+  const radius = replayCellSize * 0.46;
+
+  if (currentBoard) {
+    for (let r = 0; r < bSize; r++) {
+      for (let c = 0; c < bSize; c++) {
+        const stone = currentBoard[r][c];
+        if (stone === 1 || stone === 2) {
+          const x = replayMargin + c * replayCellSize;
+          const y = replayMargin + r * replayCellSize;
+          drawStone(x, y, radius, stone, replayCtx);
+        }
+      }
+    }
+  }
+
+  // 5. Highlight current move and captures
+  if (currentMove && !currentMove.pass && currentMove.r !== undefined) {
+    const x = replayMargin + currentMove.c * replayCellSize;
+    const y = replayMargin + currentMove.r * replayCellSize;
+
+    // Glowing marker for last placed stone
+    replayCtx.beginPath();
+    replayCtx.arc(x, y, radius * 0.28, 0, Math.PI * 2);
+    replayCtx.fillStyle = currentMove.player === 1 ? '#ef4444' : '#3b82f6';
+    replayCtx.fill();
+    replayCtx.strokeStyle = '#ffffff';
+    replayCtx.lineWidth = 1.5;
+    replayCtx.stroke();
+
+    // If stones were captured on this move, highlight captured locations
+    if (currentMove.capturedStones && currentMove.capturedStones.length > 0) {
+      replayCtx.save();
+      for (const st of currentMove.capturedStones) {
+        const cx = replayMargin + st.c * replayCellSize;
+        const cy = replayMargin + st.r * replayCellSize;
+
+        // Red dashed ring
+        replayCtx.beginPath();
+        replayCtx.arc(cx, cy, radius * 0.72, 0, Math.PI * 2);
+        replayCtx.strokeStyle = '#ef4444';
+        replayCtx.lineWidth = 2.5;
+        replayCtx.setLineDash([4, 4]);
+        replayCtx.stroke();
+
+        // X mark
+        replayCtx.strokeStyle = '#ef4444';
+        replayCtx.lineWidth = 2;
+        replayCtx.beginPath();
+        replayCtx.moveTo(cx - radius * 0.35, cy - radius * 0.35);
+        replayCtx.lineTo(cx + radius * 0.35, cy + radius * 0.35);
+        replayCtx.moveTo(cx + radius * 0.35, cy - radius * 0.35);
+        replayCtx.lineTo(cx - radius * 0.35, cy + radius * 0.35);
+        replayCtx.stroke();
+      }
+      replayCtx.restore();
+    }
+  }
+
+  // 6. Update Tactical Review Card
+  updateReplayTacticalCard(currentMove);
+}
+
+function updateReplayTacticalCard(move) {
+  if (!move) {
+    replayTacticTitle.innerText = 'จุดเริ่มต้นเกม (กระดานว่าง)';
+    replayTacticBadge.style.display = 'none';
+    replayTacticDesc.innerText = 'กดปุ่ม "ถัดไป ▶️" หรือเลื่อนแถบเพื่อดูการเดินหมากย้อนหลังทีละก้าว';
+    replayCoachTip.style.display = 'none';
+    return;
+  }
+
+  const playerName = move.player === 1 ? 'หมากดำ ⚫' : 'หมากขาว ⚪';
+  const posName = move.pass ? 'กดผ่าน (Pass)' : `${COORD_LETTERS[move.c]}${activeReplay.size - move.r}`;
+
+  if (move.tacticAnalysis && move.captured > 0) {
+    const analysis = move.tacticAnalysis;
+    replayTacticTitle.innerText = `🎯 ${playerName} กินหมาก (${move.captured} เม็ด)`;
+    replayTacticBadge.innerText = analysis.title || 'แท็กติก';
+    replayTacticBadge.style.display = 'inline-block';
+    replayTacticDesc.innerHTML = `<b>ตำแหน่งที่วาง:</b> ${posName}<br><b>กินเพราะอะไร:</b> ${analysis.explanation}`;
+    if (analysis.competitionTip) {
+      replayCoachTip.innerHTML = `<b>💡 คำแนะนำสำหรับการแข่ง:</b><br>${analysis.competitionTip}`;
+      replayCoachTip.style.display = 'block';
+    } else {
+      replayCoachTip.style.display = 'none';
+    }
+  } else if (move.pass) {
+    replayTacticTitle.innerText = `⏸️ ${playerName} ผ่าน (Pass)`;
+    replayTacticBadge.style.display = 'none';
+    replayTacticDesc.innerText = 'ผู้เล่นประเมินว่าไม่มีจุดวางหมากที่คุ้มค่าแล้ว จึงเลือกผ่าน';
+    replayCoachTip.style.display = 'none';
+  } else {
+    replayTacticTitle.innerText = `📍 ${playerName} เดินที่ ${posName}`;
+    replayTacticBadge.style.display = 'none';
+    replayTacticDesc.innerText = `วางหมากเดินเกมขยายพื้นที่และป้องกันรูปทรง`;
+    replayCoachTip.style.display = 'none';
+  }
 }
 
 function handleBoardClick(r, c) {

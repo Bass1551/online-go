@@ -17,8 +17,70 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
+const Database = require('./db');
+
+// Enable JSON body parsing for API
+app.use(express.json());
+
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Auth Helper
+function getAuthUser(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.slice(7).trim();
+  return Database.verifyToken(token);
+}
+
+// REST API Endpoints
+app.post('/api/register', (req, res) => {
+  const { username, password } = req.body || {};
+  const result = Database.register(username, password);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  res.json(result);
+});
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body || {};
+  const result = Database.login(username, password);
+  if (!result.success) {
+    return res.status(401).json(result);
+  }
+  res.json(result);
+});
+
+app.get('/api/me', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  const stats = Database.getUserStats(user.id);
+  res.json({ success: true, user, stats });
+});
+
+app.post('/api/logout', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    Database.logout(authHeader.slice(7).trim());
+  }
+  res.json({ success: true });
+});
+
+app.get('/api/history', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  const games = Database.getUserGames(user.id);
+  res.json({ success: true, games });
+});
+
+app.get('/api/games/:id', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  const game = Database.getGameById(req.params.id, user.id);
+  if (!game) return res.status(404).json({ success: false, message: 'ไม่พบประวัติเกมนี้ หรือคุณไม่มีสิทธิ์เข้าถึง' });
+  res.json({ success: true, game });
+});
 
 // Store active rooms in memory
 // Key: roomId, Value: Room object
@@ -62,6 +124,36 @@ function getSanitizedRoomState(room) {
   };
 }
 
+function saveCompletedGame(room, winner, winReason, scoreResult) {
+  if (!room || room._saved) return;
+  room._saved = true;
+
+  const userIds = [];
+  if (room.black && room.black.userId) userIds.push(room.black.userId);
+  if (room.white && room.white.userId) userIds.push(room.white.userId);
+
+  // Save if at least one player is registered
+  if (userIds.length > 0) {
+    const blackName = room.black?.name || 'หมากดำ';
+    const whiteName = room.white?.name || (room.isBotGame ? `AI ${GoBot.LEVEL_NAMES[room.botLevel] || 'บอท'}` : 'หมากขาว');
+
+    Database.saveGame({
+      roomId: room.id,
+      size: room.size,
+      isBotGame: !!room.isBotGame,
+      botLevel: room.botLevel || null,
+      blackPlayer: { name: blackName, userId: room.black?.userId || null },
+      whitePlayer: { name: whiteName, userId: room.white?.userId || null },
+      winner,
+      winReason: winReason || '',
+      scoreResult: scoreResult || null,
+      moves: room.game.moveHistory || [],
+      captures: room.game.captures || { 1: 0, 2: 0 },
+      userIds
+    });
+  }
+}
+
 // Timer tick management
 setInterval(() => {
   const now = Date.now();
@@ -85,6 +177,8 @@ setInterval(() => {
           room.game.winner = winner;
           room.game.winReason = `หมาก${timedOutColor}เวลาหมด (หมาก${winningColor}ชนะ)`;
           
+          saveCompletedGame(room, winner, room.game.winReason, null);
+
           io.to(roomId).emit('game_over', {
             winner,
             winReason: room.game.winReason,
@@ -104,6 +198,20 @@ setInterval(() => {
 io.on('connection', (socket) => {
   let currentRoomId = null;
   let playerRole = null; // 1: Black, 2: White, 'spectator'
+  let currentUser = null;
+
+  // Verify auth token if provided during connection handshake
+  if (socket.handshake.auth && socket.handshake.auth.token) {
+    currentUser = Database.verifyToken(socket.handshake.auth.token);
+  }
+
+  // Allow client to authenticate session dynamically after connect
+  socket.on('auth_session', ({ token }, callback) => {
+    currentUser = Database.verifyToken(token);
+    if (typeof callback === 'function') {
+      callback({ success: !!currentUser, user: currentUser });
+    }
+  });
 
   // Create Room (Human vs Human)
   socket.on('create_room', ({ size = 19, playerName = 'ผู้เล่น 1', timeLimit = 0 }) => {
@@ -115,13 +223,14 @@ io.on('connection', (socket) => {
 
     const game = new GoGame({ size: validSize });
     const initialTime = timeLimit > 0 ? timeLimit * 60 : 0;
+    const resolvedName = currentUser ? currentUser.username : (playerName.trim() || 'ผู้เล่นสีดำ');
 
     const room = {
       id: roomId,
       size: validSize,
       timeLimit: initialTime,
       game,
-      black: { socketId: socket.id, name: playerName.trim() || 'ผู้เล่นสีดำ', connected: true },
+      black: { socketId: socket.id, name: resolvedName, userId: currentUser ? currentUser.id : null, connected: true },
       white: null,
       spectators: [],
       timers: { 1: initialTime, 2: initialTime },
@@ -151,14 +260,15 @@ io.on('connection', (socket) => {
     const game = new GoGame({ size: validSize });
     const bot = new GoBot(level);
     const botName = `AI ${GoBot.LEVEL_NAMES[level]}`;
+    const resolvedName = currentUser ? currentUser.username : (playerName.trim() || 'ผู้เล่น (ดำ)');
 
     const room = {
       id: roomId,
       size: validSize,
       timeLimit: 0,
       game,
-      black: { socketId: socket.id, name: playerName.trim() || 'ผู้เล่น (ดำ)', connected: true },
-      white: { socketId: 'bot', name: botName, connected: true, isBot: true },
+      black: { socketId: socket.id, name: resolvedName, userId: currentUser ? currentUser.id : null, connected: true },
+      white: { socketId: 'bot', name: botName, connected: true, isBot: true, userId: null },
       spectators: [],
       timers: { 1: 0, 2: 0 },
       lastTimerTick: null,
@@ -200,6 +310,7 @@ io.on('connection', (socket) => {
         });
 
         if (passRes.isGameOver) {
+          saveCompletedGame(room, passRes.winner, passRes.winReason, passRes.scoreResult);
           io.to(roomId).emit('game_over', {
             winner: passRes.winner,
             winReason: passRes.winReason,
@@ -225,6 +336,12 @@ io.on('connection', (socket) => {
           // If Bot captured user's stones, Coach explains why!
           if (moveRes.capturedStones.length > 0) {
             const analysis = analyzeCapture(null, null, room.game, moveRes.lastMove, moveRes.capturedStones);
+            // Save tactic analysis in moveHistory for match replay review
+            const lastHist = room.game.moveHistory[room.game.moveHistory.length - 1];
+            if (lastHist) {
+              lastHist.tacticAnalysis = analysis;
+            }
+
             io.to(roomId).emit('bot_captured_advice', {
               analysis
             });
@@ -246,33 +363,40 @@ io.on('connection', (socket) => {
     currentRoomId = roomId;
     socket.join(roomId);
 
+    const resolvedName = currentUser ? currentUser.username : (playerName.trim() || 'ผู้เล่น 2');
+    const resolvedUserId = currentUser ? currentUser.id : null;
+
     // Reconnection or role assignment
     if (room.black && room.black.socketId === socket.id) {
       room.black.connected = true;
+      if (resolvedUserId && !room.black.userId) room.black.userId = resolvedUserId;
       playerRole = 1;
     } else if (room.white && room.white.socketId === socket.id) {
       room.white.connected = true;
+      if (resolvedUserId && !room.white.userId) room.white.userId = resolvedUserId;
       playerRole = 2;
     } else if (!room.black || !room.black.connected && !room.black.name) {
-      room.black = { socketId: socket.id, name: playerName.trim() || 'ผู้เล่นสีดำ', connected: true };
+      room.black = { socketId: socket.id, name: resolvedName, userId: resolvedUserId, connected: true };
       playerRole = 1;
     } else if (!room.white || !room.white.connected && !room.white.name) {
-      room.white = { socketId: socket.id, name: playerName.trim() || 'ผู้เล่นสีขาว', connected: true };
+      room.white = { socketId: socket.id, name: resolvedName, userId: resolvedUserId, connected: true };
       playerRole = 2;
     } else if (room.white && !room.white.connected) {
       // Reconnect as White
       room.white.socketId = socket.id;
       room.white.connected = true;
+      if (resolvedUserId && !room.white.userId) room.white.userId = resolvedUserId;
       playerRole = 2;
     } else if (room.black && !room.black.connected) {
       // Reconnect as Black
       room.black.socketId = socket.id;
       room.black.connected = true;
+      if (resolvedUserId && !room.black.userId) room.black.userId = resolvedUserId;
       playerRole = 1;
     } else {
       // Join as spectator
       playerRole = 'spectator';
-      room.spectators.push({ socketId: socket.id, name: playerName.trim() || `ผู้ชม ${room.spectators.length + 1}` });
+      room.spectators.push({ socketId: socket.id, name: resolvedName || `ผู้ชม ${room.spectators.length + 1}` });
     }
 
     socket.emit('room_joined', {
@@ -284,7 +408,7 @@ io.on('connection', (socket) => {
     // Notify room of new presence
     io.to(roomId).emit('room_updated', {
       room: getSanitizedRoomState(room),
-      announcement: `${playerName} ได้เข้าร่วมห้องแล้ว`
+      announcement: `${resolvedName} ได้เข้าร่วมห้องแล้ว`
     });
   });
 
@@ -321,14 +445,22 @@ io.on('connection', (socket) => {
       sound: result.capturedStones.length > 0 ? 'capture' : 'stone'
     });
 
-    // If user captures stones in a bot training game, trigger interactive Quiz!
-    if (room.isBotGame && playerRole === 1 && result.capturedStones.length > 0) {
+    // If stones were captured, analyze tactic and record in move history
+    if (result.capturedStones.length > 0) {
       const analysis = analyzeCapture(null, null, room.game, result.lastMove, result.capturedStones);
-      room.pendingQuiz = analysis;
-      socket.emit('quiz_prompt', {
-        analysis,
-        capturedCount: result.capturedStones.length
-      });
+      const lastHist = room.game.moveHistory[room.game.moveHistory.length - 1];
+      if (lastHist) {
+        lastHist.tacticAnalysis = analysis;
+      }
+
+      // If user captures stones in a bot training game, trigger interactive Quiz!
+      if (room.isBotGame && playerRole === 1) {
+        room.pendingQuiz = analysis;
+        socket.emit('quiz_prompt', {
+          analysis,
+          capturedCount: result.capturedStones.length
+        });
+      }
     }
 
     // If it's a bot game, trigger bot's next move!
@@ -376,6 +508,7 @@ io.on('connection', (socket) => {
     });
 
     if (result.isGameOver) {
+      saveCompletedGame(room, result.winner, result.winReason, result.scoreResult);
       io.to(roomId).emit('game_over', {
         winner: result.winner,
         winReason: result.winReason,
@@ -394,6 +527,7 @@ io.on('connection', (socket) => {
 
     const result = room.game.resign(playerRole);
     if (result.success) {
+      saveCompletedGame(room, result.winner, result.winReason, null);
       io.to(roomId).emit('game_over', {
         winner: result.winner,
         winReason: result.winReason,
@@ -407,6 +541,28 @@ io.on('connection', (socket) => {
   socket.on('request_undo', ({ roomId }) => {
     const room = rooms.get(roomId);
     if (!room || (playerRole !== 1 && playerRole !== 2) || room.game.isGameOver) return;
+
+    // Instant Undo for Bot Game (No bot confirmation required!)
+    if (room.isBotGame) {
+      let undoCount = 1;
+      if (room.game.turn === 1 && room.game.moveHistory.length >= 2) {
+        undoCount = 2; // Undo bot move + player move
+      } else if (room.game.moveHistory.length >= 1) {
+        undoCount = 1;
+      } else {
+        return;
+      }
+
+      for (let i = 0; i < undoCount; i++) {
+        room.game.undoMove();
+      }
+
+      io.to(roomId).emit('undo_completed', {
+        room: getSanitizedRoomState(room),
+        announcement: 'ย้อนหมากเรียบร้อย!'
+      });
+      return;
+    }
 
     const requesterName = playerRole === 1 ? room.black?.name : room.white?.name;
     const opponentRole = playerRole === 1 ? 2 : 1;
