@@ -95,18 +95,25 @@ class Database {
   }
 
   /**
-   * Login existing user
+   * Login existing user (or auto-create if server redeployed on cloud)
    */
   static login(username, password) {
-    const cleanUsername = (username || '').trim().toLowerCase();
+    const rawUsername = (username || '').trim();
+    const cleanUsername = rawUsername.toLowerCase();
     const user = users[cleanUsername];
+
+    // If user not found (e.g. server restarted or redeployed on Render),
+    // automatically register them on the fly so they never lose their account!
     if (!user) {
-      return { success: false, message: 'ไม่พบบัญชีนี้ในระบบ (หากเพิ่งเข้าใช้งานครั้งแรก กรุณากดแท็บ "สมัครสมาชิกใหม่" ด้านบน)' };
+      if (password && password.length >= 4) {
+        return Database.register(rawUsername, password);
+      }
+      return { success: false, message: 'กรุณากรอกรหัสผ่านอย่างน้อย 4 ตัวอักษร' };
     }
 
     const testHash = hashPassword(password || '', user.salt);
     if (testHash !== user.passwordHash) {
-      return { success: false, message: 'รหัสผ่านไม่ถูกต้อง' };
+      return { success: false, message: 'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบรหัสผ่านอีกครั้ง' };
     }
 
     const token = Database.createSession(user);
