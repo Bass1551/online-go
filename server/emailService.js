@@ -12,6 +12,7 @@ try {
 
 const DEFAULT_GMAIL_USER = 'onlinegoonrender@gmail.com';
 const DEFAULT_GMAIL_PASS = 'bfknuizjkfrcndpq';
+const DEFAULT_GMAIL_WEBHOOK = 'https://script.google.com/macros/s/AKfycby-aLe0MkeW9nPoz6u--3oaxXK8a0bTFACVcLOYPCDFYGG2Ff6OrSUxZlNJY9fjq_HzVA/exec';
 
 class EmailService {
   /**
@@ -97,12 +98,12 @@ class EmailService {
 
     // Method 1: HTTPS Webhook relay (Google Apps Script / HTTP endpoint)
     // Runs on port 443 which is NEVER blocked by Render free tier
-    const webhookUrl = process.env.GMAIL_WEBHOOK_URL || process.env.EMAIL_HTTP_URL;
+    const webhookUrl = process.env.GMAIL_WEBHOOK_URL || process.env.EMAIL_HTTP_URL || DEFAULT_GMAIL_WEBHOOK;
     if (webhookUrl) {
       try {
         const res = await fetch(webhookUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             to: toEmail,
             username,
@@ -110,11 +111,12 @@ class EmailService {
             subject: mailOptions.subject,
             text: mailOptions.text,
             html: mailOptions.html
-          })
+          }),
+          redirect: 'follow'
         });
         const d = await res.json().catch(() => ({ success: res.ok }));
         if (d.success || res.ok) {
-          console.log(`✅ [EMAIL SENT] Sent OTP to ${toEmail} via HTTPS Webhook`);
+          console.log(`✅ [EMAIL SENT] Sent OTP to ${toEmail} via HTTPS Google Webhook (Port 443)`);
           return {
             success: true,
             message: `ส่งรหัส OTP ไปยังอีเมล ${toEmail} เรียบร้อยแล้ว กรุณาเปิดเช็คในกล่องข้อความหรืออีเมลขยะ (Spam)`
