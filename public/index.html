@@ -397,25 +397,29 @@
     </div>
   </div>
 
-  <!-- MODAL: Share Invite Link -->
+  <!-- MODAL: Share Room Code -->
   <div id="shareModal" class="modal-backdrop">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="max-width: 440px;">
       <div style="font-size: 3rem; margin-bottom: 0.5rem;">💌</div>
       <h3 class="modal-title">ชวนเพื่อนหรือแฟนมาเล่น!</h3>
-      <p class="modal-body">
-        ส่งรหัสห้องหรือคัดลอกลิงก์ด้านล่างนี้ให้เพื่อนหรือแฟนเปิดบนเบราว์เซอร์ได้เลย
+      <p class="modal-body" style="margin-bottom: 1.25rem;">
+        บอกรหัสห้อง 6 ตัวนี้ให้เพื่อนหรือแฟนพิมพ์ในหน้าแรก เพื่อเข้าห้องมาเล่นด้วยกันได้เลย
       </p>
 
-      <div class="form-group">
-        <label class="form-label">ลิงก์เข้าห้องโดยตรง</label>
-        <input type="text" id="shareLinkInput" class="form-input" readonly style="font-size: 0.85rem; background: rgba(0,0,0,0.5);">
+      <!-- Big Obvious Room Code Display -->
+      <div style="margin-bottom: 1.25rem; background: rgba(0, 0, 0, 0.4); border: 2px dashed rgba(245, 158, 11, 0.5); border-radius: 1rem; padding: 1.25rem 1rem;">
+        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.35rem;">รหัสห้อง (Room Code):</div>
+        <div id="shareRoomCodeDisplay" style="font-size: 2.5rem; font-weight: 800; letter-spacing: 5px; color: var(--accent-gold); font-family: monospace;">------</div>
+        <button id="btnCopyRoomCode" class="btn btn-primary" style="margin-top: 0.85rem; width: 100%; font-size: 1rem; padding: 0.65rem 1rem;">
+          📋 คัดลอกเฉพาะรหัสห้อง
+        </button>
       </div>
 
-      <div class="modal-actions">
-        <button id="btnCopyShareLink" class="btn btn-primary" style="flex: 1;">
-          📋 คัดลอกลิงก์
+      <div style="display: flex; gap: 0.6rem; justify-content: center; align-items: center;">
+        <button id="btnCopyShareLink" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 0.9rem;">
+          🔗 คัดลอกลิงก์เต็ม
         </button>
-        <button id="btnCloseShareModal" class="btn btn-secondary">
+        <button id="btnCloseShareModal" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1.25rem;">
           ปิด
         </button>
       </div>

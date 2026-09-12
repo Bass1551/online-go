@@ -54,7 +54,8 @@ const btnSendChat = document.getElementById('btnSendChat');
 
 // Modals
 const shareModal = document.getElementById('shareModal');
-const shareLinkInput = document.getElementById('shareLinkInput');
+const shareRoomCodeDisplay = document.getElementById('shareRoomCodeDisplay');
+const btnCopyRoomCode = document.getElementById('btnCopyRoomCode');
 const btnCopyShareLink = document.getElementById('btnCopyShareLink');
 const btnCloseShareModal = document.getElementById('btnCloseShareModal');
 
@@ -569,8 +570,7 @@ function setupEventListeners() {
 
   // Share Modal
   btnShareModal.addEventListener('click', () => {
-    const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
-    shareLinkInput.value = inviteUrl;
+    if (shareRoomCodeDisplay) shareRoomCodeDisplay.innerText = currentRoomId || '------';
     shareModal.style.display = 'flex';
   });
 
@@ -578,14 +578,27 @@ function setupEventListeners() {
     shareModal.style.display = 'none';
   });
 
-  btnCopyShareLink.addEventListener('click', () => {
-    shareLinkInput.select();
-    navigator.clipboard.writeText(shareLinkInput.value).then(() => {
-      showToast('คัดลอกลิงก์สำเร็จแล้ว! ส่งให้เพื่อนหรือแฟนได้เลย 💖');
-    }).catch(() => {
-      showToast('คัดลอกลิงก์เรียบร้อย');
+  if (btnCopyRoomCode) {
+    btnCopyRoomCode.addEventListener('click', () => {
+      if (!currentRoomId) return;
+      navigator.clipboard.writeText(currentRoomId).then(() => {
+        showToast(`📋 คัดลอกรหัสห้อง "${currentRoomId}" เรียบร้อยแล้ว!`);
+      }).catch(() => {
+        showToast(`รหัสห้อง: ${currentRoomId}`);
+      });
     });
-  });
+  }
+
+  if (btnCopyShareLink) {
+    btnCopyShareLink.addEventListener('click', () => {
+      const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
+      navigator.clipboard.writeText(inviteUrl).then(() => {
+        showToast('🔗 คัดลอกลิงก์เต็มเรียบร้อยแล้ว!');
+      }).catch(() => {
+        showToast('คัดลอกลิงก์เรียบร้อย');
+      });
+    });
+  }
 
   // Game Over Modal
   btnCloseGameOverModal.addEventListener('click', () => {
