@@ -23,7 +23,9 @@ function loadJSON(filePath, fallback) {
       fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2), 'utf-8');
       return fallback;
     }
-    const data = fs.readFileSync(filePath, 'utf-8');
+    let data = fs.readFileSync(filePath, 'utf-8');
+    data = data.replace(/^\uFEFF/, '').trim();
+    if (!data) return fallback;
     return JSON.parse(data);
   } catch (err) {
     console.error(`Error loading ${filePath}:`, err);

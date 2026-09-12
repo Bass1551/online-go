@@ -775,10 +775,55 @@ body {
   margin-bottom: 0.5rem;
 }
 
+/* ----------------- AUTH GATE (MANDATORY LOGIN) ----------------- */
+.auth-gate-container {
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2.5rem 1.5rem;
+  width: 100%;
+  animation: modalPop 0.3s ease-out;
+}
+
+.auth-gate-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 1.25rem;
+  padding: 2.25rem 2rem;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: var(--shadow-deep);
+  backdrop-filter: blur(10px);
+}
+
+.account-player-banner {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge-account-tag {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: var(--accent-gold);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  margin-left: auto;
+}
+
 /* ----------------- USER BAR & AUTH ----------------- */
 .user-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
   padding: 0.6rem 1rem;

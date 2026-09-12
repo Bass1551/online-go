@@ -11,21 +11,55 @@
 </head>
 <body>
 
-  <!-- LOBBY VIEW -->
-  <div id="lobbyView" class="lobby-container">
+  <!-- MANDATORY AUTH GATE VIEW (Shown if not logged in) -->
+  <div id="authGateView" class="auth-gate-container" style="display: flex;">
+    <div class="brand-header" style="margin-bottom: 1.5rem;">
+      <div class="brand-logo">
+        <span>⚫⚪</span>
+        <span>Go Online</span>
+      </div>
+      <p class="brand-sub">เว็บเกมหมากล้อมออนไลน์ & วิเคราะห์โค้ช AI แข่งขัน</p>
+    </div>
+
+    <div class="auth-gate-card">
+      <div class="auth-tabs">
+        <button id="gateTabLogin" class="auth-tab active">เข้าสู่ระบบ</button>
+        <button id="gateTabRegister" class="auth-tab">สมัครสมาชิกใหม่</button>
+      </div>
+
+      <div id="gateErrorMessage" class="auth-error" style="display: none;"></div>
+
+      <form id="gateAuthForm" onsubmit="return false;" style="margin-top: 1.25rem;">
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="gateUsername">ชื่อผู้ใช้ (Username)</label>
+          <input type="text" id="gateUsername" class="form-input" placeholder="ใส่ชื่อผู้ใช้..." autocomplete="username" maxlength="20" required>
+        </div>
+
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="gatePassword">รหัสผ่าน (Password)</label>
+          <input type="password" id="gatePassword" class="form-input" placeholder="ใส่รหัสผ่าน..." autocomplete="current-password" maxlength="32" required>
+        </div>
+
+        <p id="gateNoteText" style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1.25rem; text-align: left;">
+          🔒 ระบบจะบันทึกประวัติการแข่งขัน สถิติ และวิเคราะห์การกินหมากแยกเฉพาะบัญชีของคุณ 100%
+        </p>
+
+        <button type="submit" id="btnGateSubmit" class="btn btn-primary" style="width: 100%;">
+          เข้าสู่ระบบและเริ่มเล่น
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- LOBBY VIEW (Only accessible after login) -->
+  <div id="lobbyView" class="lobby-container" style="display: none;">
     <!-- User Bar / Auth Navigation -->
     <div class="user-bar">
-      <div id="userGuestSection" style="display: flex; gap: 0.6rem; align-items: center;">
-        <span style="font-size: 0.9rem; color: var(--text-secondary);">👤 ผู้เล่นทั่วไป</span>
-        <button id="btnOpenAuth" class="btn btn-auth-sm">
-          🔑 เข้าสู่ระบบ / สมัครสมาชิก
-        </button>
+      <div class="user-profile-badge">
+        <span style="font-size: 1.1rem;">👤</span>
+        <span>บัญชีผู้เล่น: <b id="currentUserName" style="color: var(--accent-gold);">ผู้ใช้</b></span>
       </div>
-      <div id="userLoggedInSection" style="display: none; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-        <div class="user-profile-badge">
-          <span style="font-size: 1.1rem;">👤</span>
-          <span id="currentUserName" style="font-weight: 600; color: var(--accent-gold);">ผู้ใช้</span>
-        </div>
+      <div style="display: flex; gap: 0.6rem; margin-left: auto;">
         <button id="btnOpenHistory" class="btn btn-history-sm">
           📜 ประวัติการเล่นของฉัน
         </button>
@@ -55,8 +89,12 @@
         </p>
 
         <div class="form-group">
-          <label class="form-label" for="botPlayerName">ชื่อของคุณ</label>
-          <input type="text" id="botPlayerName" class="form-input" placeholder="นักกีฬาโกะ, ผู้ท้าชิง" maxlength="16">
+          <div class="account-player-banner">
+            <span style="font-size: 1.1rem;">👤</span>
+            <span style="color: var(--text-secondary); font-size: 0.88rem;">ผู้เล่น:</span>
+            <b class="account-player-name" style="color: var(--accent-gold); margin-left: 0.25rem;">กำลังโหลด...</b>
+            <span class="badge-account-tag">บันทึกสถิติลงบัญชีนี้</span>
+          </div>
         </div>
 
         <div class="form-group">
@@ -108,8 +146,11 @@
         <h2 class="card-title">✨ สร้างห้องเล่นกับเพื่อน/แฟน</h2>
         
         <div class="form-group">
-          <label class="form-label" for="createPlayerName">ชื่อของคุณ</label>
-          <input type="text" id="createPlayerName" class="form-input" placeholder="เช่น แฟนสุดน่ารัก, เซียนโกะ" maxlength="16">
+          <div class="account-player-banner">
+            <span style="font-size: 1.1rem;">⚫</span>
+            <span style="color: var(--text-secondary); font-size: 0.88rem;">เจ้าของห้อง (หมากดำ):</span>
+            <b class="account-player-name" style="color: var(--accent-gold); margin-left: 0.25rem;">กำลังโหลด...</b>
+          </div>
         </div>
 
         <div class="form-group">
@@ -159,8 +200,11 @@
         <h2 class="card-title">🔑 เข้าร่วมห้องเพื่อน</h2>
 
         <div class="form-group">
-          <label class="form-label" for="joinPlayerName">ชื่อของคุณ</label>
-          <input type="text" id="joinPlayerName" class="form-input" placeholder="ใส่ชื่อของคุณ..." maxlength="16">
+          <div class="account-player-banner">
+            <span style="font-size: 1.1rem;">⚪</span>
+            <span style="color: var(--text-secondary); font-size: 0.88rem;">ผู้เข้าร่วม (หมากขาว):</span>
+            <b class="account-player-name" style="color: var(--accent-gold); margin-left: 0.25rem;">กำลังโหลด...</b>
+          </div>
         </div>
 
         <div class="form-group">
@@ -409,44 +453,6 @@
           ดูกระดาน
         </button>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL: User Auth (Login / Register) -->
-  <div id="authModal" class="modal-backdrop">
-    <div class="modal-dialog auth-modal-dialog">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-        <h3 class="modal-title" style="margin-bottom: 0;">🔐 บัญชีผู้ใช้</h3>
-        <button id="btnCloseAuthModal" class="btn-alert-close" title="ปิด">✕</button>
-      </div>
-
-      <!-- Auth Tabs -->
-      <div class="auth-tabs">
-        <button id="tabLogin" class="auth-tab active">เข้าสู่ระบบ</button>
-        <button id="tabRegister" class="auth-tab">สมัครสมาชิกใหม่</button>
-      </div>
-
-      <div id="authErrorMessage" class="auth-error" style="display: none;"></div>
-
-      <form id="authForm" onsubmit="return false;" style="margin-top: 1.25rem;">
-        <div class="form-group" style="text-align: left;">
-          <label class="form-label" for="authUsername">ชื่อผู้ใช้ (Username)</label>
-          <input type="text" id="authUsername" class="form-input" placeholder="ใส่ชื่อผู้ใช้..." autocomplete="username" maxlength="20" required>
-        </div>
-
-        <div class="form-group" style="text-align: left;">
-          <label class="form-label" for="authPassword">รหัสผ่าน (Password)</label>
-          <input type="password" id="authPassword" class="form-input" placeholder="ใส่รหัสผ่าน..." autocomplete="current-password" maxlength="32" required>
-        </div>
-
-        <p id="authNoteText" style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1.25rem; text-align: left;">
-          💡 บัญชีนี้จะใช้บันทึกประวัติการแข่งขันและผลลัพธ์แยกเฉพาะของคุณเท่านั้น
-        </p>
-
-        <button type="submit" id="btnSubmitAuth" class="btn btn-primary" style="width: 100%;">
-          เข้าสู่ระบบ
-        </button>
-      </form>
     </div>
   </div>
 

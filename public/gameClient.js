@@ -111,22 +111,20 @@ const toastContainer = document.getElementById('toastContainer');
 const TOKEN_KEY = 'online_go_token';
 let currentUser = null;
 
-const userGuestSection = document.getElementById('userGuestSection');
-const userLoggedInSection = document.getElementById('userLoggedInSection');
+// Mandatory Gate View Elements (Shown before entering game)
+const authGateView = document.getElementById('authGateView');
+const gateTabLogin = document.getElementById('gateTabLogin');
+const gateTabRegister = document.getElementById('gateTabRegister');
+const gateErrorMessage = document.getElementById('gateErrorMessage');
+const gateAuthForm = document.getElementById('gateAuthForm');
+const gateUsername = document.getElementById('gateUsername');
+const gatePassword = document.getElementById('gatePassword');
+const btnGateSubmit = document.getElementById('btnGateSubmit');
+const gateNoteText = document.getElementById('gateNoteText');
+let gateMode = 'login'; // 'login' or 'register'
+
 const currentUserName = document.getElementById('currentUserName');
-const btnOpenAuth = document.getElementById('btnOpenAuth');
-const btnCloseAuthModal = document.getElementById('btnCloseAuthModal');
-const authModal = document.getElementById('authModal');
-const authForm = document.getElementById('authForm');
-const tabLogin = document.getElementById('tabLogin');
-const tabRegister = document.getElementById('tabRegister');
-const authUsername = document.getElementById('authUsername');
-const authPassword = document.getElementById('authPassword');
-const btnSubmitAuth = document.getElementById('btnSubmitAuth');
-const authErrorMessage = document.getElementById('authErrorMessage');
-const authNoteText = document.getElementById('authNoteText');
 const btnLogout = document.getElementById('btnLogout');
-let authMode = 'login'; // 'login' or 'register'
 
 // --- Match History Elements ---
 const btnOpenHistory = document.getElementById('btnOpenHistory');
@@ -510,7 +508,7 @@ function setupEventListeners() {
       window.goAudio.init();
       const size = document.querySelector('input[name="botBoardSize"]:checked')?.value || 9;
       const level = botLevelSelect.value || 1;
-      const name = botPlayerName.value.trim() || 'ผู้เล่น';
+      const name = currentUser ? currentUser.username : 'ผู้เล่น';
 
       socket.emit('start_bot_game', { size: parseInt(size, 10), botLevel: parseInt(level, 10), playerName: name });
     });
@@ -519,7 +517,7 @@ function setupEventListeners() {
   btnCreateRoom.addEventListener('click', () => {
     window.goAudio.init();
     const size = document.querySelector('input[name="boardSize"]:checked')?.value || 9;
-    const name = createPlayerName.value.trim() || 'ผู้เล่น 1';
+    const name = currentUser ? currentUser.username : 'ผู้เล่น 1';
     const timeLimit = parseInt(timeLimitSelect.value, 10) || 0;
 
     socket.emit('create_room', { size: parseInt(size, 10), playerName: name, timeLimit });
@@ -528,7 +526,7 @@ function setupEventListeners() {
   btnJoinRoom.addEventListener('click', () => {
     window.goAudio.init();
     const roomId = joinRoomCode.value.trim().toUpperCase();
-    const name = joinPlayerName.value.trim() || 'ผู้เล่น 2';
+    const name = currentUser ? currentUser.username : 'ผู้เล่น 2';
 
     if (!roomId) {
       showToast('กรุณากรอกรหัสห้อง 6 ตัวอักษร');
@@ -661,27 +659,17 @@ function setupEventListeners() {
     });
   });
 
-  // --- Auth Event Listeners ---
-  if (btnOpenAuth) {
-    btnOpenAuth.addEventListener('click', () => openAuthModal('login'));
+  // --- Mandatory Gate Auth Listeners ---
+  if (gateTabLogin) {
+    gateTabLogin.addEventListener('click', () => switchGateTab('login'));
   }
 
-  if (btnCloseAuthModal) {
-    btnCloseAuthModal.addEventListener('click', () => {
-      authModal.style.display = 'none';
-    });
+  if (gateTabRegister) {
+    gateTabRegister.addEventListener('click', () => switchGateTab('register'));
   }
 
-  if (tabLogin) {
-    tabLogin.addEventListener('click', () => switchAuthTab('login'));
-  }
-
-  if (tabRegister) {
-    tabRegister.addEventListener('click', () => switchAuthTab('register'));
-  }
-
-  if (authForm) {
-    authForm.addEventListener('submit', handleAuthSubmit);
+  if (gateAuthForm) {
+    gateAuthForm.addEventListener('submit', handleGateSubmit);
   }
 
   if (btnLogout) {
@@ -801,59 +789,50 @@ async function checkAuth() {
 }
 
 function renderUserBar() {
+  const accountPlayerNames = document.querySelectorAll('.account-player-name');
   if (currentUser) {
-    if (userGuestSection) userGuestSection.style.display = 'none';
-    if (userLoggedInSection) userLoggedInSection.style.display = 'flex';
+    if (authGateView) authGateView.style.display = 'none';
+    if (lobbyView && gameView.style.display !== 'flex') lobbyView.style.display = 'block';
     if (currentUserName) currentUserName.innerText = currentUser.username;
-    if (botPlayerName && !botPlayerName.value) botPlayerName.value = currentUser.username;
-    if (createPlayerName && !createPlayerName.value) createPlayerName.value = currentUser.username;
-    if (joinPlayerName && !joinPlayerName.value) joinPlayerName.value = currentUser.username;
+    accountPlayerNames.forEach(el => el.innerText = currentUser.username);
   } else {
-    if (userGuestSection) userGuestSection.style.display = 'flex';
-    if (userLoggedInSection) userLoggedInSection.style.display = 'none';
+    if (authGateView) authGateView.style.display = 'flex';
+    if (lobbyView) lobbyView.style.display = 'none';
+    if (gameView) gameView.style.display = 'none';
   }
 }
 
-function openAuthModal(mode = 'login') {
-  authMode = mode;
-  switchAuthTab(mode);
-  authErrorMessage.style.display = 'none';
-  authErrorMessage.innerText = '';
-  authModal.style.display = 'flex';
-  authUsername.focus();
-}
-
-function switchAuthTab(mode) {
-  authMode = mode;
+function switchGateTab(mode) {
+  gateMode = mode;
   if (mode === 'login') {
-    tabLogin.classList.add('active');
-    tabRegister.classList.remove('active');
-    btnSubmitAuth.innerText = 'เข้าสู่ระบบ';
-    authNoteText.innerText = '💡 เข้าสู่ระบบเพื่อบันทึกประวัติการแข่งและดูรีเพลย์ย้อนหลังเฉพาะบัญชีของคุณ';
+    gateTabLogin.classList.add('active');
+    gateTabRegister.classList.remove('active');
+    btnGateSubmit.innerText = 'เข้าสู่ระบบและเริ่มเล่น';
+    gateNoteText.innerText = '🔒 เข้าสู่ระบบเพื่อบันทึกประวัติการแข่งและดูรีเพลย์ย้อนหลังเฉพาะบัญชีของคุณ 100%';
   } else {
-    tabRegister.classList.add('active');
-    tabLogin.classList.remove('active');
-    btnSubmitAuth.innerText = 'สมัครสมาชิกใหม่';
-    authNoteText.innerText = '✨ สมัครสมาชิกฟรี บันทึกประวัติการแข่งขันและคำอธิบายแท็กติกแยกเฉพาะของคุณ 100%';
+    gateTabRegister.classList.add('active');
+    gateTabLogin.classList.remove('active');
+    btnGateSubmit.innerText = 'สมัครสมาชิกและเริ่มเล่น';
+    gateNoteText.innerText = '✨ สมัครสมาชิกใหม่ ตรวจสอบชื่อไม่ให้ซ้ำ และบันทึกประวัติการแข่งขันแยกเฉพาะบัญชีคุณ 100%';
   }
-  authErrorMessage.style.display = 'none';
+  gateErrorMessage.style.display = 'none';
 }
 
-async function handleAuthSubmit(e) {
+async function handleGateSubmit(e) {
   if (e) e.preventDefault();
-  const username = authUsername.value.trim();
-  const password = authPassword.value;
+  const username = gateUsername.value.trim();
+  const password = gatePassword.value;
 
-  authErrorMessage.style.display = 'none';
-  authErrorMessage.innerText = '';
+  gateErrorMessage.style.display = 'none';
+  gateErrorMessage.innerText = '';
 
   if (!username || !password) {
-    authErrorMessage.innerText = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน';
-    authErrorMessage.style.display = 'block';
+    gateErrorMessage.innerText = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน';
+    gateErrorMessage.style.display = 'block';
     return;
   }
 
-  const endpoint = authMode === 'register' ? '/api/register' : '/api/login';
+  const endpoint = gateMode === 'register' ? '/api/register' : '/api/login';
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -866,16 +845,15 @@ async function handleAuthSubmit(e) {
       currentUser = data.user;
       renderUserBar();
       socket.emit('auth_session', { token: data.token });
-      authModal.style.display = 'none';
-      authPassword.value = '';
-      showToast(authMode === 'register' ? `🎉 สมัครสมาชิกสำเร็จ! ยินดีต้อนรับคุณ ${currentUser.username}` : `👋 เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับคุณ ${currentUser.username}`);
+      gatePassword.value = '';
+      showToast(gateMode === 'register' ? `🎉 สมัครสมาชิกสำเร็จ! ยินดีต้อนรับคุณ ${currentUser.username}` : `👋 เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับคุณ ${currentUser.username}`);
     } else {
-      authErrorMessage.innerText = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
-      authErrorMessage.style.display = 'block';
+      gateErrorMessage.innerText = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+      gateErrorMessage.style.display = 'block';
     }
   } catch (err) {
-    authErrorMessage.innerText = 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ กรุณาลองใหม่';
-    authErrorMessage.style.display = 'block';
+    gateErrorMessage.innerText = 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ กรุณาลองใหม่';
+    gateErrorMessage.style.display = 'block';
   }
 }
 
@@ -898,8 +876,8 @@ async function handleLogout() {
 // --- MATCH HISTORY ---
 async function openHistoryModal() {
   if (!currentUser) {
-    openAuthModal('login');
     showToast('กรุณาเข้าสู่ระบบเพื่อดูประวัติการแข่งขันของคุณ');
+    renderUserBar();
     return;
   }
 
