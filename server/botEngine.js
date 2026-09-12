@@ -1,7 +1,397 @@
 /**
- * Go Bot Engine & Competition Tactical Coach
- * Supports 6 difficulty levels ranging from beginner to World-Class Pro (God Tier)
+ * Joseki & World-Class Opening Book Engine (Pro & AI Patterns)
+ * Supports 8-way rotational and reflection symmetries across 9x9, 13x13, and 19x19 boards.
  */
+class JosekiEngine {
+  /**
+   * Applies symmetry transformation k (0 to 7) to canonical coordinate (r, c) on a board of size
+   */
+  static transform(r, c, size, k) {
+    switch (k) {
+      case 0: return { r, c }; // Top-Left original
+      case 1: return { r: c, c: r }; // Top-Left diagonal reflection
+      case 2: return { r, c: size - 1 - c }; // Top-Right
+      case 3: return { r: c, c: size - 1 - r }; // Top-Right diagonal
+      case 4: return { r: size - 1 - r, c }; // Bottom-Left
+      case 5: return { r: size - 1 - c, c: r }; // Bottom-Left diagonal
+      case 6: return { r: size - 1 - r, c: size - 1 - c }; // Bottom-Right
+      case 7: return { r: size - 1 - c, c: size - 1 - r }; // Bottom-Right diagonal
+      default: return { r, c };
+    }
+  }
+
+  /**
+   * Comprehensive Joseki and Fuseki pattern database
+   */
+  static get PATTERNS() {
+    return [
+      // ==========================================
+      // 1. MODERN AI 3-3 INVASION (San-San) (19x19 & 13x13)
+      // ==========================================
+      {
+        id: 'ai_33_block',
+        name: 'AI 3-3 Invasion: Block',
+        boardSizes: [19, 13],
+        priority: 95,
+        required: [
+          { r: 3, c: 3, role: 'SELF' }, // Bot has star point
+          { r: 2, c: 2, role: 'OPP' }   // Opponent invaded 3-3
+        ],
+        empty: [
+          { r: 2, c: 3 }
+        ],
+        recommended: { r: 2, c: 3 },
+        commentary: 'บล็อกปิดทางบุก 3-3 ของฝ่ายตรงข้ามตามสูตร AI ยุคใหม่ เพื่อสร้างกำแพงอิทธิพล'
+      },
+      {
+        id: 'ai_33_crawl',
+        name: 'AI 3-3 Invasion: Crawl',
+        boardSizes: [19, 13],
+        priority: 94,
+        required: [
+          { r: 3, c: 3, role: 'OPP' },
+          { r: 2, c: 3, role: 'OPP' },
+          { r: 2, c: 2, role: 'SELF' } // Bot invaded 3-3
+        ],
+        empty: [
+          { r: 1, c: 2 }
+        ],
+        recommended: { r: 1, c: 2 },
+        commentary: 'คลานเลียบเส้นที่ 2 (Crawl) ตามสูตรบุก 3-3 เพื่อสร้างฐานที่มั่นคงในมุม'
+      },
+      {
+        id: 'ai_33_hane',
+        name: 'AI 3-3 Invasion: Push & Hane',
+        boardSizes: [19, 13],
+        priority: 93,
+        required: [
+          { r: 3, c: 3, role: 'SELF' },
+          { r: 2, c: 3, role: 'SELF' },
+          { r: 2, c: 2, role: 'OPP' },
+          { r: 1, c: 2, role: 'OPP' }
+        ],
+        empty: [
+          { r: 1, c: 3 }
+        ],
+        recommended: { r: 1, c: 3 },
+        commentary: 'ฮาเนะกดหัวหมาก (Hane) เพื่อจำกัดพื้นที่ของขาวและขยายอิทธิพลภายนอก'
+      },
+      {
+        id: 'ai_33_corner_live',
+        name: 'AI 3-3 Invasion: Live in Corner',
+        boardSizes: [19, 13],
+        priority: 92,
+        required: [
+          { r: 3, c: 3, role: 'OPP' },
+          { r: 2, c: 3, role: 'OPP' },
+          { r: 1, c: 3, role: 'OPP' },
+          { r: 2, c: 2, role: 'SELF' },
+          { r: 1, c: 2, role: 'SELF' }
+        ],
+        empty: [
+          { r: 1, c: 1 }
+        ],
+        recommended: { r: 1, c: 1 },
+        commentary: 'ฮาเนะเปิดทางรอดในมุม (Corner Hane) เพื่อเตรียมสร้าง 2 ห้องจริง'
+      },
+      {
+        id: 'ai_33_connect_solid',
+        name: 'AI 3-3 Invasion: Solid Connect',
+        boardSizes: [19, 13],
+        priority: 91,
+        required: [
+          { r: 3, c: 3, role: 'SELF' },
+          { r: 2, c: 3, role: 'SELF' },
+          { r: 1, c: 3, role: 'SELF' },
+          { r: 2, c: 2, role: 'OPP' },
+          { r: 1, c: 2, role: 'OPP' },
+          { r: 1, c: 1, role: 'OPP' }
+        ],
+        empty: [
+          { r: 2, c: 4 }
+        ],
+        recommended: { r: 2, c: 4 },
+        commentary: 'ต่อหมากมั่นคง (Nobi) ป้องกันจุดตัดและสร้างกำแพงอิทธิพลสุดแกร่ง'
+      },
+
+      // ==========================================
+      // 2. SMALL KNIGHT APPROACH (Keima Kakari) (19x19 & 13x13)
+      // ==========================================
+      {
+        id: 'small_knight_attach',
+        name: 'Small Knight Approach: Top Attachment (Tsuke)',
+        boardSizes: [19, 13],
+        priority: 88,
+        required: [
+          { r: 3, c: 3, role: 'SELF' },
+          { r: 2, c: 5, role: 'OPP' }
+        ],
+        empty: [
+          { r: 2, c: 4 }
+        ],
+        recommended: { r: 2, c: 4 },
+        commentary: 'สูตรแนบบน (Tsuke) สไตล์ AI เพื่อตั้งรับการเข้ามุมม้าเล็กและบีบให้คู่ต่อสู้ต้องเลือกข้าง'
+      },
+      {
+        id: 'small_knight_attach_reply',
+        name: 'Small Knight Approach: Outside Hane',
+        boardSizes: [19, 13],
+        priority: 87,
+        required: [
+          { r: 3, c: 3, role: 'OPP' },
+          { r: 2, c: 4, role: 'OPP' },
+          { r: 2, c: 5, role: 'SELF' }
+        ],
+        empty: [
+          { r: 1, c: 4 }
+        ],
+        recommended: { r: 1, c: 4 },
+        commentary: 'ฮาเนะสวนด้านนอก (Hane) ตอบโต้สูตรแนบบนอย่างเฉียบขาด'
+      },
+      {
+        id: 'small_knight_backoff',
+        name: 'Small Knight Approach: Solid Backoff',
+        boardSizes: [19, 13],
+        priority: 85,
+        required: [
+          { r: 3, c: 3, role: 'SELF' },
+          { r: 2, c: 5, role: 'OPP' }
+        ],
+        empty: [
+          { r: 1, c: 3 }
+        ],
+        recommended: { r: 1, c: 3 },
+        commentary: 'ถอยรับม้าเล็ก (Keima) เพื่อรักษาแต้มในมุมอย่างสมดุลและปลอดภัย'
+      },
+
+      // ==========================================
+      // 3. KOMOKU (3-4 Point) ENCLOSURES & DEFENSE
+      // ==========================================
+      {
+        id: 'komoku_small_enclosure',
+        name: 'Komoku: Small Knight Enclosure (Keima Shimari)',
+        boardSizes: [19, 13],
+        priority: 75,
+        required: [
+          { r: 2, c: 3, role: 'SELF' }
+        ],
+        emptyRadius: 6,
+        empty: [
+          { r: 4, c: 2 }
+        ],
+        recommended: { r: 4, c: 2 },
+        commentary: 'ล้อมมุมม้าเล็ก (Keima Shimari) ยึดพื้นที่มุม 15-20 แต้มอย่างมั่นคงถาวร'
+      },
+      {
+        id: 'komoku_approach_defense',
+        name: 'Komoku: Diagonal Defense (Kosumi)',
+        boardSizes: [19, 13],
+        priority: 86,
+        required: [
+          { r: 2, c: 3, role: 'SELF' },
+          { r: 4, c: 3, role: 'OPP' }
+        ],
+        empty: [
+          { r: 3, c: 3 }
+        ],
+        recommended: { r: 3, c: 3 },
+        commentary: 'เดินแยงมุมตั้งรับ (Kosumi) รักษาฐานมุมโคมกุไม่ให้ถูกเจาะ'
+      },
+
+      // ==========================================
+      // 4. EMPTY CORNER OCCUPATIONS (19x19 & 13x13)
+      // ==========================================
+      {
+        id: 'empty_corner_star',
+        name: 'Empty Corner: Star Point (Hoshi)',
+        boardSizes: [19, 13],
+        priority: 60,
+        required: [],
+        emptyRadius: 5,
+        empty: [
+          { r: 3, c: 3 }
+        ],
+        recommended: { r: 3, c: 3 },
+        commentary: 'ยึดจุดดาว (Hoshi) ตามหลัก "มุมคือทอง ข้างคือเงิน กลางคือหญ้า"'
+      },
+      {
+        id: 'empty_corner_komoku',
+        name: 'Empty Corner: Komoku (3-4)',
+        boardSizes: [19, 13],
+        priority: 58,
+        required: [],
+        emptyRadius: 5,
+        empty: [
+          { r: 2, c: 3 }
+        ],
+        recommended: { r: 2, c: 3 },
+        commentary: 'ยึดจุดโคมกุ 3-4 เพื่อเน้นความสมดุลระหว่างพื้นที่มุมและการขยายตัว'
+      },
+
+      // ==========================================
+      // 5. 9x9 BOARD MASTER OPENINGS & FIGHTING
+      // ==========================================
+      {
+        id: '9x9_tengen_open',
+        name: '9x9: Center Tengen Opening',
+        boardSizes: [9],
+        priority: 100,
+        boardEmpty: true,
+        recommended: { r: 4, c: 4 },
+        commentary: 'ยึดจุดกึ่งกลางกระดาน (เท็นเก็น Tengen 4,4) สูตรเปิดเกมที่ทรงพลังที่สุดบนกระดาน 9x9'
+      },
+      {
+        id: '9x9_tengen_reply_corner',
+        name: '9x9: Corner Base vs Tengen',
+        boardSizes: [9],
+        priority: 98,
+        required: [
+          { r: 4, c: 4, role: 'OPP' }
+        ],
+        boardTotalStones: 1,
+        recommended: { r: 2, c: 6 },
+        commentary: 'ยึดมุมตรงข้ามเพื่อตั้งฐานที่มั่นคง ท้าทายอิทธิพลกลางกระดานของดำ'
+      },
+      {
+        id: '9x9_split_corners',
+        name: '9x9: Dual Corner Split',
+        boardSizes: [9],
+        priority: 96,
+        required: [
+          { r: 4, c: 4, role: 'SELF' },
+          { r: 2, c: 6, role: 'OPP' }
+        ],
+        boardTotalStones: 2,
+        recommended: { r: 6, c: 2 },
+        commentary: 'แยกมุมตรงข้าม (Dual Corner) ควบคุมพื้นที่ 2 ฝั่งเพื่อบีบให้ขาวเล่นยาก'
+      },
+      {
+        id: '9x9_knight_extension',
+        name: '9x9: Knight Extension',
+        boardSizes: [9],
+        priority: 94,
+        required: [
+          { r: 4, c: 4, role: 'OPP' },
+          { r: 2, c: 6, role: 'SELF' },
+          { r: 6, c: 2, role: 'OPP' }
+        ],
+        boardTotalStones: 3,
+        recommended: { r: 2, c: 3 },
+        commentary: 'ขยายฐานม้าเล็กเพื่อเชื่อมโยงโครงสร้างและสร้างพื้นที่แน่นอน'
+      },
+      {
+        id: '9x9_corner_invasion_block',
+        name: '9x9: Corner Invasion Block',
+        boardSizes: [9],
+        priority: 97,
+        required: [
+          { r: 2, c: 2, role: 'SELF' },
+          { r: 1, c: 1, role: 'OPP' }
+        ],
+        empty: [
+          { r: 1, c: 2 }
+        ],
+        recommended: { r: 1, c: 2 },
+        commentary: 'บล็อกสกัดการบุกมุม 9x9 อย่างเด็ดขาด ป้องกันการแย่งพื้นที่'
+      }
+    ];
+  }
+
+  /**
+   * Matches all patterns across the 8 symmetries and finds best move
+   */
+  static findBestBookMove(game, botColor, opponent, moves) {
+    const size = game.size;
+    const board = game.board;
+    const legalSet = new Set(moves.map(m => `${m.r},${m.c}`));
+
+    let totalStones = 0;
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (board[r][c] !== 0) totalStones++;
+      }
+    }
+
+    const matchingCandidates = [];
+
+    for (const pat of JosekiEngine.PATTERNS) {
+      if (!pat.boardSizes.includes(size)) continue;
+
+      if (pat.boardEmpty && totalStones > 0) continue;
+      if (typeof pat.boardTotalStones === 'number' && totalStones !== pat.boardTotalStones) continue;
+
+      for (let k = 0; k < 8; k++) {
+        if (pat.boardEmpty && k > 0) break;
+
+        const targetCoord = JosekiEngine.transform(pat.recommended.r, pat.recommended.c, size, k);
+        const targetKey = `${targetCoord.r},${targetCoord.c}`;
+
+        if (!legalSet.has(targetKey) || board[targetCoord.r][targetCoord.c] !== 0) {
+          continue;
+        }
+
+        if (pat.emptyRadius) {
+          let hasObstacle = false;
+          for (let r = 0; r < pat.emptyRadius; r++) {
+            for (let c = 0; c < pat.emptyRadius; c++) {
+              const trans = JosekiEngine.transform(r, c, size, k);
+              if (board[trans.r][trans.c] !== 0) {
+                const isRequired = pat.required && pat.required.some(req => req.r === r && req.c === c);
+                if (!isRequired) {
+                  hasObstacle = true;
+                  break;
+                }
+              }
+            }
+            if (hasObstacle) break;
+          }
+          if (hasObstacle) continue;
+        }
+
+        let matches = true;
+        if (pat.required) {
+          for (const req of pat.required) {
+            const coord = JosekiEngine.transform(req.r, req.c, size, k);
+            const expectedColor = req.role === 'SELF' ? botColor : opponent;
+            if (board[coord.r][coord.c] !== expectedColor) {
+              matches = false;
+              break;
+            }
+          }
+        }
+        if (!matches) continue;
+
+        if (pat.empty) {
+          for (const emp of pat.empty) {
+            const coord = JosekiEngine.transform(emp.r, emp.c, size, k);
+            if (board[coord.r][coord.c] !== 0) {
+              matches = false;
+              break;
+            }
+          }
+        }
+        if (!matches) continue;
+
+        matchingCandidates.push({
+          r: targetCoord.r,
+          c: targetCoord.c,
+          priority: pat.priority,
+          name: pat.name,
+          commentary: pat.commentary,
+          tacticName: pat.name,
+          tacticalComment: pat.commentary
+        });
+      }
+    }
+
+    if (matchingCandidates.length === 0) return null;
+
+    matchingCandidates.sort((a, b) => b.priority - a.priority);
+    const topPriority = matchingCandidates[0].priority;
+    const topPool = matchingCandidates.filter(c => c.priority === topPriority);
+    return topPool[Math.floor(Math.random() * topPool.length)];
+  }
+}
 
 class GoBot {
   constructor(level = 1) {
@@ -154,6 +544,11 @@ class GoBot {
   // LEVEL 3: มือโปร (Prodigy ~5-8 Kyu)
   // ==========================================
   level3Prodigy(game, moves, botColor, opponent) {
+    if (Math.random() < 0.65) {
+      const bookMove = this.getProOpeningMove(game, moves, botColor, opponent);
+      if (bookMove) return bookMove;
+    }
+
     let bestScore = -Infinity;
     let bestMove = moves[0];
 
@@ -173,6 +568,11 @@ class GoBot {
   // LEVEL 4: มืออาชีพ (Professional ~1-3 Dan)
   // ==========================================
   level4Professional(game, moves, botColor, opponent) {
+    if (Math.random() < 0.85) {
+      const bookMove = this.getProOpeningMove(game, moves, botColor, opponent);
+      if (bookMove) return bookMove;
+    }
+
     // Candidate filtering
     const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 16);
     let bestScore = -Infinity;
@@ -501,7 +901,17 @@ class GoBot {
   }
 
   /**
-   * Evaluates shape quality: Tiger's mouth, Bamboo joint vs Empty Triangle
+   * Retrieves a world-class opening or Joseki move from JosekiEngine
+   */
+  getProOpeningMove(game, moves, botColor, opponent) {
+    if (game.moveHistory && game.moveHistory.length > 18) {
+      return null;
+    }
+    return JosekiEngine.findBestBookMove(game, botColor, opponent, moves);
+  }
+
+  /**
+   * Evaluates shape quality: Hane at head of two, Bamboo joint, Tiger's mouth, Cross-cut vs Empty Triangle
    */
   evaluateShapeIntegrity(game, move, botColor, opponent) {
     let score = 0;
@@ -509,7 +919,7 @@ class GoBot {
     const c = move.c;
     const board = game.board;
 
-    // Empty Triangle (Aki-sankaku) penalty: 3 friendly stones forming an L with empty corner
+    // 1. Empty Triangle (Aki-sankaku) penalty: 3 friendly stones forming an L with empty corner
     const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
     let friendlyCardinals = 0;
     for (const [dr, dc] of dirs) {
@@ -521,24 +931,99 @@ class GoBot {
     }
 
     if (friendlyCardinals >= 2) {
-      // Check if this forms an empty triangle
       const diagonals = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
       for (const [dr, dc] of diagonals) {
         if (game.isInBounds(r + dr, c) && board[r + dr][c] === botColor &&
             game.isInBounds(r, c + dc) && board[r][c + dc] === botColor &&
             game.isInBounds(r + dr, c + dc) && board[r + dr][c + dc] === 0) {
-          score -= 180; // Empty triangle penalty!
+          score -= 220; // Empty triangle penalty!
         }
       }
       score += 60; // Solid connection bonus
     }
 
-    // Tiger's Mouth (Kaketsugi) bonus
+    // 2. Tiger's Mouth (Kaketsugi) bonus
     for (const [dr, dc] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
       const nr = r + dr;
       const nc = c + dc;
       if (game.isInBounds(nr, nc) && board[nr][nc] === botColor) {
-        score += 45; // Flexible diagonal connection
+        score += 55; // Flexible diagonal connection
+      }
+    }
+
+    // 3. Hane at the head of two stones (Niken no atama) - Proverb: Never allow hane at head of two!
+    const lineDirs = [
+      { dr: -1, dc: 0 },
+      { dr: 1, dc: 0 },
+      { dr: 0, dc: -1 },
+      { dr: 0, dc: 1 }
+    ];
+
+    for (const d of lineDirs) {
+      const opp1R = r + d.dr;
+      const opp1C = c + d.dc;
+      const opp2R = r + d.dr * 2;
+      const opp2C = c + d.dc * 2;
+
+      if (game.isInBounds(opp1R, opp1C) && game.isInBounds(opp2R, opp2C)) {
+        if (board[opp1R][opp1C] === opponent && board[opp2R][opp2C] === opponent) {
+          score += 850; // Striking the head of two opponent stones!
+        }
+      }
+
+      // 4. Defend own head of two stones (extend to avoid being struck)
+      const own1R = r + d.dr;
+      const own1C = c + d.dc;
+      const own2R = r + d.dr * 2;
+      const own2C = c + d.dc * 2;
+      if (game.isInBounds(own1R, own1C) && game.isInBounds(own2R, own2C)) {
+        if (board[own1R][own1C] === botColor && board[own2R][own2C] === botColor) {
+          score += 650; // Extending own stones forward safely
+        }
+      }
+    }
+
+    // 5. Cross-cut, Extend (Kirichigai ni nobi)
+    const diags = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    for (const [dr, dc] of diags) {
+      const oppDiagR = r + dr;
+      const oppDiagC = c + dc;
+      if (game.isInBounds(oppDiagR, oppDiagC) && board[oppDiagR][oppDiagC] === opponent) {
+        if ((game.isInBounds(r + dr, c) && board[r + dr][c] === botColor) ||
+            (game.isInBounds(r, c + dc) && board[r][c + dc] === botColor)) {
+          score += 600; // Proper extension in cross-cut
+        }
+      }
+    }
+
+    // 6. Bamboo Joint (Takefu) - Unbreakable connection
+    const bambooOffsets = [
+      [[0, 1], [2, 0], [2, 1]],
+      [[0, -1], [2, 0], [2, -1]],
+      [[1, 0], [0, 2], [1, 2]],
+      [[-1, 0], [0, 2], [-1, 2]]
+    ];
+    for (const set of bambooOffsets) {
+      const allFriendly = set.every(([dr, dc]) => {
+        const nr = r + dr, nc = c + dc;
+        return game.isInBounds(nr, nc) && board[nr][nc] === botColor;
+      });
+      if (allFriendly) {
+        score += 450;
+      }
+    }
+
+    // 7. Defend against Peep (Nozoki ni tsugu)
+    for (const [dr, dc] of dirs) {
+      const nr = r + dr, nc = c + dc;
+      if (game.isInBounds(nr, nc) && board[nr][nc] === opponent) {
+        const b1R = r + dc, b1C = c + dr;
+        const b2R = r - dc, b2C = c - dr;
+        if (game.isInBounds(b1R, b1C) && game.isInBounds(b2R, b2C)) {
+          if (board[b1R][b1C] === botColor && board[b2R][b2C] === botColor) {
+            score += 900; // Firm connection against opponent peep
+          }
+        }
       }
     }
 
@@ -927,6 +1412,7 @@ function getBotTauntAndComfort({ botLevel = 1, winReason = '', scoreResult = nul
 
 module.exports = {
   GoBot,
+  JosekiEngine,
   analyzeCapture,
   evaluateQuizExplanation,
   getBotTauntAndComfort

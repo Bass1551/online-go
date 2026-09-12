@@ -404,6 +404,14 @@ io.on('connection', (socket) => {
             analysis
           });
         }
+
+        // If Bot played a recognized Joseki / Opening move, notify player with Tactical Coach insight!
+        if (botMove && botMove.tacticalComment) {
+          io.to(roomId).emit('bot_tactical_note', {
+            note: botMove.tacticalComment,
+            name: botMove.tacticName
+          });
+        }
       } catch (err) {
         console.error('Error in triggerBotMove:', err);
         try {

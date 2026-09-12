@@ -1701,6 +1701,12 @@ socket.on('bot_captured_advice', (data) => {
   }
 });
 
+socket.on('bot_tactical_note', (data) => {
+  if (coachBannerContent) {
+    coachBannerContent.innerHTML = `<b>🥋 สูตรและแท็กติกโปร (${data.name || 'Joseki'}):</b><br>${data.note}`;
+  }
+});
+
 socket.on('new_message', (data) => {
   addChatMessage(data);
 });
