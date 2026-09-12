@@ -3,6 +3,22 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
+
+// Automatically load .env if present
+const envPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+    const [k, ...v] = trimmed.split('=');
+    if (k && v.length > 0 && !process.env[k.trim()]) {
+      process.env[k.trim()] = v.join('=').trim().replace(/^["']|["']$/g, '');
+    }
+  });
+}
+
 const GoGame = require('./goEngine');
 const { GoBot, analyzeCapture, evaluateQuizExplanation, getBotTauntAndComfort } = require('./botEngine');
 
