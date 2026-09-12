@@ -202,6 +202,19 @@ setInterval(() => {
     } else {
       room.lastTimerTick = now;
     }
+
+    // Bot Watchdog: Recover if bot turn gets stuck without a move
+    if (room.isBotGame && room.game.turn === 2 && !room.game.isGameOver && !room.botThinking) {
+      if (!room.lastBotTurnTime) {
+        room.lastBotTurnTime = now;
+      } else if (now - room.lastBotTurnTime > 3000) {
+        // More than 3 seconds on bot's turn without action -> kickstart bot move!
+        room.lastBotTurnTime = now;
+        triggerBotMove(roomId);
+      }
+    } else {
+      room.lastBotTurnTime = null;
+    }
   }
 }, 1000);
 
@@ -304,72 +317,105 @@ io.on('connection', (socket) => {
   function triggerBotMove(roomId) {
     const room = rooms.get(roomId);
     if (!room || !room.isBotGame || room.game.isGameOver || room.game.turn !== 2) return;
+    if (room.botThinking) return;
+    room.botThinking = true;
 
-    // Simulate thinking delay (400ms - 900ms)
+    // Simulate thinking delay (350ms - 750ms)
     setTimeout(() => {
+      room.botThinking = false;
       if (!rooms.has(roomId) || room.game.turn !== 2 || room.game.isGameOver) return;
 
-      const botMove = room.bot.computeMove(room.game, 2);
-      if (botMove.pass) {
-        const passRes = room.game.pass(2);
-        io.to(roomId).emit('turn_passed', {
-          player: 2,
-          turn: passRes.turn,
-          consecutivePasses: passRes.consecutivePasses,
-          announcement: `${room.white.name} ผ่าน (Pass)`
-        });
+      try {
+        let botMove = room.bot.computeMove(room.game, 2);
+        let moveRes = null;
 
-        if (passRes.isGameOver) {
-          saveCompletedGame(room, passRes.winner, passRes.winReason, passRes.scoreResult);
-
-          let botTaunt = null;
-          if (room.isBotGame && passRes.winner === 2) {
-            botTaunt = getBotTauntAndComfort({
-              botLevel: room.botLevel || 1,
-              winReason: passRes.winReason,
-              scoreResult: passRes.scoreResult
-            });
-          }
-
-          io.to(roomId).emit('game_over', {
-            winner: passRes.winner,
-            winReason: passRes.winReason,
-            scoreResult: passRes.scoreResult,
-            room: getSanitizedRoomState(room),
-            botTaunt
-          });
+        if (botMove && !botMove.pass) {
+          moveRes = room.game.playMove(2, botMove.r, botMove.c);
         }
-      } else {
-        const moveRes = room.game.playMove(2, botMove.r, botMove.c);
-        if (moveRes.success) {
-          io.to(roomId).emit('move_played', {
-            r: botMove.r,
-            c: botMove.c,
+
+        // If computed move failed or was illegal, try all legal moves one by one
+        if (!moveRes || !moveRes.success) {
+          const legalMoves = room.bot.getLegalMoves(room.game, 2);
+          for (const fallback of legalMoves) {
+            moveRes = room.game.playMove(2, fallback.r, fallback.c);
+            if (moveRes.success) {
+              botMove = fallback;
+              break;
+            }
+          }
+        }
+
+        // If no legal moves could be played or bot intentionally passed
+        if (!moveRes || !moveRes.success || !botMove || botMove.pass) {
+          const passRes = room.game.pass(2);
+          io.to(roomId).emit('turn_passed', {
             player: 2,
-            capturedStones: moveRes.capturedStones,
-            captures: moveRes.captures,
-            turn: moveRes.turn,
-            board: room.game.board,
-            lastMove: moveRes.lastMove,
-            sound: moveRes.capturedStones.length > 0 ? 'capture' : 'stone'
+            turn: passRes.turn,
+            consecutivePasses: passRes.consecutivePasses,
+            announcement: `${room.white.name} ผ่าน (Pass)`
           });
 
-          // If Bot captured user's stones, Coach explains why!
-          if (moveRes.capturedStones.length > 0) {
-            const analysis = analyzeCapture(null, null, room.game, moveRes.lastMove, moveRes.capturedStones);
-            // Save tactic analysis in moveHistory for match replay review
-            const lastHist = room.game.moveHistory[room.game.moveHistory.length - 1];
-            if (lastHist) {
-              lastHist.tacticAnalysis = analysis;
+          if (passRes.isGameOver) {
+            saveCompletedGame(room, passRes.winner, passRes.winReason, passRes.scoreResult);
+
+            let botTaunt = null;
+            if (room.isBotGame && passRes.winner === 2) {
+              botTaunt = getBotTauntAndComfort({
+                botLevel: room.botLevel || 1,
+                winReason: passRes.winReason,
+                scoreResult: passRes.scoreResult
+              });
             }
 
-            io.to(roomId).emit('bot_captured_advice', {
-              analysis
+            io.to(roomId).emit('game_over', {
+              winner: passRes.winner,
+              winReason: passRes.winReason,
+              scoreResult: passRes.scoreResult,
+              room: getSanitizedRoomState(room),
+              botTaunt
             });
           }
+          return;
         }
+
+        // Move successfully played!
+        io.to(roomId).emit('move_played', {
+          r: botMove.r,
+          c: botMove.c,
+          player: 2,
+          capturedStones: moveRes.capturedStones,
+          captures: moveRes.captures,
+          turn: moveRes.turn,
+          board: room.game.board,
+          lastMove: moveRes.lastMove,
+          sound: moveRes.capturedStones.length > 0 ? 'capture' : 'stone'
+        });
+
+        // If Bot captured user's stones, Coach explains why!
+        if (moveRes.capturedStones.length > 0) {
+          const analysis = analyzeCapture(null, null, room.game, moveRes.lastMove, moveRes.capturedStones);
+          const lastHist = room.game.moveHistory[room.game.moveHistory.length - 1];
+          if (lastHist) {
+            lastHist.tacticAnalysis = analysis;
+          }
+
+          io.to(roomId).emit('bot_captured_advice', {
+            analysis
+          });
+        }
+      } catch (err) {
+        console.error('Error in triggerBotMove:', err);
+        try {
+          const passRes = room.game.pass(2);
+          io.to(roomId).emit('turn_passed', {
+            player: 2,
+            turn: passRes.turn,
+            consecutivePasses: passRes.consecutivePasses,
+            announcement: `${room.white.name} ผ่าน (Pass)`
+          });
+        } catch (e) {}
       }
-    }, 600 + Math.random() * 400);
+    }, 350 + Math.random() * 350);
   }
 
   // Join Room

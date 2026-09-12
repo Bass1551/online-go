@@ -25,12 +25,13 @@ class GoBot {
   getLegalMoves(game, color) {
     const size = game.size;
     const moves = [];
+    const opponent = color === 1 ? 2 : 1;
+
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (game.board[r][c] === 0) {
           const clone = game.cloneBoard();
           clone[r][c] = color;
-          const opponent = color === 1 ? 2 : 1;
           let capturesOpponent = false;
 
           for (const n of game.getNeighbors(r, c)) {
@@ -38,7 +39,9 @@ class GoBot {
               const oppGroup = game.getGroup(n.r, n.c, clone);
               if (oppGroup && oppGroup.liberties === 0) {
                 capturesOpponent = true;
-                break;
+                for (const s of oppGroup.stones) {
+                  clone[s.r][s.c] = 0; // Remove captured stone!
+                }
               }
             }
           }

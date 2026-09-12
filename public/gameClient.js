@@ -570,7 +570,16 @@ function setupEventListeners() {
 
   btnRestart.addEventListener('click', () => {
     if (confirm('ต้องการเริ่มเล่นเกมใหม่หรือไม่?')) {
-      socket.emit('restart_game', { roomId: currentRoomId });
+      if (roomState && roomState.isBotGame) {
+        // Direct restart for bot game
+        socket.emit('start_bot_game', {
+          size: roomState.size || 9,
+          botLevel: roomState.botLevel || 1,
+          playerName: currentUser ? currentUser.username : (roomState.black?.name || 'ผู้เล่น')
+        });
+      } else {
+        socket.emit('restart_game', { roomId: currentRoomId });
+      }
     }
   });
 
@@ -1516,8 +1525,25 @@ socket.on('move_played', (data) => {
   }
 });
 
+socket.on('connect', () => {
+  console.log('Connected to server');
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    socket.emit('auth_session', { token });
+  }
+});
+
+socket.on('disconnect', (reason) => {
+  console.warn('Disconnected:', reason);
+  showToast('🔄 เซิร์ฟเวอร์กำลังรีโหลด/อัปเดตเวอร์ชัน ระบบจะเชื่อมต่อใหม่โดยอัตโนมัติ...');
+});
+
 socket.on('move_error', (data) => {
-  showToast(`⚠️ ${data.message}`);
+  if (data.message && (data.message.includes('ไม่พบห้อง') || data.message.includes('not found'))) {
+    showToast('⚠️ เซิร์ฟเวอร์เพิ่งอัปเดตเวอร์ชันใหม่สำเร็จ! กด "🔄 เริ่มใหม่" หรือสร้างห้องใหม่ได้เลยครับ');
+  } else {
+    showToast(`⚠️ ${data.message}`);
+  }
 });
 
 socket.on('turn_passed', (data) => {
