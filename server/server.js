@@ -260,6 +260,12 @@ app.delete('/api/admin/users/:id', verifyAdmin, (req, res) => {
   res.json(result);
 });
 
+app.post('/api/admin/users/wipe-all', verifyAdmin, (req, res) => {
+  const result = Database.adminWipeAllUsers();
+  io.emit('admin_event', { type: 'all_users_wiped' });
+  res.json(result);
+});
+
 app.post('/api/admin/clean-test-data', verifyAdmin, (req, res) => {
   const result = Database.cleanTestData();
   io.emit('admin_event', { type: 'test_data_cleaned' });

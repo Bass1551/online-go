@@ -570,6 +570,29 @@ if (btnCleanTestData) {
   });
 }
 
+// Wipe All Users Button
+const btnWipeAllUsers = document.getElementById('btnWipeAllUsers');
+if (btnWipeAllUsers) {
+  btnWipeAllUsers.addEventListener('click', async () => {
+    const confirmName = prompt('⚠️ คำเตือนสำคัญ!\nคุณกำลังจะลบข้อมูลผู้ใช้ทั้งหมดที่มี และเซสชันทั้งหมด ให้ทุกคนต้องสมัครใหม่\n\nพิมพ์คำว่า "WIPE" เพื่อยืนยันการลบ:');
+    if (confirmName !== 'WIPE') {
+      if (confirmName !== null) showToast('ยกเลิกการลบ (ไม่ได้พิมพ์ WIPE ถูกต้อง)');
+      return;
+    }
+    try {
+      const res = await adminFetch('/api/admin/users/wipe-all', { method: 'POST' });
+      if (res.success) {
+        showToast(res.message);
+        loadAllAdminData();
+      } else {
+        showToast(res.message || 'ลบข้อมูลไม่สำเร็จ', true);
+      }
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+}
+
 // Force Close Room
 window.forceCloseRoom = async function(roomId) {
   if (!confirm(`⚠️ ยืนยันการบังคับปิดห้อง ${roomId} หรือไม่?`)) {

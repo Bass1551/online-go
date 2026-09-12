@@ -121,13 +121,8 @@ class Database {
     const cleanUsername = rawUsername.toLowerCase();
     const user = users[cleanUsername];
 
-    // If user not found (e.g. server restarted or redeployed on Render),
-    // automatically register them on the fly so they never lose their account!
     if (!user) {
-      if (password && password.length >= 4) {
-        return Database.register(rawUsername, password);
-      }
-      return { success: false, message: 'กรุณากรอกรหัสผ่านอย่างน้อย 4 ตัวอักษร' };
+      return { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้ในระบบ กรุณากดแท็บ "สมัครสมาชิกใหม่" เพื่อลงทะเบียนบัญชีของคุณก่อนเข้าเล่นครับ' };
     }
 
     const testHash = hashPassword(password || '', user.salt);
@@ -650,6 +645,23 @@ class Database {
     return {
       success: true,
       message: `ลบบัญชีผู้ใช้ "${deletedUser.username}" เรียบร้อยแล้ว`
+    };
+  }
+
+  /**
+   * Admin: Wipe all users and sessions completely
+   */
+  static adminWipeAllUsers() {
+    users = {};
+    sessions = {};
+    resetRequests = [];
+    activeOtps = {};
+    saveJSON(USERS_FILE, users);
+    saveJSON(SESSIONS_FILE, sessions);
+    saveJSON(RESET_REQUESTS_FILE, resetRequests);
+    return {
+      success: true,
+      message: 'ลบข้อมูลผู้ใช้และเซสชันทั้งหมดเรียบร้อยแล้ว ทุกคนต้องสมัครสมาชิกใหม่'
     };
   }
 
