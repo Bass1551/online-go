@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👑 Online Go - ระบบหลังบ้านผู้ดูแลระบบ (Admin Backoffice)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --admin-bg: #0d1117;
+      --admin-card: #161b22;
+      --admin-border: #30363d;
+      --admin-accent: #58a6ff;
+      --admin-gold: #f1e05a;
+      --admin-green: #2ea043;
+      --admin-red: #f85149;
+      --admin-purple: #bc8cff;
+    }
+
+    body {
+      background: var(--admin-bg);
+      color: #c9d1d9;
+      font-family: 'Prompt', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .admin-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    /* Auth Lock Screen */
+    #authOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.96);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .login-box {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .login-box .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .login-box h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-box p {
+      color: #8b949e;
+      font-size: 0.95rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: #0d1117;
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+      color: #f0f6fc;
+      font-size: 1rem;
+      margin-bottom: 1.2rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .login-box input:focus {
+      border-color: var(--admin-accent);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+    }
+
+    .btn-admin-primary {
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-admin-primary:hover {
+      background: linear-gradient(135deg, #388bfd 0%, #58a6ff 100%);
+      transform: translateY(-1px);
+    }
+
+    /* Admin Navbar */
+    .admin-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--admin-border);
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .admin-brand h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      margin: 0;
+    }
+
+    .admin-badge {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--admin-red);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--admin-border);
+      color: #c9d1d9;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover {
+      background: #21262d;
+      border-color: #8b949e;
+      color: #f0f6fc;
+    }
+
+    /* Tab Menu */
+    .tab-bar {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--admin-border);
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #8b949e;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: #c9d1d9;
+    }
+
+    .tab-btn.active {
+      color: #58a6ff;
+      border-bottom-color: #58a6ff;
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stat Cards */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .stat-card {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-card .value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .stat-card .hint {
+      font-size: 0.75rem;
+      color: #8b949e;
+    }
+
+    /* Cards & Panels */
+    .admin-panel {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .panel-header h3 {
+      font-size: 1.15rem;
+      color: #f0f6fc;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Tables */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--admin-border);
+    }
+
+    table.admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    table.admin-table th {
+      background: #0d1117;
+      color: #8b949e;
+      padding: 0.85rem 1rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--admin-border);
+      white-space: nowrap;
+    }
+
+    table.admin-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--admin-border);
+      color: #c9d1d9;
+      vertical-align: middle;
+    }
+
+    table.admin-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.admin-table tr:hover td {
+      background: rgba(110, 118, 129, 0.05);
+    }
+
+    /* Code Snippet Styles */
+    .code-box {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      background: #0d1117;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      color: #58a6ff;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    .code-box:hover {
+      border-color: #58a6ff;
+    }
+
+    /* Action Buttons */
+    .btn-sm {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-sm-warning {
+      background: rgba(210, 153, 34, 0.15);
+      color: #d29922;
+      border-color: rgba(210, 153, 34, 0.4);
+    }
+    .btn-sm-warning:hover {
+      background: rgba(210, 153, 34, 0.3);
+    }
+
+    .btn-sm-danger {
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+      border-color: rgba(248, 81, 73, 0.4);
+    }
+    .btn-sm-danger:hover {
+      background: rgba(248, 81, 73, 0.3);
+    }
+
+    .btn-sm-success {
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      border-color: rgba(46, 160, 67, 0.4);
+    }
+    .btn-sm-success:hover {
+      background: rgba(46, 160, 67, 0.3);
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-green {
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .badge-red {
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .badge-blue {
+      background: rgba(88, 166, 255, 0.15);
+      color: #58a6ff;
+      border: 1px solid rgba(88, 166, 255, 0.3);
+    }
+
+    /* Modal */
+    .admin-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-content {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: 12px;
+      max-width: 460px;
+      width: 100%;
+      padding: 1.8rem;
+    }
+
+    .modal-content h3 {
+      color: #f0f6fc;
+      margin-top: 0;
+      margin-bottom: 0.8rem;
+    }
+
+    .modal-content p {
+      color: #8b949e;
+      font-size: 0.9rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    /* Toast */
+    #adminToast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #1f242c;
+      color: #f0f6fc;
+      padding: 0.9rem 1.5rem;
+      border-radius: 8px;
+      border-left: 4px solid #58a6ff;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      z-index: 10001;
+      display: none;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN AUTH LOCK OVERLAY -->
+  <div id="authOverlay">
+    <div class="login-box">
+      <div class="icon">👑</div>
+      <h1>ระบบหลังบ้าน (Admin Backoffice)</h1>
+      <p>ระบบตรวจสอบและจัดการข้อมูลสำหรับผู้ดูแลระบบเท่านั้น กรุณากรอก Master Admin Key เพื่อปลดล็อก</p>
+      <form id="adminLoginForm">
+        <input type="password" id="adminKeyInput" placeholder="กรอก Master Admin Key..." autocomplete="off" required>
+        <button type="submit" class="btn-admin-primary">ปลดล็อกระบบหลังบ้าน 🔓</button>
+      </form>
+      <div style="margin-top: 1.2rem;">
+        <a href="/" style="color: #8b949e; font-size: 0.85rem; text-decoration: none;">← กลับไปหน้าเล่นเกม</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN ADMIN DASHBOARD CONTAINER -->
+  <div class="admin-container" id="mainDashboard" style="display: none;">
+    
+    <!-- Navbar Header -->
+    <header class="admin-nav">
+      <div class="admin-brand">
+        <span style="font-size: 1.8rem;">🏯</span>
+        <div>
+          <h2>Online Go Backoffice</h2>
+          <div style="font-size: 0.8rem; color: #8b949e;">ระบบควบคุมและบริหารเซิร์ฟเวอร์ส่วนกลาง</div>
+        </div>
+        <span class="admin-badge">OWNER ONLY</span>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-outline" id="btnRefreshData">🔄 โหลดข้อมูลใหม่</button>
+        <a href="/" class="btn-outline" target="_blank">🎮 ไปยังหน้าเกม</a>
+        <button class="btn-outline" id="btnLogoutAdmin" style="color: var(--admin-red); border-color: rgba(248, 81, 73, 0.4);">🚪 ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="overview">📊 ภาพรวมระบบ</button>
+      <button class="tab-btn" data-tab="users">👥 บัญชีผู้ใช้ & ดูรหัสผ่าน (<span id="userCountBadge">0</span>)</button>
+      <button class="tab-btn" data-tab="rooms">🎮 ห้องที่กำลังเล่นสด (<span id="roomCountBadge">0</span>)</button>
+      <button class="tab-btn" data-tab="games">📜 ประวัติเกมทั้งหมด (<span id="gameCountBadge">0</span>)</button>
+      <button class="tab-btn" data-tab="broadcast">📢 ส่งประกาศเซิร์ฟเวอร์</button>
+    </nav>
+
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview" class="tab-content active">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="label">👥 ผู้ใช้ที่ลงทะเบียนทั้งหมด <span>👤</span></div>
+          <div class="value" id="statUsers">-</div>
+          <div class="hint">บันทึกอยู่ในฐานข้อมูลถาวร</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">🎮 ห้องที่เปิดอยู่ในแรมขณะนี้ <span>⚡</span></div>
+          <div class="value" id="statRooms" style="color: var(--admin-green);">-</div>
+          <div class="hint">ห้องที่กำลังเล่นหรือรอผู้เล่น</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">📜 จำนวนแมตช์ที่เคยเล่น <span>🏆</span></div>
+          <div class="value" id="statGames" style="color: var(--admin-purple);">-</div>
+          <div class="hint">ประวัติเกม Kifu ในระบบ</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">⏱️ ระยะเวลาเปิดทำงาน (Uptime) <span>⏳</span></div>
+          <div class="value" id="statUptime" style="font-size: 1.3rem;">-</div>
+          <div class="hint" id="statServerTime">Server Time</div>
+        </div>
+      </div>
+
+      <div class="admin-panel">
+        <div class="panel-header">
+          <h3>🖥️ ข้อมูลทรัพยากรเซิร์ฟเวอร์ (Server Diagnostics)</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <tbody>
+              <tr>
+                <td style="width: 250px; font-weight: 600; color: #8b949e;">Node.js Version</td>
+                <td id="diagNodeVersion">-</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600; color: #8b949e;">ระบบปฏิบัติการ (OS Platform)</td>
+                <td id="diagPlatform">-</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600; color: #8b949e;">การใช้หน่วยความจำ RAM (RSS)</td>
+                <td id="diagMemRss">-</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600; color: #8b949e;">Heap Memory Used</td>
+                <td id="diagMemHeap">-</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 600; color: #8b949e;">สถานะความปลอดภัยหลังบ้าน</td>
+                <td><span class="badge-pill badge-green">🔒 มีการป้องกันด้วย Master Admin Key อย่างเข้มงวด</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: USERS & PASSWORDS -->
+    <section id="tab-users" class="tab-content">
+      <div class="admin-panel">
+        <div class="panel-header">
+          <h3>👥 รายชื่อผู้ใช้ทั้งหมด & ข้อมูลความปลอดภัย (Users & Credentials)</h3>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="userSearchInput" placeholder="🔍 ค้นหาชื่อผู้ใช้..." style="padding: 0.4rem 0.8rem; background: #0d1117; border: 1px solid var(--admin-border); border-radius: 6px; color: #f0f6fc; font-size: 0.85rem;">
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 1rem;">
+          💡 <strong>หมายเหตุสำหรับเจ้าของระบบ:</strong> รหัสผ่านในระบบถูกเข้ารหัสชั้นสูงด้วยอัลกอริทึม Scrypt (SHA-512 + Salt) เพื่อความปลอดภัยสูงสุด หากผู้ใช้ลืมรหัสผ่าน คุณสามารถกดปุ่ม <strong>"🔑 เปลี่ยนรหัส"</strong> เพื่อตั้งรหัสผ่านใหม่ให้เขาได้ทันที!
+        </p>
+        <div class="table-responsive">
+          <table class="admin-table" id="usersTable">
+            <thead>
+              <tr>
+                <th>ลำดับ</th>
+                <th>ชื่อผู้ใช้ (Username)</th>
+                <th>User ID</th>
+                <th>วันที่ลงทะเบียน</th>
+                <th>Salt สุ่มเฉพาะ</th>
+                <th>Password Hash (Scrypt)</th>
+                <th>สถิติเล่น (ชนะ/แพ้)</th>
+                <th>การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="8" style="text-align: center; color: #8b949e;">กำลังโหลดข้อมูล...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: LIVE ROOMS -->
+    <section id="tab-rooms" class="tab-content">
+      <div class="admin-panel">
+        <div class="panel-header">
+          <h3>🎮 ห้องที่กำลังเปิดและแข่งขันสด (Real-time Live Rooms)</h3>
+          <span style="font-size: 0.85rem; color: #8b949e;">ข้อมูลซิงก์จาก RAM บนเซิร์ฟเวอร์แบบเรียลไทม์</span>
+        </div>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>รหัสห้อง (Code)</th>
+                <th>ขนาด</th>
+                <th>เวลาต่อเทิร์น</th>
+                <th>ผู้เล่นหมากดำ ⚫</th>
+                <th>ผู้เล่นหมากขาว ⚪</th>
+                <th>ตาเดิน / ตาใคร</th>
+                <th>ผู้ชม</th>
+                <th>การกระทำ</th>
+              </tr>
+            </thead>
+            <tbody id="roomsTableBody">
+              <tr><td colspan="8" style="text-align: center; color: #8b949e;">ไม่มีห้องที่เปิดอยู่ขณะนี้</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: GAMES ARCHIVE -->
+    <section id="tab-games" class="tab-content">
+      <div class="admin-panel">
+        <div class="panel-header">
+          <h3>📜 ประวัติเกมทั้งหมดในระบบ (Global Match Archive)</h3>
+          <span style="font-size: 0.85rem; color: #8b949e;">รวมทุกคู่ที่เล่นจบและบันทึกลงระบบ</span>
+        </div>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>วันและเวลา</th>
+                <th>ขนาด</th>
+                <th>โหมด</th>
+                <th>หมากดำ ⚫</th>
+                <th>หมากขาว ⚪</th>
+                <th>ผลการแข่งขัน</th>
+                <th>ตาเดิน</th>
+                <th>เม็ดที่จับกิน</th>
+              </tr>
+            </thead>
+            <tbody id="gamesTableBody">
+              <tr><td colspan="8" style="text-align: center; color: #8b949e;">กำลังโหลดข้อมูลประวัติเกม...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: BROADCAST -->
+    <section id="tab-broadcast" class="tab-content">
+      <div class="admin-panel" style="max-width: 650px;">
+        <div class="panel-header">
+          <h3>📢 ส่งข้อความประกาศเซิร์ฟเวอร์ (System Broadcast)</h3>
+        </div>
+        <p style="font-size: 0.9rem; color: #8b949e; margin-bottom: 1.2rem;">
+          ข้อความนี้จะถูกส่งผ่าน WebSocket ไปแสดงเตือนแบบ Toast บนหน้าจอของผู้เล่นทุกคนที่เชื่อมต่ออยู่ทันที
+        </p>
+        <form id="broadcastForm">
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.85rem; color: #c9d1d9; margin-bottom: 0.5rem; font-weight: 500;">ข้อความประกาศ:</label>
+            <textarea id="broadcastInput" rows="4" style="width: 100%; padding: 0.75rem; background: #0d1117; border: 1px solid var(--admin-border); border-radius: 8px; color: #f0f6fc; font-family: inherit; font-size: 0.95rem; resize: vertical;" placeholder="เช่น เซิร์ฟเวอร์จะปิดปรับปรุงเวลา 14:00 น. หรือ ขอต้อนรับสู่การแข่งขัน Go Online!" required></textarea>
+          </div>
+          <button type="submit" class="btn-admin-primary" style="width: auto; padding: 0.75rem 1.8rem;">🚀 ส่งประกาศถึงทุกคน</button>
+        </form>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- RESET PASSWORD MODAL -->
+  <div class="admin-modal" id="resetPasswordModal">
+    <div class="modal-content">
+      <h3>🔑 รีเซ็ตรหัสผ่านผู้ใช้</h3>
+      <p>คุณกำลังเปลี่ยนรหัสผ่านใหม่ให้กับ: <strong id="resetTargetUsername" style="color: var(--admin-accent);"></strong></p>
+      <form id="resetPasswordForm">
+        <input type="hidden" id="resetTargetId">
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.85rem; color: #c9d1d9; margin-bottom: 0.4rem;">รหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร):</label>
+          <input type="text" id="newPasswordInput" style="width: 100%; padding: 0.75rem; background: #0d1117; border: 1px solid var(--admin-border); border-radius: 8px; color: #f0f6fc; font-size: 1rem;" placeholder="กำหนดรหัสผ่านใหม่..." required minlength="4">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-outline" id="btnCancelReset">ยกเลิก</button>
+          <button type="submit" class="btn-admin-primary" style="width: auto; padding: 0.55rem 1.2rem;">บันทึกรหัสผ่านใหม่</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="adminToast">ข้อความแจ้งเตือน</div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

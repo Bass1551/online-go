@@ -1722,6 +1722,13 @@ socket.on('new_message', (data) => {
   addChatMessage(data);
 });
 
+socket.on('system_announcement', (data) => {
+  if (data && data.message) {
+    showToast(`📢 ประกาศจากผู้ดูแล: ${data.message}`);
+    addChatMessage({ type: 'system', text: `📢 ประกาศจากผู้ดูแล: ${data.message}` });
+  }
+});
+
 // Boot
 init();
 

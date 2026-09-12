@@ -82,6 +82,143 @@ app.get('/api/games/:id', (req, res) => {
   res.json({ success: true, game });
 });
 
+// ================= ADMIN BACKOFFICE API =================
+const ADMIN_MASTER_KEY = process.env.ADMIN_SECRET_KEY || 'admin_go_secret_2026';
+
+function verifyAdmin(req, res, next) {
+  const key = req.headers['x-admin-key'] || req.query.admin_key || (req.body && req.body.adminKey);
+  if (!key || key !== ADMIN_MASTER_KEY) {
+    return res.status(403).json({ success: false, message: 'การเข้าถึงถูกปฏิเสธ: ต้องใช้ Master Admin Key ที่ถูกต้อง' });
+  }
+  next();
+}
+
+// Admin login verification
+app.post('/api/admin/login', (req, res) => {
+  const { adminKey } = req.body || {};
+  if (adminKey === ADMIN_MASTER_KEY) {
+    return res.json({ success: true, message: 'ยืนยันตัวตนผู้ดูแลระบบสำเร็จ' });
+  }
+  return res.status(403).json({ success: false, message: 'Master Admin Key ไม่ถูกต้อง' });
+});
+
+// Admin System Overview Stats
+app.get('/api/admin/stats', verifyAdmin, (req, res) => {
+  const users = Database.getAllUsers();
+  const games = Database.getAllGames(1000);
+  const mem = process.memoryUsage();
+  res.json({
+    success: true,
+    stats: {
+      totalUsers: users.length,
+      activeRooms: rooms.size,
+      totalGames: games.length,
+      uptimeSeconds: Math.floor(process.uptime()),
+      memoryUsageMB: {
+        rss: Math.round(mem.rss / 1024 / 1024),
+        heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+        heapTotal: Math.round(mem.heapTotal / 1024 / 1024)
+      },
+      nodeVersion: process.version,
+      platform: `${os.type()} ${os.release()} (${os.arch()})`,
+      serverTime: new Date().toISOString()
+    }
+  });
+});
+
+// Admin User Management
+app.get('/api/admin/users', verifyAdmin, (req, res) => {
+  const users = Database.getAllUsers();
+  res.json({ success: true, users });
+});
+
+app.post('/api/admin/users/reset-password', verifyAdmin, (req, res) => {
+  const { target, newPassword } = req.body || {};
+  const result = Database.adminResetPassword(target, newPassword);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  res.json(result);
+});
+
+app.delete('/api/admin/users/:id', verifyAdmin, (req, res) => {
+  const result = Database.adminDeleteUser(req.params.id);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  res.json(result);
+});
+
+// Admin Live Rooms
+app.get('/api/admin/rooms', verifyAdmin, (req, res) => {
+  const liveRooms = [];
+  rooms.forEach((room, id) => {
+    liveRooms.push({
+      id: room.id,
+      size: room.size,
+      timeLimit: room.timeLimit,
+      isBotGame: !!room.isBotGame,
+      botLevel: room.botLevel || null,
+      black: room.black ? { name: room.black.name, connected: room.black.connected } : null,
+      white: room.white ? { name: room.white.name, connected: room.white.connected } : null,
+      spectatorCount: room.spectators ? room.spectators.length : 0,
+      spectators: (room.spectators || []).map(s => s.name),
+      moveCount: room.game ? room.game.history.length : 0,
+      currentTurn: room.game ? room.game.currentTurn : 1,
+      isGameOver: room.game ? room.game.isGameOver : false,
+      captures: room.game ? room.game.captures : { 1: 0, 2: 0 },
+      createdAt: room.createdAt || null
+    });
+  });
+  res.json({ success: true, rooms: liveRooms });
+});
+
+app.delete('/api/admin/rooms/:id', verifyAdmin, (req, res) => {
+  const roomId = req.params.id;
+  const room = rooms.get(roomId);
+  if (!room) {
+    return res.status(404).json({ success: false, message: 'ไม่พบห้องที่ระบุ' });
+  }
+  io.to(roomId).emit('room_updated', {
+    announcement: '⚠️ ห้องนี้ถูกปิดโดยผู้ดูแลระบบ (Admin Force Close)'
+  });
+  rooms.delete(roomId);
+  res.json({ success: true, message: `ปิดห้อง ${roomId} สำเร็จเรียบร้อยแล้ว` });
+});
+
+// Admin All Match History
+app.get('/api/admin/games', verifyAdmin, (req, res) => {
+  const limit = parseInt(req.query.limit) || 200;
+  const games = Database.getAllGames(limit);
+  res.json({ success: true, games });
+});
+
+app.get('/api/admin/games/:id', verifyAdmin, (req, res) => {
+  const game = Database.getGameByIdAdmin(req.params.id);
+  if (!game) {
+    return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลเกมนี้' });
+  }
+  res.json({ success: true, game });
+});
+
+// Admin System Broadcast to all connected clients
+app.post('/api/admin/broadcast', verifyAdmin, (req, res) => {
+  const { message } = req.body || {};
+  if (!message || !message.trim()) {
+    return res.status(400).json({ success: false, message: 'กรุณาระบุข้อความประกาศ' });
+  }
+  io.emit('system_announcement', {
+    message: message.trim(),
+    timestamp: Date.now()
+  });
+  res.json({ success: true, message: 'ส่งข้อความประกาศถึงผู้เล่นทุกคนเรียบร้อยแล้ว' });
+});
+
+// Admin Page Route
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
+});
+
 // Store active rooms in memory
 // Key: roomId, Value: Room object
 const rooms = new Map();

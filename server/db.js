@@ -226,6 +226,121 @@ class Database {
       winRate: userGames.length > 0 ? Math.round((wins / userGames.length) * 100) : 0
     };
   }
+
+  // ================= ADMIN BACKOFFICE METHODS =================
+
+  /**
+   * Admin: Get all registered user accounts with security details and stats
+   */
+  static getAllUsers() {
+    return Object.values(users).map(u => {
+      const stats = Database.getUserStats(u.id);
+      return {
+        id: u.id,
+        username: u.username,
+        salt: u.salt,
+        passwordHash: u.passwordHash,
+        createdAt: u.createdAt || 'ไม่ระบุ',
+        stats
+      };
+    });
+  }
+
+  /**
+   * Admin: Reset password for any user account
+   */
+  static adminResetPassword(target, newPassword) {
+    if (!target) return { success: false, message: 'กรุณาระบุบัญชีผู้ใช้' };
+    if (!newPassword || newPassword.length < 4) {
+      return { success: false, message: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 4 ตัวอักษร' };
+    }
+
+    const clean = target.trim();
+    // Search by ID or username
+    let userKey = Object.keys(users).find(k => users[k].id === clean || users[k].username.toLowerCase() === clean.toLowerCase());
+    if (!userKey) {
+      return { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้ในระบบ' };
+    }
+
+    const user = users[userKey];
+    const newSalt = crypto.randomBytes(16).toString('hex');
+    const newHash = hashPassword(newPassword, newSalt);
+
+    user.salt = newSalt;
+    user.passwordHash = newHash;
+    user.updatedAt = new Date().toISOString();
+
+    saveJSON(USERS_FILE, users);
+
+    // Invalidate existing sessions for this user so they must log in with new password
+    for (const token of Object.keys(sessions)) {
+      if (sessions[token].userId === user.id) {
+        delete sessions[token];
+      }
+    }
+    saveJSON(SESSIONS_FILE, sessions);
+
+    return {
+      success: true,
+      message: `เปลี่ยนรหัสผ่านสำหรับผู้ใช้ "${user.username}" สำเร็จเรียบร้อยแล้ว`,
+      user: { id: user.id, username: user.username }
+    };
+  }
+
+  /**
+   * Admin: Delete user account
+   */
+  static adminDeleteUser(target) {
+    if (!target) return { success: false, message: 'กรุณาระบุบัญชีผู้ใช้' };
+    const clean = target.trim();
+    const userKey = Object.keys(users).find(k => users[k].id === clean || users[k].username.toLowerCase() === clean.toLowerCase());
+    if (!userKey) {
+      return { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้' };
+    }
+
+    const deletedUser = users[userKey];
+    delete users[userKey];
+    saveJSON(USERS_FILE, users);
+
+    // Clear sessions
+    for (const token of Object.keys(sessions)) {
+      if (sessions[token].userId === deletedUser.id) {
+        delete sessions[token];
+      }
+    }
+    saveJSON(SESSIONS_FILE, sessions);
+
+    return {
+      success: true,
+      message: `ลบบัญชีผู้ใช้ "${deletedUser.username}" เรียบร้อยแล้ว`
+    };
+  }
+
+  /**
+   * Admin: Get all recorded matches
+   */
+  static getAllGames(limit = 200) {
+    return games.slice(0, limit).map(g => ({
+      id: g.id,
+      date: g.date,
+      size: g.size,
+      isBotGame: !!g.isBotGame,
+      botLevel: g.botLevel,
+      blackPlayer: g.blackPlayer,
+      whitePlayer: g.whitePlayer,
+      winner: g.winner,
+      winReason: g.winReason,
+      totalMoves: (g.moves || []).length,
+      captures: g.captures
+    }));
+  }
+
+  /**
+   * Admin: Get full game by ID (no restriction)
+   */
+  static getGameByIdAdmin(gameId) {
+    return games.find(g => g.id === gameId) || null;
+  }
 }
 
 module.exports = Database;
