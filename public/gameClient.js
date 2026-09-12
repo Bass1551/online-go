@@ -523,12 +523,14 @@ function setupEventListeners() {
       const size = document.querySelector('input[name="botBoardSize"]:checked')?.value || 9;
       const level = botLevelSelect.value || 1;
       const timeLimit = botTimeLimitSelect ? (parseInt(botTimeLimitSelect.value, 10) || 0) : 0;
+      const playerColor = document.querySelector('input[name="botPlayerColor"]:checked')?.value || 'black';
       const name = currentUser ? currentUser.username : 'ผู้เล่น';
 
       socket.emit('start_bot_game', {
         size: parseInt(size, 10),
         botLevel: parseInt(level, 10),
         timeLimit,
+        playerColor,
         playerName: name
       });
     });
@@ -1409,6 +1411,13 @@ function updateRoomUI(state) {
   whiteCaptures.innerText = `กินได้: ${state.game.captures[2] || 0}`;
   komiValue.innerText = `+${state.game.komi}`;
 
+  // Sync myRole with room state if user socket is recognized
+  if (state.black && state.black.socketId === socket.id) {
+    myRole = 1;
+  } else if (state.white && state.white.socketId === socket.id) {
+    myRole = 2;
+  }
+
   // Role Indicator
   if (myRole === 1) {
     roleIndicator.innerHTML = 'คุณเป็น: <b style="color:#fff;">หมากดำ ⚫</b>';
@@ -1442,7 +1451,9 @@ function updateRoomUI(state) {
     if (coachBanner) coachBanner.style.display = 'block';
     if (btnShareModal) btnShareModal.style.display = 'none';
     if (coachBannerContent && !coachBannerContent.innerText) {
-      coachBannerContent.innerHTML = `🥋 ยินดีต้อนรับสู่โหมดซ้อมแข่ง! คุณกำลังประลองกับ <b>${state.white?.name}</b> ทุกครั้งที่มีการกินหมาก โค้ชจะช่วยวิเคราะห์แท็กติกให้คุณ`;
+      const oppName = myRole === 1 ? (state.white?.name || 'AI') : (state.black?.name || 'AI');
+      const myColorText = myRole === 1 ? 'หมากดำ ⚫ (เดินก่อน)' : 'หมากขาว ⚪ (เดินหลัง + โคมิ)';
+      coachBannerContent.innerHTML = `🥋 ยินดีต้อนรับสู่โหมดซ้อมแข่ง! คุณกำลังประลองกับ <b>${oppName}</b> โดยคุณถือ <b>${myColorText}</b> ทุกครั้งที่มีการกินหมาก โค้ชจะช่วยวิเคราะห์แท็กติกให้คุณ`;
     }
   } else {
     if (coachBanner) coachBanner.style.display = 'none';

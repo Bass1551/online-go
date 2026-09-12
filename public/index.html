@@ -151,6 +151,36 @@
         </div>
 
         <div class="form-group">
+          <label class="form-label">🎨 เลือกฝั่งหมาก (Nigiri / สลับซ้อม)</label>
+          <div class="board-options">
+            <label>
+              <input type="radio" name="botPlayerColor" value="black" checked>
+              <div class="board-option-label">
+                <div style="font-size: 1.15rem;">⚫</div>
+                <div style="font-weight: 700; font-size: 0.9rem;">หมากดำ</div>
+                <small style="opacity: 0.75; font-size: 0.72rem;">เดินก่อน</small>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="botPlayerColor" value="white">
+              <div class="board-option-label">
+                <div style="font-size: 1.15rem;">⚪</div>
+                <div style="font-weight: 700; font-size: 0.9rem;">หมากขาว</div>
+                <small style="opacity: 0.75; font-size: 0.72rem;">เดินหลัง + โคมิ</small>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="botPlayerColor" value="random">
+              <div class="board-option-label">
+                <div style="font-size: 1.15rem;">🎲</div>
+                <div style="font-weight: 700; font-size: 0.9rem;">สุ่มทายหมาก</div>
+                <small style="opacity: 0.75; font-size: 0.72rem;">Nigiri 50/50</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">⏱️ เวลาต่อฝ่าย (จำลองแรงกดดันการแข่ง)</label>
           <select id="botTimeLimitSelect" class="form-input">
             <option value="0">ไม่จำกัดเวลา (เล่นสบายๆ ไม่มีแรงกดดัน)</option>

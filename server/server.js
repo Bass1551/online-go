@@ -180,7 +180,8 @@ setInterval(() => {
           saveCompletedGame(room, winner, room.game.winReason, null);
 
           let botTaunt = null;
-          if (room.isBotGame && winner === 2) {
+          const currentBotColor = room.botColor || (room.black && room.black.isBot ? 1 : 2);
+          if (room.isBotGame && winner === currentBotColor) {
             botTaunt = getBotTauntAndComfort({
               botLevel: room.botLevel || 1,
               winReason: room.game.winReason,
@@ -204,7 +205,8 @@ setInterval(() => {
     }
 
     // Bot Watchdog: Recover if bot turn gets stuck without a move
-    if (room.isBotGame && room.game.turn === 2 && !room.game.isGameOver && !room.botThinking) {
+    const activeBotColor = room.botColor || (room.black && room.black.isBot ? 1 : 2);
+    if (room.isBotGame && room.game.turn === activeBotColor && !room.game.isGameOver && !room.botThinking) {
       if (!room.lastBotTurnTime) {
         room.lastBotTurnTime = now;
       } else if (now - room.lastBotTurnTime > 3000) {
@@ -275,7 +277,7 @@ io.on('connection', (socket) => {
   });
 
   // Start Bot Game (Single Player Training Mode)
-  socket.on('start_bot_game', ({ size = 9, botLevel = 1, playerName = 'ผู้เล่น', timeLimit = 0 }) => {
+  socket.on('start_bot_game', ({ size = 9, botLevel = 1, playerName = 'ผู้เล่น', timeLimit = 0, playerColor = 'black' }) => {
     const validSize = [9, 13, 19].includes(Number(size)) ? Number(size) : 9;
     const level = Math.max(1, Math.min(6, parseInt(botLevel, 10) || 1));
     let roomId = 'BOT-' + generateRoomId().slice(0, 4);
@@ -283,62 +285,85 @@ io.on('connection', (socket) => {
     const game = new GoGame({ size: validSize });
     const bot = new GoBot(level);
     const botName = `AI ${GoBot.LEVEL_NAMES[level]}`;
-    const resolvedName = currentUser ? currentUser.username : (playerName.trim() || 'ผู้เล่น (ดำ)');
     const initialTime = Number(timeLimit) > 0 ? Number(timeLimit) * 60 : 0;
+
+    // Resolve chosen color (support 'black', 'white', or 'random' / 'nigiri')
+    let assignedRole = 1; // 1 = Black, 2 = White
+    if (playerColor === 'white') {
+      assignedRole = 2;
+    } else if (playerColor === 'random' || playerColor === 'nigiri') {
+      assignedRole = Math.random() < 0.5 ? 1 : 2;
+    }
+
+    const resolvedName = currentUser ? currentUser.username : (playerName.trim() || `ผู้เล่น (${assignedRole === 1 ? 'หมากดำ' : 'หมากขาว'})`);
 
     const room = {
       id: roomId,
       size: validSize,
       timeLimit: initialTime,
       game,
-      black: { socketId: socket.id, name: resolvedName, userId: currentUser ? currentUser.id : null, connected: true },
-      white: { socketId: 'bot', name: botName, connected: true, isBot: true, userId: null },
+      black: assignedRole === 1
+        ? { socketId: socket.id, name: resolvedName, userId: currentUser ? currentUser.id : null, connected: true }
+        : { socketId: 'bot', name: botName, connected: true, isBot: true, userId: null },
+      white: assignedRole === 2
+        ? { socketId: socket.id, name: resolvedName, userId: currentUser ? currentUser.id : null, connected: true }
+        : { socketId: 'bot', name: botName, connected: true, isBot: true, userId: null },
       spectators: [],
       timers: { 1: initialTime, 2: initialTime },
       lastTimerTick: null,
       undoPending: null,
       isBotGame: true,
       bot,
+      botColor: assignedRole === 1 ? 2 : 1,
       botLevel: level,
       pendingQuiz: null
     };
 
     rooms.set(roomId, room);
     currentRoomId = roomId;
-    playerRole = 1;
+    playerRole = assignedRole;
 
     socket.join(roomId);
     socket.emit('room_created', {
       roomId,
-      role: 1,
+      role: assignedRole,
       room: getSanitizedRoomState(room)
     });
+
+    // If player chose White (role 2), Bot is Black (role 1) and moves FIRST!
+    if (assignedRole === 2) {
+      triggerBotMove(roomId);
+    }
   });
 
   function triggerBotMove(roomId) {
     const room = rooms.get(roomId);
-    if (!room || !room.isBotGame || room.game.isGameOver || room.game.turn !== 2) return;
+    if (!room || !room.isBotGame || room.game.isGameOver) return;
+    const botColor = room.botColor || (room.black && room.black.isBot ? 1 : 2);
+    if (room.game.turn !== botColor) return;
     if (room.botThinking) return;
     room.botThinking = true;
 
     // Simulate thinking delay (350ms - 750ms)
     setTimeout(() => {
       room.botThinking = false;
-      if (!rooms.has(roomId) || room.game.turn !== 2 || room.game.isGameOver) return;
+      if (!rooms.has(roomId) || room.game.turn !== botColor || room.game.isGameOver) return;
+
+      const botPlayerObj = botColor === 1 ? room.black : room.white;
 
       try {
-        let botMove = room.bot.computeMove(room.game, 2);
+        let botMove = room.bot.computeMove(room.game, botColor);
         let moveRes = null;
 
         if (botMove && !botMove.pass) {
-          moveRes = room.game.playMove(2, botMove.r, botMove.c);
+          moveRes = room.game.playMove(botColor, botMove.r, botMove.c);
         }
 
         // If computed move failed or was illegal, try all legal moves one by one
         if (!moveRes || !moveRes.success) {
-          const legalMoves = room.bot.getLegalMoves(room.game, 2);
+          const legalMoves = room.bot.getLegalMoves(room.game, botColor);
           for (const fallback of legalMoves) {
-            moveRes = room.game.playMove(2, fallback.r, fallback.c);
+            moveRes = room.game.playMove(botColor, fallback.r, fallback.c);
             if (moveRes.success) {
               botMove = fallback;
               break;
@@ -348,19 +373,19 @@ io.on('connection', (socket) => {
 
         // If no legal moves could be played or bot intentionally passed
         if (!moveRes || !moveRes.success || !botMove || botMove.pass) {
-          const passRes = room.game.pass(2);
+          const passRes = room.game.pass(botColor);
           io.to(roomId).emit('turn_passed', {
-            player: 2,
+            player: botColor,
             turn: passRes.turn,
             consecutivePasses: passRes.consecutivePasses,
-            announcement: `${room.white.name} ผ่าน (Pass)`
+            announcement: `${botPlayerObj.name} ผ่าน (Pass)`
           });
 
           if (passRes.isGameOver) {
             saveCompletedGame(room, passRes.winner, passRes.winReason, passRes.scoreResult);
 
             let botTaunt = null;
-            if (room.isBotGame && passRes.winner === 2) {
+            if (room.isBotGame && passRes.winner === botColor) {
               botTaunt = getBotTauntAndComfort({
                 botLevel: room.botLevel || 1,
                 winReason: passRes.winReason,
@@ -383,7 +408,7 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('move_played', {
           r: botMove.r,
           c: botMove.c,
-          player: 2,
+          player: botColor,
           capturedStones: moveRes.capturedStones,
           captures: moveRes.captures,
           turn: moveRes.turn,
@@ -415,12 +440,12 @@ io.on('connection', (socket) => {
       } catch (err) {
         console.error('Error in triggerBotMove:', err);
         try {
-          const passRes = room.game.pass(2);
+          const passRes = room.game.pass(botColor);
           io.to(roomId).emit('turn_passed', {
-            player: 2,
+            player: botColor,
             turn: passRes.turn,
             consecutivePasses: passRes.consecutivePasses,
-            announcement: `${room.white.name} ผ่าน (Pass)`
+            announcement: `${botPlayerObj.name} ผ่าน (Pass)`
           });
         } catch (e) {}
       }
@@ -530,7 +555,7 @@ io.on('connection', (socket) => {
       }
 
       // If user captures stones in a bot training game, trigger interactive Quiz!
-      if (room.isBotGame && playerRole === 1) {
+      if (room.isBotGame && playerRole !== room.botColor) {
         room.pendingQuiz = analysis;
         socket.emit('quiz_prompt', {
           analysis,
@@ -540,7 +565,7 @@ io.on('connection', (socket) => {
     }
 
     // If it's a bot game, trigger bot's next move!
-    if (room.isBotGame && !room.game.isGameOver && room.game.turn === 2) {
+    if (room.isBotGame && !room.game.isGameOver && room.game.turn === room.botColor) {
       triggerBotMove(roomId);
     }
   });
@@ -587,7 +612,7 @@ io.on('connection', (socket) => {
       saveCompletedGame(room, result.winner, result.winReason, result.scoreResult);
 
       let botTaunt = null;
-      if (room.isBotGame && result.winner === 2) {
+      if (room.isBotGame && result.winner === room.botColor) {
         botTaunt = getBotTauntAndComfort({
           botLevel: room.botLevel || 1,
           winReason: result.winReason,
@@ -602,7 +627,7 @@ io.on('connection', (socket) => {
         room: getSanitizedRoomState(room),
         botTaunt
       });
-    } else if (room.isBotGame && result.turn === 2) {
+    } else if (room.isBotGame && result.turn === room.botColor) {
       triggerBotMove(roomId);
     }
   });
@@ -617,7 +642,7 @@ io.on('connection', (socket) => {
       saveCompletedGame(room, result.winner, result.winReason, null);
 
       let botTaunt = null;
-      if (room.isBotGame && result.winner === 2) {
+      if (room.isBotGame && result.winner === room.botColor) {
         botTaunt = getBotTauntAndComfort({
           botLevel: room.botLevel || 1,
           winReason: result.winReason,
@@ -643,7 +668,7 @@ io.on('connection', (socket) => {
     // Instant Undo for Bot Game (No bot confirmation required!)
     if (room.isBotGame) {
       let undoCount = 1;
-      if (room.game.turn === 1 && room.game.moveHistory.length >= 2) {
+      if (room.game.turn === playerRole && room.game.moveHistory.length >= 2) {
         undoCount = 2; // Undo bot move + player move
       } else if (room.game.moveHistory.length >= 1) {
         undoCount = 1;
@@ -716,10 +741,22 @@ io.on('connection', (socket) => {
     room.black = room.white;
     room.white = oldBlack;
 
+    if (room.isBotGame) {
+      room.botColor = room.black.isBot ? 1 : 2;
+      playerRole = room.botColor === 1 ? 2 : 1;
+    } else {
+      playerRole = playerRole === 1 ? 2 : 1;
+    }
+
     io.to(roomId).emit('game_restarted', {
       room: getSanitizedRoomState(room),
       announcement: 'เริ่มเกมใหม่เรียบร้อย! (สลับฝั่งหมากดำ/ขาว)'
     });
+
+    // If bot became Black, bot moves first!
+    if (room.isBotGame && room.botColor === 1) {
+      triggerBotMove(roomId);
+    }
   });
 
   // Chat message & quick emoji

@@ -31,10 +31,11 @@ console.log(`✅ 9x9 Move 1 Tengen passed: (${move1.r}, ${move1.c}) - ${move1.ta
 // Play Move 1 (Black Tengen)
 game9.playMove(1, 4, 4);
 
-// Move 2: Bot as White replies with corner base (2, 6)
+// Move 2: Bot as White replies with one of the 4 symmetrical corners (2,2), (2,6), (6,2), (6,6)
 const botWhite = new GoBot(6);
 const move2 = botWhite.computeMove(game9, 2);
-assert(move2.r === 2 && (move2.c === 6 || move2.c === 2), 'Move 2 on 9x9 should take corner against Tengen');
+const isCorner9 = (move2.r === 2 || move2.r === 6) && (move2.c === 2 || move2.c === 6);
+assert(isCorner9, `Move 2 on 9x9 should take one of the 4 symmetrical corners! Got (${move2.r}, ${move2.c})`);
 console.log(`✅ 9x9 Move 2 corner response passed: (${move2.r}, ${move2.c}) - ${move2.tacticalComment}`);
 
 // 3. Test 19x19 AI 3-3 Invasion (San-San Joseki)
