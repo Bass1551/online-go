@@ -607,7 +607,7 @@ io.on('connection', (socket) => {
   }
 
   // Join Room
-  socket.on('join_room', ({ roomId, playerName = 'ผู้เล่น 2' }) => {
+  socket.on('join_room', ({ roomId, playerName = 'ผู้เล่น 2', isAdmin = false }) => {
     roomId = (roomId || '').trim().toUpperCase();
     const room = rooms.get(roomId);
 
@@ -617,6 +617,28 @@ io.on('connection', (socket) => {
 
     currentRoomId = roomId;
     socket.join(roomId);
+
+    // Admin inspection mode: ALWAYS enters as spectator with Admin title
+    if (isAdmin) {
+      playerRole = 'spectator';
+      const adminName = '👑 ผู้ดูแลระบบ';
+      room.spectators = room.spectators.filter(s => s.socketId !== socket.id);
+      room.spectators.push({ socketId: socket.id, name: adminName, isAdmin: true });
+
+      socket.emit('room_joined', {
+        roomId,
+        role: 'spectator',
+        isAdmin: true,
+        room: getSanitizedRoomState(room)
+      });
+
+      io.to(roomId).emit('room_updated', {
+        room: getSanitizedRoomState(room),
+        announcement: '👑 ผู้ดูแลระบบ ได้เข้ามารับชมการแข่งขัน'
+      });
+      io.emit('admin_event', { type: 'room_updated', roomId });
+      return;
+    }
 
     const resolvedName = currentUser ? currentUser.username : (playerName.trim() || 'ผู้เล่น 2');
     const resolvedUserId = currentUser ? currentUser.id : null;
@@ -927,15 +949,18 @@ io.on('connection', (socket) => {
     let senderName = 'ผู้ชม';
     let senderColor = null;
 
-    if (playerRole === 1) {
+    const spec = room.spectators.find(s => s.socketId === socket.id);
+    if (spec && spec.isAdmin) {
+      senderName = '👑 ผู้ดูแลระบบ';
+      senderColor = 'admin';
+    } else if (playerRole === 1) {
       senderName = room.black?.name || 'หมากดำ';
       senderColor = 'black';
     } else if (playerRole === 2) {
       senderName = room.white?.name || 'หมากขาว';
       senderColor = 'white';
-    } else {
-      const spec = room.spectators.find(s => s.socketId === socket.id);
-      if (spec) senderName = spec.name;
+    } else if (spec) {
+      senderName = spec.name;
     }
 
     io.to(roomId).emit('new_message', {

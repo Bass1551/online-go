@@ -13,6 +13,7 @@ let boardSize = 9;
 let cellSize = 40;
 let margin = 35;
 let canvasSize = 500;
+let isAdminSpectateMode = false;
 
 // Elements
 const lobbyView = document.getElementById('lobbyView');
@@ -205,15 +206,24 @@ async function init() {
 function checkUrlParams() {
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
+  const adminParam = urlParams.get('admin') === '1' || urlParams.get('admin_spectate') === '1';
+
+  if (adminParam) {
+    isAdminSpectateMode = true;
+  }
+
   if (roomParam) {
     const targetRoomId = roomParam.trim().toUpperCase();
     if (joinRoomCode) joinRoomCode.value = targetRoomId;
 
     // Automatically join the room and switch to game view directly!
-    if (currentUser) {
+    if (isAdminSpectateMode) {
+      showToast(`👑 กำลังเปิดเข้าสู่ห้อง ${targetRoomId} ในฐานะผู้ดูแลระบบ...`);
+      socket.emit('join_room', { roomId: targetRoomId, playerName: '👑 ผู้ดูแลระบบ', isAdmin: true });
+    } else if (currentUser) {
       const playerName = currentUser.username;
       showToast(`กำลังเปิดเข้าสู่ห้อง ${targetRoomId}...`);
-      socket.emit('join_room', { roomId: targetRoomId, playerName });
+      socket.emit('join_room', { roomId: targetRoomId, playerName, isAdmin: false });
     } else {
       showToast(`พบคำเชิญเข้าห้อง ${targetRoomId} กรุณาเข้าสู่ระบบเพื่อเริ่มเล่นหรือเข้าชม`);
     }
@@ -1349,6 +1359,11 @@ function updateReplayTacticalCard(move) {
 function handleBoardClick(r, c) {
   if (!currentRoomId || !roomState) return;
 
+  if (isAdminSpectateMode) {
+    showToast('👑 คุณกำลังตรวจการแข่งขันในฐานะผู้ดูแลระบบ');
+    return;
+  }
+
   if (myRole !== 1 && myRole !== 2) {
     showToast('คุณกำลังรับชมเกมในฐานะผู้ชม');
     return;
@@ -1374,7 +1389,8 @@ function addChatMessage(msg) {
   const div = document.createElement('div');
   if (msg.type === 'emoji') {
     div.className = 'chat-msg emoji-burst';
-    div.innerHTML = `<span class="sender" style="font-size:0.85rem; display:block; color:var(--text-secondary);">${msg.sender}:</span> ${msg.text}`;
+    const senderColor = msg.senderColor === 'admin' ? 'color:#ffd166; font-weight:700;' : 'color:var(--text-secondary);';
+    div.innerHTML = `<span class="sender" style="font-size:0.85rem; display:block; ${senderColor}">${msg.sender}:</span> ${msg.text}`;
     spawnFloatingEmoji(msg.text);
     window.goAudio.playEmoji();
   } else if (msg.type === 'system') {
@@ -1382,8 +1398,10 @@ function addChatMessage(msg) {
     div.innerText = msg.text;
   } else {
     div.className = 'chat-msg';
-    const colorStyle = msg.senderColor === 'black' ? 'color:#a5b4fc;' : (msg.senderColor === 'white' ? 'color:#fbcfe8;' : '');
-    div.innerHTML = `<span class="sender" style="${colorStyle}">${msg.sender} (${msg.time}):</span> <span>${escapeHtml(msg.text)}</span>`;
+    const colorStyle = msg.senderColor === 'admin' 
+      ? 'color:#ffd166; font-weight:700; text-shadow:0 0 8px rgba(255,209,102,0.5);' 
+      : (msg.senderColor === 'black' ? 'color:#a5b4fc;' : (msg.senderColor === 'white' ? 'color:#fbcfe8;' : ''));
+    div.innerHTML = `<span class="sender" style="${colorStyle}">${escapeHtml(msg.sender)} (${msg.time}):</span> <span>${escapeHtml(msg.text)}</span>`;
   }
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1439,7 +1457,9 @@ function updateRoomUI(state) {
   }
 
   // Role Indicator
-  if (myRole === 1) {
+  if (isAdminSpectateMode) {
+    roleIndicator.innerHTML = 'คุณเป็น: <b style="color:#ffd166; font-weight:700;">👑 ผู้ดูแลระบบ 👁️</b>';
+  } else if (myRole === 1) {
     roleIndicator.innerHTML = 'คุณเป็น: <b style="color:#fff;">หมากดำ ⚫</b>';
   } else if (myRole === 2) {
     roleIndicator.innerHTML = 'คุณเป็น: <b style="color:#fff;">หมากขาว ⚪</b>';
@@ -1512,9 +1532,12 @@ socket.on('room_created', (data) => {
 socket.on('room_joined', (data) => {
   currentRoomId = data.roomId;
   myRole = data.role;
+  if (data.isAdmin) {
+    isAdminSpectateMode = true;
+  }
   enterGameView();
   updateRoomUI(data.room);
-  showToast(`เข้าห้อง ${data.roomId} เรียบร้อยแล้ว!`);
+  showToast(data.isAdmin ? `👑 เข้าตรวจห้อง ${data.roomId} ในฐานะผู้ดูแลระบบ` : `เข้าห้อง ${data.roomId} เรียบร้อยแล้ว!`);
 });
 
 socket.on('join_error', (data) => {

@@ -284,7 +284,7 @@ function renderRoomsTable(rooms) {
       <td>${r.spectatorCount} คน</td>
       <td>
         <div style="display: flex; gap: 0.4rem;">
-          <a href="/?room=${r.id}" target="_blank" class="btn-sm btn-sm-success" style="text-decoration: none;">👁️ เข้าดู</a>
+          <a href="/?room=${r.id}&admin=1" target="_blank" class="btn-sm btn-sm-success" style="text-decoration: none;">👁️ เข้าดูสด (ผู้ดูแลระบบ)</a>
           <button class="btn-sm btn-sm-danger" onclick="forceCloseRoom('${r.id}')">🛑 ปิดห้อง</button>
         </div>
       </td>
