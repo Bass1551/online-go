@@ -40,5 +40,19 @@
     "salt": "d9507897999bc46b1f755e8af801bfef",
     "passwordHash": "b116d2319d710e3c111ed974d8ee3ff15fd37b6417ce49b8894f9c5e5334ad202dd11685bb8fe777f6e2710a6ef7092a6de7beceb6920b4560a016d8c222e439",
     "createdAt": "2026-09-12T02:42:02.700Z"
+  },
+  "pro_1823": {
+    "id": "usr_ccab09a8e73d5d56",
+    "username": "Pro_1823",
+    "salt": "59fbe9bdb63d82724b501baccfe037b2",
+    "passwordHash": "1c60007dec967277b6fedd524efaa842a90a376b5ba43e780dcf65bf81cb8f9ab021e59ebcb8caa1c56e0628d6c6c72be1d58ee6ad4f27ff454955068072d15b",
+    "createdAt": "2026-09-12T02:44:22.425Z"
+  },
+  "chal_1823": {
+    "id": "usr_54b0ef6a419b1983",
+    "username": "Chal_1823",
+    "salt": "cfd31f72a4eac93222b7a56a633cec4c",
+    "passwordHash": "055b324eccb7438364fee03cd9462a94e54fc1419fda033d1356dfed06e72f4f24a3f4499b02e4e9df870d3bb1dc81ab50fb72d1a24f04009a4553e728e28e01",
+    "createdAt": "2026-09-12T02:44:22.475Z"
   }
 }

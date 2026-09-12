@@ -275,7 +275,7 @@ io.on('connection', (socket) => {
   });
 
   // Start Bot Game (Single Player Training Mode)
-  socket.on('start_bot_game', ({ size = 9, botLevel = 1, playerName = 'ผู้เล่น' }) => {
+  socket.on('start_bot_game', ({ size = 9, botLevel = 1, playerName = 'ผู้เล่น', timeLimit = 0 }) => {
     const validSize = [9, 13, 19].includes(Number(size)) ? Number(size) : 9;
     const level = Math.max(1, Math.min(6, parseInt(botLevel, 10) || 1));
     let roomId = 'BOT-' + generateRoomId().slice(0, 4);
@@ -284,16 +284,17 @@ io.on('connection', (socket) => {
     const bot = new GoBot(level);
     const botName = `AI ${GoBot.LEVEL_NAMES[level]}`;
     const resolvedName = currentUser ? currentUser.username : (playerName.trim() || 'ผู้เล่น (ดำ)');
+    const initialTime = Number(timeLimit) > 0 ? Number(timeLimit) * 60 : 0;
 
     const room = {
       id: roomId,
       size: validSize,
-      timeLimit: 0,
+      timeLimit: initialTime,
       game,
       black: { socketId: socket.id, name: resolvedName, userId: currentUser ? currentUser.id : null, connected: true },
       white: { socketId: 'bot', name: botName, connected: true, isBot: true, userId: null },
       spectators: [],
-      timers: { 1: 0, 2: 0 },
+      timers: { 1: initialTime, 2: initialTime },
       lastTimerTick: null,
       undoPending: null,
       isBotGame: true,

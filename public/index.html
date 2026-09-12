@@ -136,6 +136,18 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <label class="form-label">⏱️ เวลาต่อฝ่าย (จำลองแรงกดดันการแข่ง)</label>
+          <select id="botTimeLimitSelect" class="form-input">
+            <option value="0">ไม่จำกัดเวลา (เล่นสบายๆ ไม่มีแรงกดดัน)</option>
+            <option value="1">⚡ 1 นาที (Blitz / สายฟ้าแลบ แรงกดดันขั้นสุด!)</option>
+            <option value="3">🔥 3 นาที (ด่วนกระชับ ตื่นเต้นมาก)</option>
+            <option value="5">⏱️ 5 นาที (ซ้อมแข่งแบบกระชับ)</option>
+            <option value="10" selected>🏆 10 นาที (มาตรฐานการแข่ง - แนะนำ)</option>
+            <option value="15">⌛ 15 นาที (แข่งขันทางการ คิดรอบคอบ)</option>
+          </select>
+        </div>
+
         <button id="btnStartBotGame" class="btn btn-primary" style="margin-top: auto;">
           🥋 เริ่มฝึกซ้อมกับ AI & โค้ช
         </button>

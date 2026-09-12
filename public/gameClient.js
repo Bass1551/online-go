@@ -90,6 +90,7 @@ const btnRejectUndo = document.getElementById('btnRejectUndo');
 const btnStartBotGame = document.getElementById('btnStartBotGame');
 const botPlayerName = document.getElementById('botPlayerName');
 const botLevelSelect = document.getElementById('botLevelSelect');
+const botTimeLimitSelect = document.getElementById('botTimeLimitSelect');
 
 const coachBanner = document.getElementById('coachBanner');
 const coachBannerContent = document.getElementById('coachBannerContent');
@@ -521,9 +522,15 @@ function setupEventListeners() {
       window.goAudio.init();
       const size = document.querySelector('input[name="botBoardSize"]:checked')?.value || 9;
       const level = botLevelSelect.value || 1;
+      const timeLimit = botTimeLimitSelect ? (parseInt(botTimeLimitSelect.value, 10) || 0) : 0;
       const name = currentUser ? currentUser.username : 'ผู้เล่น';
 
-      socket.emit('start_bot_game', { size: parseInt(size, 10), botLevel: parseInt(level, 10), playerName: name });
+      socket.emit('start_bot_game', {
+        size: parseInt(size, 10),
+        botLevel: parseInt(level, 10),
+        timeLimit,
+        playerName: name
+      });
     });
   }
 
