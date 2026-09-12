@@ -101,7 +101,7 @@ class Database {
     const cleanUsername = (username || '').trim().toLowerCase();
     const user = users[cleanUsername];
     if (!user) {
-      return { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้ หรือชื่อผู้ใช้ไม่ถูกต้อง' };
+      return { success: false, message: 'ไม่พบบัญชีนี้ในระบบ (หากเพิ่งเข้าใช้งานครั้งแรก กรุณากดแท็บ "สมัครสมาชิกใหม่" ด้านบน)' };
     }
 
     const testHash = hashPassword(password || '', user.salt);

@@ -861,7 +861,17 @@ async function handleGateSubmit(e) {
       gatePassword.value = '';
       showToast(gateMode === 'register' ? `🎉 สมัครสมาชิกสำเร็จ! ยินดีต้อนรับคุณ ${currentUser.username}` : `👋 เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับคุณ ${currentUser.username}`);
     } else {
-      gateErrorMessage.innerText = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+      gateErrorMessage.innerHTML = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+      if (gateMode === 'login' && data.message && data.message.includes('สมัครสมาชิกใหม่')) {
+        gateErrorMessage.innerHTML += `<br><a href="#" id="linkSwitchRegister" style="color: #fde047; font-weight: 700; text-decoration: underline; display: inline-block; margin-top: 0.35rem;">👉 คลิกตรงนี้เพื่อสมัครสมาชิกชื่อ "${username}" ทันที</a>`;
+        const link = document.getElementById('linkSwitchRegister');
+        if (link) {
+          link.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            switchGateTab('register');
+          });
+        }
+      }
       gateErrorMessage.style.display = 'block';
     }
   } catch (err) {
