@@ -161,6 +161,49 @@ class GoAudio {
     osc.start(t);
     osc.stop(t + 0.15);
   }
+
+  playBotTaunt() {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    // Comical "Wah Wah Wah Waaaah" sad trombone / mocking fanfare
+    const notes = [
+      { freq: 330, dur: 0.22, delay: 0 },
+      { freq: 311, dur: 0.22, delay: 0.24 },
+      { freq: 293, dur: 0.24, delay: 0.48 },
+      { freq: 277, dur: 0.65, delay: 0.74, slide: 220 }
+    ];
+
+    notes.forEach(n => {
+      const noteTime = t + n.delay;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(n.freq, noteTime);
+      if (n.slide) {
+        osc.frequency.linearRampToValueAtTime(n.slide, noteTime + n.dur);
+      }
+
+      // Filter to make it sound like a brass mute trombone
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, noteTime);
+      filter.frequency.exponentialRampToValueAtTime(300, noteTime + n.dur);
+
+      gain.gain.setValueAtTime(0.25, noteTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteTime + n.dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(noteTime);
+      osc.stop(noteTime + n.dur);
+    });
+  }
 }
 
 window.goAudio = new GoAudio();

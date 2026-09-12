@@ -4,7 +4,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const os = require('os');
 const GoGame = require('./goEngine');
-const { GoBot, analyzeCapture, evaluateQuizExplanation } = require('./botEngine');
+const { GoBot, analyzeCapture, evaluateQuizExplanation, getBotTauntAndComfort } = require('./botEngine');
 
 const app = express();
 const server = http.createServer(app);
@@ -179,11 +179,21 @@ setInterval(() => {
           
           saveCompletedGame(room, winner, room.game.winReason, null);
 
+          let botTaunt = null;
+          if (room.isBotGame && winner === 2) {
+            botTaunt = getBotTauntAndComfort({
+              botLevel: room.botLevel || 1,
+              winReason: room.game.winReason,
+              isTimeout: true
+            });
+          }
+
           io.to(roomId).emit('game_over', {
             winner,
             winReason: room.game.winReason,
             scoreResult: null,
-            room: getSanitizedRoomState(room)
+            room: getSanitizedRoomState(room),
+            botTaunt
           });
         }
 
@@ -311,11 +321,22 @@ io.on('connection', (socket) => {
 
         if (passRes.isGameOver) {
           saveCompletedGame(room, passRes.winner, passRes.winReason, passRes.scoreResult);
+
+          let botTaunt = null;
+          if (room.isBotGame && passRes.winner === 2) {
+            botTaunt = getBotTauntAndComfort({
+              botLevel: room.botLevel || 1,
+              winReason: passRes.winReason,
+              scoreResult: passRes.scoreResult
+            });
+          }
+
           io.to(roomId).emit('game_over', {
             winner: passRes.winner,
             winReason: passRes.winReason,
             scoreResult: passRes.scoreResult,
-            room: getSanitizedRoomState(room)
+            room: getSanitizedRoomState(room),
+            botTaunt
           });
         }
       } else {
@@ -509,11 +530,22 @@ io.on('connection', (socket) => {
 
     if (result.isGameOver) {
       saveCompletedGame(room, result.winner, result.winReason, result.scoreResult);
+
+      let botTaunt = null;
+      if (room.isBotGame && result.winner === 2) {
+        botTaunt = getBotTauntAndComfort({
+          botLevel: room.botLevel || 1,
+          winReason: result.winReason,
+          scoreResult: result.scoreResult
+        });
+      }
+
       io.to(roomId).emit('game_over', {
         winner: result.winner,
         winReason: result.winReason,
         scoreResult: result.scoreResult,
-        room: getSanitizedRoomState(room)
+        room: getSanitizedRoomState(room),
+        botTaunt
       });
     } else if (room.isBotGame && result.turn === 2) {
       triggerBotMove(roomId);
@@ -528,11 +560,22 @@ io.on('connection', (socket) => {
     const result = room.game.resign(playerRole);
     if (result.success) {
       saveCompletedGame(room, result.winner, result.winReason, null);
+
+      let botTaunt = null;
+      if (room.isBotGame && result.winner === 2) {
+        botTaunt = getBotTauntAndComfort({
+          botLevel: room.botLevel || 1,
+          winReason: result.winReason,
+          isResign: true
+        });
+      }
+
       io.to(roomId).emit('game_over', {
         winner: result.winner,
         winReason: result.winReason,
         scoreResult: null,
-        room: getSanitizedRoomState(room)
+        room: getSanitizedRoomState(room),
+        botTaunt
       });
     }
   });

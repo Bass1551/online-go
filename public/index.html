@@ -460,6 +460,58 @@
     </div>
   </div>
 
+  <!-- MODAL: Bot Taunt & Comfort (เมื่อผู้เล่นแพ้บ็อต) -->
+  <div id="botTauntModal" class="modal-backdrop">
+    <div class="modal-dialog bot-taunt-dialog">
+      <!-- Top Flaming Taunt Badge -->
+      <div class="taunt-badge-header">
+        <span class="taunt-badge-icon">😈</span>
+        <span class="taunt-badge-text" id="botTauntHeadline">💥 อ่อนว่ะ!! 55555</span>
+      </div>
+
+      <!-- Bot Name & Level Tag -->
+      <div class="bot-level-tag" id="botTauntLevelTag">🤖 บ็อตระดับ: เริ่มต้น</div>
+
+      <!-- Meme Video / Clip Container -->
+      <div class="meme-container">
+        <img id="botMemeImg" class="meme-gif" src="/assets/memes/smug_cat.gif" alt="บ็อตเยาะเย้ย">
+        <div id="botMemeCaption" class="meme-caption">😼 แมวยิ้มมุมปากเยาะเย้ย</div>
+      </div>
+
+      <!-- Taunt Quote Speech Bubble -->
+      <div class="taunt-speech-bubble">
+        <div class="speech-quote-icon">❝</div>
+        <div id="botTauntQuote" class="speech-text">
+          อ่อนว่ะ! บอทเดินมั่วๆ ยังชนะเฉยเลย 55555
+        </div>
+      </div>
+
+      <!-- Comfort & Coaching Card -->
+      <div class="comfort-card">
+        <div class="comfort-header">
+          <span style="font-size: 1.2rem;">💝</span>
+          <span style="font-weight: 700; color: #4ade80;">คำปลอบใจ & คำแนะนำจากโค้ช:</span>
+        </div>
+        <div id="botComfortQuote" class="comfort-body">
+          แต่ล้อเล่นนะเว้ย! ❤️ ความจริงคือคุณสู้ได้ดีมากแล้ว ความพ่ายแพ้คือบันไดสู่ความเก่ง...
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions taunt-actions">
+        <button id="btnTauntRematch" class="btn btn-primary taunt-rematch-btn">
+          🔥 ไม่ยอมเว้ย! ขอแก้มืออีกรอบ
+        </button>
+        <button id="btnTauntReview" class="btn btn-secondary">
+          🔍 ดูว่าแพ้ตรงไหน
+        </button>
+        <button id="btnCloseTauntModal" class="btn btn-secondary">
+          ดูกระดาน
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: Match History -->
   <div id="historyModal" class="modal-backdrop">
     <div class="modal-dialog history-modal-dialog">

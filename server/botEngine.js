@@ -786,8 +786,146 @@ function evaluateQuizExplanation(userText = '', selectedTactic = '', analysis) {
   };
 }
 
+
+/**
+ * Generates dynamic taunt ("อ่อนว่ะ!"), meme clip, and comforting coaching advice
+ * when player loses to the bot.
+ */
+function getBotTauntAndComfort({ botLevel = 1, winReason = '', scoreResult = null, isResign = false, isTimeout = false }) {
+  const level = Math.max(1, Math.min(6, parseInt(botLevel, 10) || 1));
+
+  // 1. Memes collection
+  const memeOptions = {
+    smug_cat: {
+      file: 'smug_cat.gif',
+      url: '/assets/memes/smug_cat.gif',
+      caption: '😼 แมวยิ้มมุมปากเยาะเย้ย'
+    },
+    leo_pointing: {
+      file: 'leo_pointing.gif',
+      url: '/assets/memes/leo_pointing.gif',
+      caption: '👉 ชี้หน้าหัวเราะเยาะ: อ่อนว่ะ!'
+    },
+    tom_cruise: {
+      file: 'tom_cruise_laugh.gif',
+      url: '/assets/memes/tom_cruise_laugh.gif',
+      caption: '🤣 ขำจนน้ำตาเล็ด ก๊ากกกกก'
+    },
+    el_risitas: {
+      file: 'el_risitas.gif',
+      url: '/assets/memes/el_risitas.gif',
+      caption: '🤹 El Risitas หัวเราะเยาะจนหายใจไม่ทัน!'
+    },
+    joker_laugh: {
+      file: 'joker_laugh.gif',
+      url: '/assets/memes/joker_laugh.gif',
+      caption: '🃏 โจ๊กเกอร์หัวเราะคลั่ง สะใจโว้ยยย'
+    }
+  };
+
+  // 2. Taunts categorized by Bot Difficulty Level
+  const levelTaunts = {
+    1: [
+      'อ่อนว่ะ! บอทเดินมั่วๆ ยังชนะเฉยเลย 55555',
+      'ฮั่นแน่... ขนาดบอทเพิ่งหัดเล่นพี่ยังแพ้เลย อ่อนจังงับ 😜',
+      'อ่อนว่ะ! บอทกดหลับตายังรอดมาได้ พี่เดินยังไงเนี่ย!',
+      'ขนาดเดินตามดวงยังชนะ อ่อนว่ะพี่ชายยยยย'
+    ],
+    2: [
+      'อ่อนว่ะ! โดนหลอกจับกินอาตาริง่ายๆ แบบนี้ได้ไงเนี่ย!',
+      'บอกแล้วว่าอย่าเผลอให้กินสองต่อ อ่อนว่ะ! รูปหมากพรุนเป็นรังผึ้งเลยนะ',
+      'คิดว่าจะหลอกกินบอทได้หรอ อ่อนว่ะ! โดนจับตัดลมหายใจเกลี้ยง!',
+      'กินหมูไปหลายตัวเลยนะกระดานนี้ อ่อนว่ะเพื่อนเอ๋ย 555'
+    ],
+    3: [
+      'อ่อนว่ะ! รูปทรงหมากแบบนี้ยังห่างชั้นกับนักกีฬาชมรมเยอะนะน้อง',
+      'อ่านหมากยังตื้นไป 3 ก้าว อ่อนว่ะ! นึกว่าจะตึงกว่านี้ซะอีก!',
+      'เปิดมุมดูดีแต่กลางกระดานยุบ อ่อนว่ะ! โดนตัดเชื่อมทีเดียวพังทั้งแถบ!',
+      'หมากตันจนขยับไม่ได้ อ่อนว่ะ! ไปฝึกแก้หมากติดมุมมาใหม่นะ'
+    ],
+    4: [
+      'อ่อนว่ะ! ติดกับดัก Minimax ลึก 2 ชั้นของผมเต็มเปาเลยนะคร้าบ!',
+      'อ่านเกมขาดตั้งแต่ตาที่ 15 แล้ว อ่อนว่ะ! ไปฝึกอ่านบันไดมาใหม่นะน้อง',
+      'นึกว่าจะเก่งกว่านี้ซะอีก อ่อนว่ะ! โดนยึดพื้นที่มุมไปหมดเลย!',
+      'คิดว่าหลอกล่อสำเร็จแล้วดิ? อ่อนว่ะ โดนตลบหลังจนหมดกระดาน!'
+    ],
+    5: [
+      'อ่อนว่ะ! พยายามจะล้อมข้า แต่ตัวเองกลับลืมสร้าง 2 ห้องจริง น่าขันสิ้นดี!',
+      'ระดับดั้งเขาวัดกันที่ความสุขุม แต่อันนี้... อ่อนว่ะ! มองไม่เห็นทางชนะเลยสักนิด',
+      'Alpha-Beta คำนวณทะลุปรุโปร่งหมดแล้ว อ่อนว่ะ! ยังเร็วไปร้อยปี!',
+      'ทักษะระดับนี้ยังไม่คู่ควรกับปรมาจารย์หรอกนะ อ่อนว่ะ!'
+    ],
+    6: [
+      'อ่อนว่ะ!! คิดจะมาล้ม "โคตรพ่อโคตรแม่มึงเอ้ย" ชาติหน้าตอนบ่ายๆ เถอะไอ้น้อง! 55555',
+      'นี่เหรอฝีมือมนุษย์? อ่อนว่ะ!! ข้าคำนวณชัยชนะไว้ตั้งแต่เม็ดแรกที่วางแล้วโว้ยยย!',
+      'อ่อนว่ะ! เดินแบบนี้ กลับไปเล่น OX หรือเป่ายิ้งฉุบดีกว่ามั้ยไอ้น้อง 5555555',
+      'กราบข้าซะ! อ่อนว่ะ! คิดจะท้าทายพลังแห่งพระเจ้าหมากล้อมยังเร็วไปล้านปีแสง!'
+    ]
+  };
+
+  // Context-specific taunts
+  let contextTaunts = [];
+  if (isResign || (winReason && winReason.includes('ยอมแพ้'))) {
+    contextTaunts = [
+      'ขอยอมแพ้หนีไปก่อนซะงั้น อ่อนว่ะ! ใจยังไม่ถึงเลยนะเรา 555',
+      'ใจปลาซิวแท้! โดนกดดันนิดเดียวก็ยอมแพ้ซะแล้ว อ่อนว่ะ!'
+    ];
+  } else if (isTimeout || (winReason && winReason.includes('เวลาหมด'))) {
+    contextTaunts = [
+      'นั่งคิดนานจนหัวหมุนเวลาหมด อ่อนว่ะ! บอทเดิน 1 วินาที คุณคิด 5 นาทีก็ยังแพ้!',
+      'เวลาหมดคากระดาน อ่อนว่ะ! มัวแต่ลังเลโดนบอทแซงเข้าวินเฉย!'
+    ];
+  } else if (scoreResult && typeof scoreResult.margin === 'number') {
+    if (scoreResult.margin >= 30) {
+      contextTaunts = [`แต้มขาดลอยตั้ง ${scoreResult.margin} แต้ม ไม่เห็นฝุ่นเลย อ่อนว่ะ! 555`];
+    } else if (scoreResult.margin <= 3) {
+      contextTaunts = [`เกือบจะได้แล้วเชียว แต่ก็ยังแพ้อยู่ดี ${scoreResult.margin} แต้ม... สรุปคือ อ่อนว่ะ! 555`];
+    }
+  }
+
+  // If context taunts exist, prioritize them
+  const tauntPool = (contextTaunts.length > 0)
+    ? contextTaunts
+    : (levelTaunts[level] || levelTaunts[1]);
+
+  const selectedTaunt = tauntPool[Math.floor(Math.random() * tauntPool.length)];
+
+  // 3. Comfort & Coaching Quotes (อบอุ่น ให้กำลังใจ และมีประโยชน์เชิงแท็กติก)
+  const comfortQuotes = [
+    'แต่ล้อเล่นนะเว้ย! ❤️ ความจริงคือคุณกล้าเดินเกมบุกได้น่าประทับใจมาก จุดที่พลาดมีแค่จังหวะเชื่อมลมหายใจตาเดียวเท่านั้นเอง สู้ต่อเลย!',
+    'อย่าเพิ่งท้อนะเพื่อน! 🏆 ในวงการโกะมีคำกล่าวว่า "อยากเป็นเซียนต้องยอมแพ้ให้ครบ 1,000 กระดาน" วันนี้คุณเข้าใกล้ระดับโปรไปอีกหนึ่งก้าวแล้ว!',
+    'โค้ชขอชมจากใจเลย: คุณอ่านหมากได้ลึกขึ้นกว่าเดิมเยอะมาก แค่รอบหน้าต้องระวังเรื่อง "เส้นมรณะ" กับ "การสร้างสองห้อง" ให้รัดกุมกว่านี้!',
+    'แพ้กระดานนี้ไม่ได้แปลว่าคุณไม่เก่ง แต่มันคือโอกาสทองที่คุณจะได้ดู Replay ย้อนหลังแล้วแก้จุดบกพร่องให้แกร่งขึ้น! แก้มืออีกรอบมั้ยล่ะ?',
+    'ใจสู้มาก! ยอมรับเลยว่ามีบางจังหวะที่บอทเองก็ต้องคำนวณหนักเหมือนกัน ฝีมือคุณพัฒนาเร็วมากจริงๆ รีบกดแก้มือเลย!',
+    'จำไว้ว่า: นักกีฬาโกะที่เก่งที่สุดไม่ใช่คนที่ไม่เคยแพ้ แต่คือคนที่แพ้แล้วลุกขึ้นมา "แก้มือ" ทันที! ลุยกันอีกรอบ!'
+  ];
+  const selectedComfort = comfortQuotes[Math.floor(Math.random() * comfortQuotes.length)];
+
+  // 4. Select Meme matching the tone
+  let candidateMemes = [];
+  if (level <= 2) {
+    candidateMemes = [memeOptions.smug_cat, memeOptions.tom_cruise];
+  } else if (level <= 4) {
+    candidateMemes = [memeOptions.leo_pointing, memeOptions.tom_cruise, memeOptions.smug_cat];
+  } else {
+    candidateMemes = [memeOptions.el_risitas, memeOptions.joker_laugh, memeOptions.leo_pointing];
+  }
+  const selectedMeme = candidateMemes[Math.floor(Math.random() * candidateMemes.length)];
+
+  return {
+    botLevel: level,
+    botLevelName: GoBot.LEVEL_NAMES[level] || `ระดับ ${level}`,
+    headline: '💥 อ่อนว่ะ!! 55555',
+    taunt: selectedTaunt,
+    comfort: selectedComfort,
+    meme: selectedMeme
+  };
+}
+
 module.exports = {
   GoBot,
   analyzeCapture,
-  evaluateQuizExplanation
+  evaluateQuizExplanation,
+  getBotTauntAndComfort
 };
+

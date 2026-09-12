@@ -69,6 +69,18 @@ const scoreDiffDetail = document.getElementById('scoreDiffDetail');
 const btnPlayAgain = document.getElementById('btnPlayAgain');
 const btnCloseGameOverModal = document.getElementById('btnCloseGameOverModal');
 
+// Bot Taunt & Comfort Modal
+const botTauntModal = document.getElementById('botTauntModal');
+const botTauntHeadline = document.getElementById('botTauntHeadline');
+const botTauntLevelTag = document.getElementById('botTauntLevelTag');
+const botMemeImg = document.getElementById('botMemeImg');
+const botMemeCaption = document.getElementById('botMemeCaption');
+const botTauntQuote = document.getElementById('botTauntQuote');
+const botComfortQuote = document.getElementById('botComfortQuote');
+const btnTauntRematch = document.getElementById('btnTauntRematch');
+const btnTauntReview = document.getElementById('btnTauntReview');
+const btnCloseTauntModal = document.getElementById('btnCloseTauntModal');
+
 const undoModal = document.getElementById('undoModal');
 const undoMessage = document.getElementById('undoMessage');
 const btnAcceptUndo = document.getElementById('btnAcceptUndo');
@@ -609,6 +621,29 @@ function setupEventListeners() {
     gameOverModal.style.display = 'none';
     socket.emit('restart_game', { roomId: currentRoomId });
   });
+
+  // Bot Taunt Modal Listeners
+  if (btnCloseTauntModal) {
+    btnCloseTauntModal.addEventListener('click', () => {
+      botTauntModal.style.display = 'none';
+    });
+  }
+
+  if (btnTauntRematch) {
+    btnTauntRematch.addEventListener('click', () => {
+      botTauntModal.style.display = 'none';
+      socket.emit('restart_game', { roomId: currentRoomId });
+    });
+  }
+
+  if (btnTauntReview) {
+    btnTauntReview.addEventListener('click', () => {
+      botTauntModal.style.display = 'none';
+      if (typeof openHistoryModal === 'function') {
+        openHistoryModal();
+      }
+    });
+  }
 
   // Undo Modal
   btnAcceptUndo.addEventListener('click', () => {
@@ -1506,29 +1541,52 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('game_over', (data) => {
-  window.goAudio.playWin();
   if (data.room) {
     updateRoomUI(data.room);
   }
 
-  const isMeWinner = data.winner === myRole;
-  if (myRole === 1 || myRole === 2) {
-    modalWinnerTitle.innerText = isMeWinner ? '🎉 ยินดีด้วย คุณเป็นฝ่ายชนะ! 🎉' : 'เกมจบลงแล้ว!';
-  } else {
-    modalWinnerTitle.innerText = 'เกมจบลงแล้ว!';
-  }
-  modalWinReason.innerText = data.winReason;
+  // Check if player lost to a bot (Trigger Mockery & Comfort + Meme!)
+  if (data.botTaunt && (myRole === 1 || myRole === 2) && data.winner !== myRole) {
+    if (window.goAudio.playBotTaunt) {
+      window.goAudio.playBotTaunt();
+    }
 
-  if (data.scoreResult) {
-    scoreDetailsBox.style.display = 'block';
-    scoreBlackDetail.innerText = `${data.scoreResult.blackTotal} แต้ม (พื้นที่ ${data.scoreResult.blackTerritory} + กินได้ ${data.scoreResult.blackCaptures})`;
-    scoreWhiteDetail.innerText = `${data.scoreResult.whiteTotal} แต้ม (พื้นที่ ${data.scoreResult.whiteTerritory} + กินได้ ${data.scoreResult.whiteCaptures} + คอมิ ${data.scoreResult.komi})`;
-    scoreDiffDetail.innerText = `${data.scoreResult.margin} แต้ม`;
+    if (botTauntHeadline) botTauntHeadline.innerText = data.botTaunt.headline || '💥 อ่อนว่ะ!! 55555';
+    if (botTauntLevelTag) botTauntLevelTag.innerText = `🤖 ${data.botTaunt.botLevelName || 'บ็อต'}`;
+    if (botTauntQuote) botTauntQuote.innerText = data.botTaunt.taunt;
+    if (botComfortQuote) botComfortQuote.innerText = data.botTaunt.comfort;
+
+    if (data.botTaunt.meme && botMemeImg) {
+      botMemeImg.src = data.botTaunt.meme.url;
+      if (botMemeCaption) botMemeCaption.innerText = data.botTaunt.meme.caption || '';
+    }
+
+    if (gameOverModal) gameOverModal.style.display = 'none';
+    if (botTauntModal) botTauntModal.style.display = 'flex';
   } else {
-    scoreDetailsBox.style.display = 'none';
+    window.goAudio.playWin();
+
+    const isMeWinner = data.winner === myRole;
+    if (myRole === 1 || myRole === 2) {
+      modalWinnerTitle.innerText = isMeWinner ? '🎉 ยินดีด้วย คุณเป็นฝ่ายชนะ! 🎉' : 'เกมจบลงแล้ว!';
+    } else {
+      modalWinnerTitle.innerText = 'เกมจบลงแล้ว!';
+    }
+    modalWinReason.innerText = data.winReason;
+
+    if (data.scoreResult) {
+      scoreDetailsBox.style.display = 'block';
+      scoreBlackDetail.innerText = `${data.scoreResult.blackTotal} แต้ม (พื้นที่ ${data.scoreResult.blackTerritory} + กินได้ ${data.scoreResult.blackCaptures})`;
+      scoreWhiteDetail.innerText = `${data.scoreResult.whiteTotal} แต้ม (พื้นที่ ${data.scoreResult.whiteTerritory} + กินได้ ${data.scoreResult.whiteCaptures} + คอมิ ${data.scoreResult.komi})`;
+      scoreDiffDetail.innerText = `${data.scoreResult.margin} แต้ม`;
+    } else {
+      scoreDetailsBox.style.display = 'none';
+    }
+
+    if (botTauntModal) botTauntModal.style.display = 'none';
+    gameOverModal.style.display = 'flex';
   }
 
-  gameOverModal.style.display = 'flex';
   addChatMessage({ type: 'system', text: `🏆 เกมจบแล้ว: ${data.winReason}` });
 });
 
@@ -1548,7 +1606,8 @@ socket.on('undo_completed', (data) => {
 });
 
 socket.on('game_restarted', (data) => {
-  gameOverModal.style.display = 'none';
+  if (gameOverModal) gameOverModal.style.display = 'none';
+  if (botTauntModal) botTauntModal.style.display = 'none';
   updateRoomUI(data.room);
   addChatMessage({ type: 'system', text: data.announcement });
   showToast('เริ่มเกมใหม่เรียบร้อยแล้ว');
