@@ -681,9 +681,9 @@ io.on('connection', (socket) => {
       room.lastTimerTick = Date.now();
     }
 
-    // Realistic thinking delay based on bot level (1.2s to 2.8s) so bot feels human and timers tick naturally
-    const baseDelay = room.botLevel <= 2 ? 1200 : (room.botLevel <= 4 ? 1500 : 2000);
-    const variableDelay = Math.floor(Math.random() * (room.botLevel <= 2 ? 600 : (room.botLevel <= 4 ? 800 : 1000)));
+    // Snappy, smooth, instant bot response (250ms to 450ms) - feels fluid and natural like top Go/Chess apps
+    const baseDelay = room.botLevel <= 2 ? 250 : (room.botLevel <= 4 ? 320 : 400);
+    const variableDelay = Math.floor(Math.random() * 100);
     const thinkingDelay = baseDelay + variableDelay;
 
     setTimeout(() => {

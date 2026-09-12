@@ -612,7 +612,7 @@ class GoBot {
     const bookMove = this.getProOpeningMove(game, moves, botColor, opponent);
     if (bookMove) return bookMove;
 
-    const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 14);
+    const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 8);
     let bestScore = -Infinity;
     let bestMove = candidates[0] || moves[0];
 
@@ -635,23 +635,19 @@ class GoBot {
     const bookMove = this.getProOpeningMove(game, moves, botColor, opponent);
     if (bookMove) return bookMove;
 
-    // 2. High-priority Candidate selection (focus on critical sharp points)
-    const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 18);
+    // 2. High-priority Candidate selection (top 8 sharpest candidates)
+    const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 8);
     let bestScore = -Infinity;
     let bestMove = candidates[0] || moves[0];
 
-    // 3. Deep 4-ply Tactical Alpha-Beta Search + Double Atari Hunter
+    // 3. Fast 3-ply Tactical Alpha-Beta Search + Double Atari Hunter
     for (const m of candidates) {
-      let score = this.alphaBetaSearch(game, m, 4, -Infinity, Infinity, false, botColor, opponent);
+      let score = this.alphaBetaSearch(game, m, 3, -Infinity, Infinity, false, botColor, opponent);
 
       // Severe Double Atari & Cut bonus
       score += this.detectDoubleAtari(game, m, botColor, opponent) * 2500;
       score += this.detectCuttingPoints(game, m, botColor, opponent) * 450;
       score += this.evaluateShapeIntegrity(game, m, botColor, opponent) * 350;
-
-      // Fast Monte Carlo Rollout (30 simulations for top candidate) to verify win-rate stability
-      const mcWinRate = this.quickMCRollout(game, m, botColor, opponent, 25);
-      score += mcWinRate * 400;
 
       if (score > bestScore) {
         bestScore = score;

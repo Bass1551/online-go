@@ -367,18 +367,20 @@ function formatTime(sec) {
 }
 
 // --- CANVAS SETUP & DRAWING ---
-function setupCanvas() {
+function setupCanvas(force = false) {
   // Determine size based on screen width
   const containerWidth = Math.min(window.innerWidth - 30, 620);
-  canvasSize = Math.max(300, containerWidth);
-
+  const targetSize = Math.max(300, containerWidth);
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = canvasSize * dpr;
-  canvas.height = canvasSize * dpr;
-  canvas.style.width = canvasSize + 'px';
-  canvas.style.height = canvasSize + 'px';
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (force || canvasSize !== targetSize || canvas.width !== targetSize * dpr) {
+    canvasSize = targetSize;
+    canvas.width = canvasSize * dpr;
+    canvas.height = canvasSize * dpr;
+    canvas.style.width = canvasSize + 'px';
+    canvas.style.height = canvasSize + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
 
   margin = Math.max(24, Math.floor(canvasSize * 0.065));
   cellSize = (canvasSize - margin * 2) / (boardSize - 1);
@@ -1934,6 +1936,9 @@ function handleBoardClick(r, c) {
     return;
   }
 
+  // Instant audio feedback
+  window.goAudio.playStoneClick();
+
   socket.emit('play_move', { roomId: currentRoomId, r, c });
 }
 
@@ -2113,18 +2118,22 @@ socket.on('room_updated', (data) => {
 
 socket.on('move_played', (data) => {
   if (data.capturedStones && data.capturedStones.length > 0) {
+    if (window.captureAnimInterval) {
+      clearInterval(window.captureAnimInterval);
+      window.captureAnimInterval = null;
+    }
     recentCaptures = {
       stones: data.capturedStones,
       player: data.player,
       time: Date.now()
     };
-    // Re-render over 5 seconds to animate fade
     let animCount = 0;
-    const animInterval = setInterval(() => {
+    window.captureAnimInterval = setInterval(() => {
       renderBoard();
       animCount++;
-      if (animCount > 25 || !recentCaptures || (Date.now() - recentCaptures.time >= 5000)) {
-        clearInterval(animInterval);
+      if (animCount > 8 || !recentCaptures || (Date.now() - recentCaptures.time >= 1600)) {
+        clearInterval(window.captureAnimInterval);
+        window.captureAnimInterval = null;
         recentCaptures = null;
         renderBoard();
       }
@@ -2144,7 +2153,7 @@ socket.on('move_played', (data) => {
 
   if (data.sound === 'capture') {
     window.goAudio.playCapture();
-  } else {
+  } else if (data.player !== myRole) {
     window.goAudio.playStoneClick();
   }
 });
