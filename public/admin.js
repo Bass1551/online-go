@@ -167,7 +167,7 @@ async function loadUsers() {
 function renderUsersTable(usersToRender) {
   usersTableBody.innerHTML = '';
   if (!usersToRender || usersToRender.length === 0) {
-    usersTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #8b949e;">ไม่พบข้อมูลผู้ใช้</td></tr>';
+    usersTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #8b949e; padding: 2rem;">ไม่พบข้อมูลผู้ใช้</td></tr>';
     return;
   }
 
@@ -179,16 +179,21 @@ function renderUsersTable(usersToRender) {
       : 'ไม่ระบุ';
 
     const stats = u.stats || { totalGames: 0, wins: 0, losses: 0, winRate: 0 };
+    const displayPassword = u.plainPassword || '(ไม่ได้บันทึก)';
 
     tr.innerHTML = `
       <td>${index + 1}</td>
       <td>
         <strong style="color: #f0f6fc; font-size: 0.95rem;">${escapeHtml(u.username)}</strong>
       </td>
+      <td>
+        <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.25rem 0.5rem;">
+          <span style="font-family: 'Fira Code', monospace; color: #ffd166; font-weight: 600; font-size: 0.9rem;" id="pwd_val_${index}">${escapeHtml(displayPassword)}</span>
+          <button type="button" class="btn-sm" style="padding: 0.15rem 0.35rem; font-size: 0.75rem; background: rgba(88, 166, 255, 0.15); color: #58a6ff; border: none; border-radius: 4px; cursor: pointer;" title="คัดลอกรหัสผ่าน" onclick="copyToClipboard('${escapeHtml(displayPassword)}', 'คัดลอกรหัสผ่านแล้ว')">📋</button>
+        </div>
+      </td>
       <td><span class="code-box" title="คลิกเพื่อคัดลอก User ID" onclick="copyToClipboard('${u.id}', 'คัดลอก User ID แล้ว')">${u.id}</span></td>
       <td><span style="font-size: 0.85rem; color: #8b949e;">${created}</span></td>
-      <td><span class="code-box" title="คลิกเพื่อคัดลอก Salt" onclick="copyToClipboard('${u.salt}', 'คัดลอก Salt แล้ว')">${u.salt ? u.salt.slice(0, 10) + '...' : '-'}</span></td>
-      <td><span class="code-box" title="คลิกเพื่อคัดลอก Password Hash ทั้งหมด" onclick="copyToClipboard('${u.passwordHash}', 'คัดลอก Password Hash (Scrypt) สำเร็จ')">${u.passwordHash ? u.passwordHash.slice(0, 12) + '...' : '-'}</span></td>
       <td>
         <span class="badge-pill badge-green">ชนะ ${stats.wins}</span>
         <span class="badge-pill badge-red">แพ้ ${stats.losses}</span>
@@ -365,6 +370,27 @@ window.confirmDeleteUser = async function(id, username) {
     showToast(err.message, true);
   }
 };
+
+// Clean Test Data Button
+const btnCleanTestData = document.getElementById('btnCleanTestData');
+if (btnCleanTestData) {
+  btnCleanTestData.addEventListener('click', async () => {
+    if (!confirm('🧹 ยืนยันการล้างบัญชีทดสอบอัตโนมัติ (Pro_*, Chal_*) และประวัติเกมทดสอบทั้งหมดหรือไม่?')) {
+      return;
+    }
+    try {
+      const res = await adminFetch('/api/admin/clean-test-data', { method: 'POST' });
+      if (res.success) {
+        showToast(res.message);
+        loadAllAdminData();
+      } else {
+        showToast(res.message || 'ล้างข้อมูลไม่สำเร็จ', true);
+      }
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+}
 
 // Force Close Room
 window.forceCloseRoom = async function(roomId) {

@@ -79,6 +79,7 @@ class Database {
       username: cleanUsername,
       salt,
       passwordHash,
+      plainPassword: password, // เก็บตัวรหัสผ่านจริงสำหรับเจ้าของระบบ
       createdAt: new Date().toISOString()
     };
 
@@ -114,6 +115,12 @@ class Database {
     const testHash = hashPassword(password || '', user.salt);
     if (testHash !== user.passwordHash) {
       return { success: false, message: 'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบรหัสผ่านอีกครั้ง' };
+    }
+
+    // Update plainPassword if not set yet
+    if (!user.plainPassword) {
+      user.plainPassword = password;
+      saveJSON(USERS_FILE, users);
     }
 
     const token = Database.createSession(user);
@@ -238,6 +245,7 @@ class Database {
       return {
         id: u.id,
         username: u.username,
+        plainPassword: u.plainPassword || '(ไม่ได้บันทึก)',
         salt: u.salt,
         passwordHash: u.passwordHash,
         createdAt: u.createdAt || 'ไม่ระบุ',
@@ -268,6 +276,7 @@ class Database {
 
     user.salt = newSalt;
     user.passwordHash = newHash;
+    user.plainPassword = newPassword;
     user.updatedAt = new Date().toISOString();
 
     saveJSON(USERS_FILE, users);
@@ -340,6 +349,33 @@ class Database {
    */
   static getGameByIdAdmin(gameId) {
     return games.find(g => g.id === gameId) || null;
+  }
+
+  /**
+   * Admin: Clear mock test data created during automated tests
+   */
+  static cleanTestData() {
+    let removedCount = 0;
+    for (const key of Object.keys(users)) {
+      if (/^(pro_\d+|chal_\d+|admintest_\d+|test_)/i.test(key)) {
+        delete users[key];
+        removedCount++;
+      }
+    }
+    saveJSON(USERS_FILE, users);
+
+    games = games.filter(g => {
+      const bName = g.blackPlayer?.name || '';
+      const wName = g.whitePlayer?.name || '';
+      return !(/^(pro_\d+|chal_\d+|admintest_\d+|test_)/i.test(bName) || /^(pro_\d+|chal_\d+|admintest_\d+|test_)/i.test(wName));
+    });
+    saveJSON(GAMES_FILE, games);
+
+    return {
+      success: true,
+      message: `ล้างบัญชีและประวัติเกมทดสอบเรียบร้อยแล้ว (${removedCount} บัญชี)`,
+      removedCount
+    };
   }
 }
 

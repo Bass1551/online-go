@@ -149,6 +149,11 @@ app.delete('/api/admin/users/:id', verifyAdmin, (req, res) => {
   res.json(result);
 });
 
+app.post('/api/admin/clean-test-data', verifyAdmin, (req, res) => {
+  const result = Database.cleanTestData();
+  res.json(result);
+});
+
 // Admin Live Rooms
 app.get('/api/admin/rooms', verifyAdmin, (req, res) => {
   const liveRooms = [];

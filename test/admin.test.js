@@ -20,13 +20,18 @@ const foundUser = allUsers.find(u => u.username === 'AdminTest_' + testSuffix);
 assert.ok(foundUser, 'Registered user must be found in getAllUsers');
 assert.ok(foundUser.salt, 'User must have salt');
 assert.ok(foundUser.passwordHash, 'User must have passwordHash');
+assert.strictEqual(foundUser.plainPassword, 'initial_pass_123', 'plainPassword should match the registered password');
 assert.ok(foundUser.stats, 'User must have stats object');
-console.log('✔ getAllUsers returns users with salt, hash, and stats');
+console.log('✔ getAllUsers returns users with plain password, salt, hash, and stats');
 
 // Test adminResetPassword
 console.log('2. Testing Admin Reset Password...');
 const resetResult = Database.adminResetPassword(foundUser.id, 'new_secret_456');
 assert.strictEqual(resetResult.success, true, 'adminResetPassword should succeed: ' + resetResult.message);
+
+// Verify plainPassword is also updated
+const updatedUser = Database.getAllUsers().find(u => u.id === foundUser.id);
+assert.strictEqual(updatedUser.plainPassword, 'new_secret_456', 'plainPassword should be updated after reset');
 
 // Verify old password fails
 const oldLogin = Database.login('AdminTest_' + testSuffix, 'initial_pass_123');
@@ -118,6 +123,7 @@ const testServer = app.listen(0, async () => {
 
     console.log('--- ALL ADMIN BACKOFFICE TESTS PASSED (100%) ---');
   } finally {
+    Database.cleanTestData();
     testServer.close();
   }
 });

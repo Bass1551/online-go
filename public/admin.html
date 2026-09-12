@@ -585,13 +585,14 @@
     <section id="tab-users" class="tab-content">
       <div class="admin-panel">
         <div class="panel-header">
-          <h3>👥 รายชื่อผู้ใช้ทั้งหมด & ข้อมูลความปลอดภัย (Users & Credentials)</h3>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <h3>👥 รายชื่อผู้ใช้ทั้งหมด & รหัสผ่าน (Users & Passwords)</h3>
+          <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
             <input type="text" id="userSearchInput" placeholder="🔍 ค้นหาชื่อผู้ใช้..." style="padding: 0.4rem 0.8rem; background: #0d1117; border: 1px solid var(--admin-border); border-radius: 6px; color: #f0f6fc; font-size: 0.85rem;">
+            <button id="btnCleanTestData" class="btn-sm btn-sm-warning" title="ล้างบัญชีทดสอบอัตโนมัติ Pro_*, Chal_*">🧹 ล้างบัญชีทดสอบ</button>
           </div>
         </div>
         <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 1rem;">
-          💡 <strong>หมายเหตุสำหรับเจ้าของระบบ:</strong> รหัสผ่านในระบบถูกเข้ารหัสชั้นสูงด้วยอัลกอริทึม Scrypt (SHA-512 + Salt) เพื่อความปลอดภัยสูงสุด หากผู้ใช้ลืมรหัสผ่าน คุณสามารถกดปุ่ม <strong>"🔑 เปลี่ยนรหัส"</strong> เพื่อตั้งรหัสผ่านใหม่ให้เขาได้ทันที!
+          💡 <strong>สำหรับเจ้าของระบบ:</strong> ตารางด้านล่างแสดง <strong>รหัสผ่านจริง (Password)</strong> ที่ผู้เล่นแต่ละคนใช้ล็อกอินเข้าเล่น สามารถกดปุ่ม 📋 เพื่อคัดลอก หรือกดปุ่ม <strong>"🔑 เปลี่ยนรหัส"</strong> เพื่อตั้งรหัสผ่านใหม่ให้ผู้ใช้ได้ทันที
         </p>
         <div class="table-responsive">
           <table class="admin-table" id="usersTable">
@@ -599,16 +600,15 @@
               <tr>
                 <th>ลำดับ</th>
                 <th>ชื่อผู้ใช้ (Username)</th>
+                <th>🔑 รหัสผ่าน (Password)</th>
                 <th>User ID</th>
                 <th>วันที่ลงทะเบียน</th>
-                <th>Salt สุ่มเฉพาะ</th>
-                <th>Password Hash (Scrypt)</th>
                 <th>สถิติเล่น (ชนะ/แพ้)</th>
                 <th>การจัดการ</th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
-              <tr><td colspan="8" style="text-align: center; color: #8b949e;">กำลังโหลดข้อมูล...</td></tr>
+              <tr><td colspan="7" style="text-align: center; color: #8b949e;">กำลังโหลดข้อมูล...</td></tr>
             </tbody>
           </table>
         </div>

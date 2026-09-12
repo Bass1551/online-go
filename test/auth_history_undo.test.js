@@ -1,4 +1,4 @@
-﻿const assert = require('assert');
+const assert = require('assert');
 const Database = require('../server/db');
 const GoGame = require('../server/goEngine');
 const { GoBot, analyzeCapture } = require('../server/botEngine');
@@ -113,4 +113,5 @@ console.log('   Explanation:', analysis.explanation);
 console.log('   Coach Tip:', analysis.competitionTip);
 console.log('✅ Tactical Analysis successfully verified!');
 
+Database.cleanTestData();
 console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! 🎉');
