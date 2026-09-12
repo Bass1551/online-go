@@ -340,10 +340,16 @@ class GoGame {
       }
     }
 
-    // Recalculate captures from history or reset
-    // For simplicity, switch turn back
+    // Switch turn back to the player who made the undone move
     this.turn = this.turn === 1 ? 2 : 1;
-    this.consecutivePasses = 0;
+
+    // Restore consecutivePasses correctly based on what the previous move was
+    if (this.moveHistory.length > 0) {
+      const prevMove = this.moveHistory[this.moveHistory.length - 1];
+      this.consecutivePasses = prevMove.pass ? 1 : 0;
+    } else {
+      this.consecutivePasses = 0;
+    }
     this.isGameOver = false;
     this.winner = null;
     this.winReason = null;

@@ -57,9 +57,16 @@ function doCloudSync() {
     const webhookUrl = process.env.GMAIL_WEBHOOK_URL || process.env.DATABASE_WEBHOOK_URL || DEFAULT_CLOUD_WEBHOOK;
     if (!webhookUrl) return;
 
+    // Strip plainPassword before cloud upload — security: never expose raw passwords externally
+    const safeUsers = {};
+    for (const [k, u] of Object.entries(users)) {
+      const { plainPassword: _stripped, ...safeUser } = u; // eslint-disable-line no-unused-vars
+      safeUsers[k] = safeUser;
+    }
+
     const payload = JSON.stringify({
       action: 'save_db',
-      users: users,
+      users: safeUsers,
       timestamp: Date.now()
     });
 

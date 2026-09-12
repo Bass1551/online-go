@@ -778,17 +778,32 @@ class GoBot {
     let botTerritory = 0;
     let oppTerritory = 0;
 
+    const visitedBot = new Set();
+    const visitedOpp = new Set();
+
     for (let r = 0; r < game.size; r++) {
       for (let c = 0; c < game.size; c++) {
         const color = board[r][c];
         if (color === botColor) {
           botStones++;
-          const grp = game.getGroup(r, c, board);
-          if (grp) botLiberties += grp.liberties;
+          const key = `${r},${c}`;
+          if (!visitedBot.has(key)) {
+            const grp = game.getGroup(r, c, board);
+            if (grp) {
+              botLiberties += grp.liberties;
+              for (const s of grp.stones) visitedBot.add(`${s.r},${s.c}`);
+            }
+          }
         } else if (color === opponent) {
           oppStones++;
-          const grp = game.getGroup(r, c, board);
-          if (grp) oppLiberties += grp.liberties;
+          const key = `${r},${c}`;
+          if (!visitedOpp.has(key)) {
+            const grp = game.getGroup(r, c, board);
+            if (grp) {
+              oppLiberties += grp.liberties;
+              for (const s of grp.stones) visitedOpp.add(`${s.r},${s.c}`);
+            }
+          }
         } else {
           // Territory estimate
           let botNeighbors = 0;
@@ -1154,16 +1169,16 @@ class GoBot {
       }
 
       // Quick territory estimate
-      let bScore = 0;
-      let wScore = 0;
+      let botScore = 0;
+      let oppScore = 0;
       for (let r = 0; r < game.size; r++) {
         for (let c = 0; c < game.size; c++) {
-          if (simBoard[r][c] === botColor) wScore++;
-          else if (simBoard[r][c] === opponent) bScore++;
+          if (simBoard[r][c] === botColor) botScore++;
+          else if (simBoard[r][c] === opponent) oppScore++;
         }
       }
 
-      if (wScore >= bScore) botWins++;
+      if (botScore >= oppScore) botWins++;
     }
 
     return botWins / simulations;
@@ -1173,23 +1188,45 @@ class GoBot {
     const moves = [];
     const size = game.size;
     const opponent = color === 1 ? 2 : 1;
+    // Ko check: the board state 2 half-moves ago (opponent's last state)
+    const koForbidden = game.history.length >= 2 ? game.history[game.history.length - 2] : null;
 
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (board[r][c] === 0) {
           // Check liberties
+          let isLegal = false;
           for (const n of game.getNeighbors(r, c)) {
             if (board[n.r][n.c] === 0 || board[n.r][n.c] === color) {
-              moves.push({ r, c });
+              isLegal = true;
               break;
             } else if (board[n.r][n.c] === opponent) {
               const oppGrp = game.getGroup(n.r, n.c, board);
               if (oppGrp && oppGrp.liberties === 1) {
-                moves.push({ r, c });
+                isLegal = true;
                 break;
               }
             }
           }
+
+          if (isLegal && koForbidden) {
+            // Quick Ko check: simulate the move and compare board serial
+            const testBoard = game.cloneBoard(board);
+            testBoard[r][c] = color;
+            // Remove any captured opponent groups
+            for (const n of game.getNeighbors(r, c)) {
+              if (testBoard[n.r][n.c] === opponent) {
+                const grp = game.getGroup(n.r, n.c, testBoard);
+                if (grp && grp.liberties === 0) {
+                  for (const s of grp.stones) testBoard[s.r][s.c] = 0;
+                }
+              }
+            }
+            const serial = game.serializeBoard(testBoard);
+            if (serial === koForbidden) isLegal = false;
+          }
+
+          if (isLegal) moves.push({ r, c });
         }
       }
     }
