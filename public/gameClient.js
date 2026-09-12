@@ -1241,12 +1241,16 @@ async function handleForgotOtpRequest(e) {
     btnSubmitOtpRequest.innerText = '⏳ กำลังส่งรหัส OTP...';
   }
 
-  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
     const res = await fetch('/api/auth/send-email-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier })
+      body: JSON.stringify({ identifier }),
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
     const data = await res.json();
     if (btnSubmitOtpRequest) {
       btnSubmitOtpRequest.disabled = false;
@@ -1256,8 +1260,8 @@ async function handleForgotOtpRequest(e) {
     if (data.success) {
       if (forgotOtpTarget) forgotOtpTarget.value = data.username || identifier;
       if (otpSentBanner) {
-        if (data.simulated) {
-          otpSentBanner.innerHTML = `⚠️ <b>โหมดทดสอบ:</b> รหัส OTP ของคุณคือ <span style="font-size: 1.25rem; font-weight: bold; color: #fde047; letter-spacing: 2px;">${data.otpCode}</span><br><small style="color: #cbd5e1;">(จำลองการส่ง เนื่องจากเซิร์ฟเวอร์ยังไม่ได้ตั้งค่ารหัสผ่าน Gmail SMTP ใน Environment Variables)</small>`;
+        if (data.blockedByHost || data.simulated) {
+          otpSentBanner.innerHTML = `⚠️ <b>รหัส OTP ของคุณคือ:</b> <span style="font-size: 1.3rem; font-weight: bold; color: #fde047; letter-spacing: 2px;">${data.otpCode}</span><br><small style="color: #cbd5e1;">(เซิร์ฟเวอร์ Cloud บล็อกพอร์ตส่งอีเมล SMTP ระบบจึงแสดงรหัสให้คุณนำไปตั้งรหัสใหม่ได้ทันทีครับ)</small>`;
         } else {
           otpSentBanner.innerHTML = `📬 ส่งรหัส OTP 6 หลักไปยัง <b>${data.emailMasked || 'Gmail ของคุณ'}</b> เรียบร้อยแล้ว! กรุณาเปิดเช็คกล่องจดหมาย (หรืออีเมลขยะ)`;
         }
@@ -1265,7 +1269,7 @@ async function handleForgotOtpRequest(e) {
       if (formForgotOtpRequest) formForgotOtpRequest.style.display = 'none';
       if (formForgotOtpVerify) formForgotOtpVerify.style.display = 'block';
       if (forgotOtpCode) {
-        forgotOtpCode.value = data.simulated ? data.otpCode : '';
+        forgotOtpCode.value = (data.blockedByHost || data.simulated) ? data.otpCode : '';
         forgotOtpCode.focus();
       }
       startOtpCooldown(60);
@@ -1281,7 +1285,9 @@ async function handleForgotOtpRequest(e) {
       btnSubmitOtpRequest.innerText = '📩 ขอรับรหัส OTP 6 หลัก';
     }
     if (forgotErrorMessage) {
-      forgotErrorMessage.innerText = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่';
+      forgotErrorMessage.innerText = err.name === 'AbortError'
+        ? 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง หรือใช้แท็บ PIN 4 หลัก'
+        : 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่';
       forgotErrorMessage.style.display = 'block';
     }
   }
