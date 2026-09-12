@@ -870,6 +870,9 @@ function setupEventListeners() {
   if (gateAuthForm) {
     gateAuthForm.addEventListener('submit', handleGateSubmit);
   }
+  if (btnGateSubmit) {
+    btnGateSubmit.addEventListener('click', handleGateSubmit);
+  }
 
   if (btnLogout) {
     btnLogout.addEventListener('click', handleLogout);
@@ -1040,6 +1043,8 @@ async function checkAuth() {
     }
   } catch (err) {
     console.error('Auth check error:', err);
+    currentUser = null;
+    renderUserBar();
   }
 }
 
@@ -1047,7 +1052,7 @@ function renderUserBar() {
   const accountPlayerNames = document.querySelectorAll('.account-player-name');
   if (currentUser) {
     if (authGateView) authGateView.style.display = 'none';
-    if (lobbyView && gameView.style.display !== 'flex') lobbyView.style.display = 'block';
+    if (lobbyView && (!gameView || gameView.style.display !== 'flex')) lobbyView.style.display = 'block';
     if (currentUserName) currentUserName.innerText = currentUser.username;
     accountPlayerNames.forEach(el => el.innerText = currentUser.username);
   } else {
@@ -1079,8 +1084,15 @@ function switchGateTab(mode) {
   gateErrorMessage.style.display = 'none';
 }
 
+let isGateSubmitting = false;
+
 async function handleGateSubmit(e) {
-  if (e) e.preventDefault();
+  if (e) {
+    e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+  }
+  if (isGateSubmitting) return;
+
   const username = gateUsername.value.trim();
   const password = gatePassword.value;
   const recoveryPin = gateRecoveryPin ? gateRecoveryPin.value.trim() : '';
@@ -1093,6 +1105,12 @@ async function handleGateSubmit(e) {
     gateErrorMessage.innerText = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน';
     gateErrorMessage.style.display = 'block';
     return;
+  }
+
+  isGateSubmitting = true;
+  if (btnGateSubmit) {
+    btnGateSubmit.disabled = true;
+    btnGateSubmit.innerText = gateMode === 'register' ? '⏳ กำลังสมัครสมาชิก...' : '⏳ กำลังเข้าสู่ระบบ...';
   }
 
   const endpoint = gateMode === 'register' ? '/api/register' : '/api/login';
@@ -1140,8 +1158,15 @@ async function handleGateSubmit(e) {
       gateErrorMessage.style.display = 'block';
     }
   } catch (err) {
+    console.error('Login/Register error:', err);
     gateErrorMessage.innerText = 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ กรุณาลองใหม่';
     gateErrorMessage.style.display = 'block';
+  } finally {
+    isGateSubmitting = false;
+    if (btnGateSubmit) {
+      btnGateSubmit.disabled = false;
+      btnGateSubmit.innerText = gateMode === 'register' ? 'สมัครสมาชิกและเริ่มเล่น' : 'เข้าสู่ระบบและเริ่มเล่น';
+    }
   }
 }
 
@@ -1241,6 +1266,7 @@ async function handleForgotOtpRequest(e) {
     btnSubmitOtpRequest.innerText = '⏳ กำลังส่งรหัส OTP...';
   }
 
+  try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000);
 
