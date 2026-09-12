@@ -570,6 +570,87 @@ if (btnCleanTestData) {
   });
 }
 
+// Backup Database Button
+const btnBackupDb = document.getElementById('btnBackupDb');
+if (btnBackupDb) {
+  btnBackupDb.addEventListener('click', async () => {
+    try {
+      const res = await adminFetch('/api/admin/export-db');
+      if (res.success && res.users) {
+        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(res.users, null, 2));
+        const dlAnchor = document.createElement('a');
+        dlAnchor.setAttribute('href', dataStr);
+        const dateStr = new Date().toISOString().slice(0, 10);
+        dlAnchor.setAttribute('download', `online_go_users_${dateStr}.json`);
+        document.body.appendChild(dlAnchor);
+        dlAnchor.click();
+        dlAnchor.remove();
+        showToast(`📥 สำรองข้อมูลสำเร็จ (${res.totalCount} บัญชี)`);
+      } else {
+        showToast('สำรองข้อมูลไม่สำเร็จ', true);
+      }
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+}
+
+// Restore Database Button
+const btnRestoreDb = document.getElementById('btnRestoreDb');
+const restoreFileInput = document.getElementById('restoreFileInput');
+if (btnRestoreDb && restoreFileInput) {
+  btnRestoreDb.addEventListener('click', () => {
+    restoreFileInput.value = '';
+    restoreFileInput.click();
+  });
+
+  restoreFileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const rawJson = JSON.parse(event.target.result);
+        if (!confirm(`ยืนยันการกู้คืนข้อมูลผู้ใช้จากไฟล์ "${file.name}" หรือไม่?`)) return;
+
+        const res = await adminFetch('/api/admin/restore-db', {
+          method: 'POST',
+          body: JSON.stringify({ users: rawJson, overwrite: false })
+        });
+        if (res.success) {
+          showToast(res.message);
+          loadAllAdminData();
+        } else {
+          showToast(res.message || 'กู้คืนไม่สำเร็จ', true);
+        }
+      } catch (err) {
+        showToast('ไฟล์ JSON ไม่ถูกต้อง: ' + err.message, true);
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// Cloud Sync Button
+const btnCloudSync = document.getElementById('btnCloudSync');
+if (btnCloudSync) {
+  btnCloudSync.addEventListener('click', async () => {
+    btnCloudSync.disabled = true;
+    btnCloudSync.innerText = '⏳ กำลังซิงก์...';
+    try {
+      const res = await adminFetch('/api/admin/sync-cloud', { method: 'POST' });
+      showToast(res.message);
+      loadAllAdminData();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      btnCloudSync.disabled = false;
+      btnCloudSync.innerText = '☁️ ซิงก์ Google Cloud';
+    }
+  });
+}
+
 // Wipe All Users Button
 const btnWipeAllUsers = document.getElementById('btnWipeAllUsers');
 if (btnWipeAllUsers) {

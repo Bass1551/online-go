@@ -615,10 +615,14 @@
       <div class="admin-panel">
         <div class="panel-header">
           <h3>👥 รายชื่อผู้ใช้ทั้งหมด & รหัสผ่าน (Users & Passwords)</h3>
-          <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
             <input type="text" id="userSearchInput" placeholder="🔍 ค้นหาชื่อผู้ใช้..." style="padding: 0.4rem 0.8rem; background: #0d1117; border: 1px solid var(--admin-border); border-radius: 6px; color: #f0f6fc; font-size: 0.85rem;">
+            <button id="btnBackupDb" class="btn-sm btn-sm-info" style="background: rgba(56, 139, 253, 0.15); color: #58a6ff; border: 1px solid rgba(56, 139, 253, 0.4);" title="ดาวน์โหลดไฟล์สำรองข้อมูลผู้ใช้เก็บไว้ในเครื่อง">📥 สำรองข้อมูล (.json)</button>
+            <button id="btnRestoreDb" class="btn-sm btn-sm-info" style="background: rgba(163, 113, 247, 0.15); color: #bc8cff; border: 1px solid rgba(163, 113, 247, 0.4);" title="นำไฟล์สำรอง .json มากู้คืนเข้าสู่ระบบ">📤 กู้คืนข้อมูล</button>
+            <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
+            <button id="btnCloudSync" class="btn-sm btn-sm-warning" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.4);" title="ซิงก์ดึงข้อมูลผู้ใช้จาก Google Cloud Webhook ทันที">☁️ ซิงก์ Google Cloud</button>
             <button id="btnCleanTestData" class="btn-sm btn-sm-warning" title="ล้างบัญชีทดสอบอัตโนมัติ Pro_*, Chal_*">🧹 ล้างบัญชีทดสอบ</button>
-            <button id="btnWipeAllUsers" class="btn-sm btn-sm-danger" style="background: rgba(248, 81, 73, 0.2); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.4);" title="ลบข้อมูลผู้ใช้ทั้งหมด ให้ทุกคนสมัครใหม่">🚨 ลบผู้ใช้ทั้งหมด (Wipe All)</button>
+            <button id="btnWipeAllUsers" class="btn-sm btn-sm-danger" style="background: rgba(248, 81, 73, 0.2); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.4);" title="ลบข้อมูลผู้ใช้ทั้งหมด ให้ทุกคนสมัครใหม่">🚨 ลบผู้ใช้ทั้งหมด</button>
           </div>
         </div>
         <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 1rem;">

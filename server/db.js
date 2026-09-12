@@ -6,6 +6,11 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const https = require('https');
+const { URL } = require('url');
+
+const DEFAULT_CLOUD_WEBHOOK = 'https://script.google.com/macros/s/AKfycby-aLe0MkeW9nPoz6u--3oaxXK8a0bTFACVcLOYPCDFYGG2Ff6OrSUxZlNJY9fjq_HzVA/exec';
+let cloudSyncTimeout = null;
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -39,8 +44,46 @@ function saveJSON(filePath, data) {
     const tempFile = `${filePath}.tmp.${Date.now()}`;
     fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
     fs.renameSync(tempFile, filePath);
+    if (filePath === USERS_FILE) {
+      Database.syncToCloud();
+    }
   } catch (err) {
     console.error(`Error saving ${filePath}:`, err);
+  }
+}
+
+function doCloudSync() {
+  try {
+    const webhookUrl = process.env.GMAIL_WEBHOOK_URL || process.env.DATABASE_WEBHOOK_URL || DEFAULT_CLOUD_WEBHOOK;
+    if (!webhookUrl) return;
+
+    const payload = JSON.stringify({
+      action: 'save_db',
+      users: users,
+      timestamp: Date.now()
+    });
+
+    const parsed = new URL(webhookUrl);
+    const req = https.request({
+      hostname: parsed.hostname,
+      path: parsed.pathname + (parsed.search || ''),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+        'User-Agent': 'OnlineGo-Server/2.0'
+      },
+      timeout: 8000
+    }, (res) => {
+      res.resume();
+    });
+
+    req.on('error', () => {});
+    req.on('timeout', () => req.destroy());
+    req.write(payload);
+    req.end();
+  } catch (err) {
+    // Ignore background sync errors
   }
 }
 
@@ -717,6 +760,111 @@ class Database {
       removedCount
     };
   }
+
+  /**
+   * Raw user dictionary for backup and cloud persistence
+   */
+  static exportRawUsers() {
+    return JSON.parse(JSON.stringify(users));
+  }
+
+  /**
+   * Restore or merge raw user dictionary into database
+   */
+  static importRawUsers(rawUsers, overwrite = false) {
+    if (!rawUsers || typeof rawUsers !== 'object') {
+      return { success: false, message: 'ข้อมูลผู้ใช้ไม่ถูกต้อง' };
+    }
+    const count = Object.keys(rawUsers).length;
+    if (overwrite) {
+      users = Object.assign({}, rawUsers);
+    } else {
+      users = Object.assign({}, users, rawUsers);
+    }
+    saveJSON(USERS_FILE, users);
+    Database.syncToCloud(true);
+    return {
+      success: true,
+      message: `กู้คืนข้อมูลผู้ใช้สำเร็จเรียบร้อย (${count} บัญชี)`,
+      totalUsers: Object.keys(users).length
+    };
+  }
+
+  /**
+   * Push current database to Google Cloud Webhook
+   */
+  static syncToCloud(immediate = false) {
+    if (immediate) {
+      if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+      doCloudSync();
+    } else {
+      if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+      cloudSyncTimeout = setTimeout(doCloudSync, 1500);
+    }
+  }
+
+  /**
+   * Load and restore users from Google Cloud Webhook
+   */
+  static async loadFromCloud() {
+    return new Promise((resolve) => {
+      try {
+        const webhookUrl = process.env.GMAIL_WEBHOOK_URL || process.env.DATABASE_WEBHOOK_URL || DEFAULT_CLOUD_WEBHOOK;
+        if (!webhookUrl) return resolve({ success: false, message: 'ไม่มี Webhook URL' });
+
+        const followGet = (targetUrl) => {
+          try {
+            const parsed = new URL(targetUrl);
+            const req = https.request({
+              hostname: parsed.hostname,
+              path: parsed.pathname + (parsed.search ? parsed.search : '') + (parsed.search ? '&' : '?') + 'action=load_db',
+              method: 'GET',
+              headers: { 'User-Agent': 'OnlineGo-Server/2.0' },
+              timeout: 6000
+            }, (res) => {
+              if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                return followGet(res.headers.location);
+              }
+              let data = '';
+              res.on('data', c => data += c);
+              res.on('end', () => {
+                try {
+                  const parsedData = JSON.parse(data);
+                  if (parsedData && typeof parsedData === 'object' && !parsedData.error) {
+                    const cloudUsers = parsedData.users || parsedData;
+                    if (cloudUsers && typeof cloudUsers === 'object' && Object.keys(cloudUsers).length > 0) {
+                      users = Object.assign({}, users, cloudUsers);
+                      saveJSON(USERS_FILE, users);
+                      console.log(`[CloudDB] ✅ Synced and restored ${Object.keys(cloudUsers).length} users from Google Cloud Webhook!`);
+                      return resolve({ success: true, count: Object.keys(cloudUsers).length, users: cloudUsers });
+                    }
+                  }
+                  resolve({ success: false, message: 'ไม่มีข้อมูลในคลาวด์ หรือรูปแบบไม่ถูกต้อง' });
+                } catch (e) {
+                  resolve({ success: false, message: 'ไม่สามารถแปลงข้อมูล JSON จากคลาวด์' });
+                }
+              });
+            });
+
+            req.on('error', (err) => resolve({ success: false, message: err.message }));
+            req.on('timeout', () => { req.destroy(); resolve({ success: false, message: 'หมดเวลาเชื่อมต่อ (Timeout)' }); });
+            req.end();
+          } catch (err) {
+            resolve({ success: false, message: err.message });
+          }
+        };
+
+        followGet(webhookUrl);
+      } catch (err) {
+        resolve({ success: false, message: err.message });
+      }
+    });
+  }
 }
+
+// Auto-sync from cloud on startup
+setTimeout(() => {
+  Database.loadFromCloud().catch(() => {});
+}, 1500);
 
 module.exports = Database;

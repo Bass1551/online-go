@@ -272,6 +272,53 @@ app.post('/api/admin/clean-test-data', verifyAdmin, (req, res) => {
   res.json(result);
 });
 
+// Admin Database Backup & Export
+app.get('/api/admin/export-db', verifyAdmin, (req, res) => {
+  const rawUsers = Database.exportRawUsers();
+  res.json({
+    success: true,
+    users: rawUsers,
+    totalCount: Object.keys(rawUsers).length,
+    exportedAt: new Date().toISOString()
+  });
+});
+
+app.get('/api/admin/download-backup', verifyAdmin, (req, res) => {
+  const rawUsers = Database.exportRawUsers();
+  const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+  res.setHeader('Content-Disposition', `attachment; filename="online_go_users_${dateStr}.json"`);
+  res.setHeader('Content-Type', 'application/json');
+  res.send(JSON.stringify(rawUsers, null, 2));
+});
+
+app.post('/api/admin/restore-db', verifyAdmin, (req, res) => {
+  const { users: rawUsers, overwrite } = req.body || {};
+  if (!rawUsers || typeof rawUsers !== 'object') {
+    return res.status(400).json({ success: false, message: 'ข้อมูล JSON ไม่ถูกต้อง' });
+  }
+  const result = Database.importRawUsers(rawUsers, !!overwrite);
+  io.emit('admin_event', { type: 'database_restored' });
+  res.json(result);
+});
+
+app.post('/api/admin/sync-cloud', verifyAdmin, async (req, res) => {
+  const loadResult = await Database.loadFromCloud();
+  if (loadResult.success) {
+    io.emit('admin_event', { type: 'database_restored' });
+    return res.json({
+      success: true,
+      message: `ดึงข้อมูลจาก Google Cloud สำเร็จ (${loadResult.count} บัญชี)`,
+      count: loadResult.count
+    });
+  }
+  // If loading failed, trigger push to cloud
+  Database.syncToCloud(true);
+  res.json({
+    success: true,
+    message: 'ส่งข้อมูลผู้ใช้ปัจจุบันไปบันทึกบน Google Cloud สำเร็จเรียบร้อยแล้ว'
+  });
+});
+
 // Admin Live Rooms
 app.get('/api/admin/rooms', verifyAdmin, (req, res) => {
   const liveRooms = [];
