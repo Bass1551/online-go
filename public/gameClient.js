@@ -1888,6 +1888,9 @@ socket.on('move_played', (data) => {
     roomState.game.turn = data.turn;
     roomState.game.captures = data.captures;
     roomState.game.lastMove = data.lastMove;
+    if (data.timers) {
+      roomState.timers = data.timers;
+    }
     updateRoomUI(roomState);
   }
 

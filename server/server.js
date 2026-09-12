@@ -554,7 +554,7 @@ io.on('connection', (socket) => {
         : { socketId: 'bot', name: botName, connected: true, isBot: true, userId: null },
       spectators: [],
       timers: { 1: initialTime, 2: initialTime },
-      lastTimerTick: null,
+      lastTimerTick: Number(timeLimit) > 0 ? Date.now() : null,
       undoPending: null,
       isBotGame: true,
       bot,
@@ -589,12 +589,50 @@ io.on('connection', (socket) => {
     if (room.botThinking) return;
     room.botThinking = true;
 
-    // Simulate thinking delay (350ms - 750ms)
+    if (!room.lastTimerTick) {
+      room.lastTimerTick = Date.now();
+    }
+
+    // Realistic thinking delay based on bot level (1.2s to 2.8s) so bot feels human and timers tick naturally
+    const baseDelay = room.botLevel <= 2 ? 1200 : (room.botLevel <= 4 ? 1500 : 2000);
+    const variableDelay = Math.floor(Math.random() * (room.botLevel <= 2 ? 600 : (room.botLevel <= 4 ? 800 : 1000)));
+    const thinkingDelay = baseDelay + variableDelay;
+
     setTimeout(() => {
       room.botThinking = false;
       if (!rooms.has(roomId) || room.game.turn !== botColor || room.game.isGameOver) return;
 
       const botPlayerObj = botColor === 1 ? room.black : room.white;
+
+      // Deduct elapsed thinking time from bot's timer if timeLimit is enabled
+      const now = Date.now();
+      if (room.timeLimit && room.timeLimit > 0 && room.lastTimerTick) {
+        const elapsed = Math.floor((now - room.lastTimerTick) / 1000);
+        if (elapsed >= 1) {
+          room.timers[botColor] = Math.max(0, room.timers[botColor] - elapsed);
+          room.lastTimerTick = now;
+          io.to(roomId).emit('timer_update', { timers: room.timers });
+
+          // Bot timeout check
+          if (room.timers[botColor] <= 0) {
+            const winner = botColor === 1 ? 2 : 1;
+            const timedOutColor = botColor === 1 ? 'ดำ' : 'ขาว';
+            const winningColor = winner === 1 ? 'ดำ' : 'ขาว';
+            room.game.isGameOver = true;
+            room.game.winner = winner;
+            room.game.winReason = `หมาก${timedOutColor} (AI) เวลาหมด (หมาก${winningColor}ชนะ)`;
+            saveCompletedGame(room, winner, room.game.winReason, null);
+            io.to(roomId).emit('game_over', {
+              winner,
+              winReason: room.game.winReason,
+              scoreResult: null,
+              room: getSanitizedRoomState(room),
+              botTaunt: null
+            });
+            return;
+          }
+        }
+      }
 
       try {
         let botMove = room.bot.computeMove(room.game, botColor);
@@ -616,6 +654,12 @@ io.on('connection', (socket) => {
           }
         }
 
+        // Reset timer tick for human player's upcoming turn & broadcast timer
+        room.lastTimerTick = Date.now();
+        if (room.timeLimit && room.timeLimit > 0) {
+          io.to(roomId).emit('timer_update', { timers: room.timers });
+        }
+
         // If no legal moves could be played or bot intentionally passed
         if (!moveRes || !moveRes.success || !botMove || botMove.pass) {
           const passRes = room.game.pass(botColor);
@@ -623,6 +667,7 @@ io.on('connection', (socket) => {
             player: botColor,
             turn: passRes.turn,
             consecutivePasses: passRes.consecutivePasses,
+            timers: room.timers,
             announcement: `${botPlayerObj.name} ผ่าน (Pass)`
           });
 
@@ -659,8 +704,10 @@ io.on('connection', (socket) => {
           turn: moveRes.turn,
           board: room.game.board,
           lastMove: moveRes.lastMove,
+          timers: room.timers,
           sound: moveRes.capturedStones.length > 0 ? 'capture' : 'stone'
         });
+        io.emit('admin_event', { type: 'move_played', roomId });
 
         // If Bot captured user's stones, Coach explains why!
         if (moveRes.capturedStones.length > 0) {
@@ -690,11 +737,12 @@ io.on('connection', (socket) => {
             player: botColor,
             turn: passRes.turn,
             consecutivePasses: passRes.consecutivePasses,
+            timers: room.timers,
             announcement: `${botPlayerObj.name} ผ่าน (Pass)`
           });
         } catch (e) {}
       }
-    }, 350 + Math.random() * 350);
+    }, thinkingDelay);
   }
 
   // Join Room
@@ -815,6 +863,7 @@ io.on('connection', (socket) => {
       turn: result.turn,
       board: room.game.board,
       lastMove: result.lastMove,
+      timers: room.timers,
       sound: result.capturedStones.length > 0 ? 'capture' : 'stone'
     });
     io.emit('admin_event', { type: 'move_played', roomId });
