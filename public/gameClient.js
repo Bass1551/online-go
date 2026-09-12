@@ -195,19 +195,28 @@ const STAR_POINTS = {
 };
 
 // --- INITIALIZATION ---
-function init() {
+async function init() {
   setupEventListeners();
-  checkUrlParams();
   setupCanvas();
-  checkAuth();
+  await checkAuth();
+  checkUrlParams();
 }
 
 function checkUrlParams() {
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
   if (roomParam) {
-    joinRoomCode.value = roomParam.toUpperCase();
-    showToast(`พบรหัสห้อง ${roomParam.toUpperCase()} ใส่ชื่อของคุณแล้วกดเข้าร่วมได้เลย!`);
+    const targetRoomId = roomParam.trim().toUpperCase();
+    if (joinRoomCode) joinRoomCode.value = targetRoomId;
+
+    // Automatically join the room and switch to game view directly!
+    if (currentUser) {
+      const playerName = currentUser.username;
+      showToast(`กำลังเปิดเข้าสู่ห้อง ${targetRoomId}...`);
+      socket.emit('join_room', { roomId: targetRoomId, playerName });
+    } else {
+      showToast(`พบคำเชิญเข้าห้อง ${targetRoomId} กรุณาเข้าสู่ระบบเพื่อเริ่มเล่นหรือเข้าชม`);
+    }
   }
 }
 
@@ -913,6 +922,17 @@ async function handleGateSubmit(e) {
       socket.emit('auth_session', { token: data.token });
       gatePassword.value = '';
       showToast(gateMode === 'register' ? `🎉 สมัครสมาชิกสำเร็จ! ยินดีต้อนรับคุณ ${currentUser.username}` : `👋 เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับคุณ ${currentUser.username}`);
+
+      // Auto-join room if room param is present in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomParam = urlParams.get('room');
+      if (roomParam) {
+        const targetRoomId = roomParam.trim().toUpperCase();
+        setTimeout(() => {
+          showToast(`กำลังเปิดเข้าสู่ห้อง ${targetRoomId}...`);
+          socket.emit('join_room', { roomId: targetRoomId, playerName: currentUser.username });
+        }, 200);
+      }
     } else {
       gateErrorMessage.innerHTML = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
       if (gateMode === 'login' && data.message && data.message.includes('สมัครสมาชิกใหม่')) {

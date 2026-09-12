@@ -9,6 +9,34 @@ let currentUsers = [];
 let currentRooms = [];
 let currentGames = [];
 
+// Socket.io Real-time connection
+const adminSocket = typeof io !== 'undefined' ? io() : null;
+if (adminSocket) {
+  adminSocket.on('connect', () => {
+    updateLiveSyncBadge(true);
+  });
+  adminSocket.on('disconnect', () => {
+    updateLiveSyncBadge(false);
+  });
+  adminSocket.on('admin_event', () => {
+    if (adminKey && mainDashboard.style.display !== 'none') {
+      loadAllAdminData();
+    }
+  });
+}
+
+function updateLiveSyncBadge(isLive) {
+  const badge = document.getElementById('liveSyncBadge');
+  if (!badge) return;
+  if (isLive) {
+    badge.innerHTML = '🟢 ซิงก์ข้อมูลสด (Real-time)';
+    badge.className = 'badge-pill badge-green';
+  } else {
+    badge.innerHTML = '🟡 ออฟไลน์ (Polling 3s)';
+    badge.className = 'badge-pill badge-red';
+  }
+}
+
 // DOM Elements
 const authOverlay = document.getElementById('authOverlay');
 const mainDashboard = document.getElementById('mainDashboard');
@@ -535,10 +563,11 @@ if (adminKey) {
   showLogin();
 }
 
-// Auto refresh every 30 seconds if tab is active
+// Auto refresh fallback every 3 seconds if tab is active
 setInterval(() => {
   if (adminKey && mainDashboard.style.display !== 'none') {
     loadStats();
     loadRooms();
+    loadUsers();
   }
-}, 30000);
+}, 3000);

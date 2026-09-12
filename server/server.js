@@ -40,6 +40,7 @@ app.post('/api/register', (req, res) => {
   if (!result.success) {
     return res.status(400).json(result);
   }
+  io.emit('admin_event', { type: 'user_registered', user: result.user });
   res.json(result);
 });
 
@@ -49,6 +50,7 @@ app.post('/api/login', (req, res) => {
   if (!result.success) {
     return res.status(401).json(result);
   }
+  io.emit('admin_event', { type: 'user_login', user: result.user });
   res.json(result);
 });
 
@@ -138,6 +140,7 @@ app.post('/api/admin/users/reset-password', verifyAdmin, (req, res) => {
   if (!result.success) {
     return res.status(400).json(result);
   }
+  io.emit('admin_event', { type: 'password_reset', target });
   res.json(result);
 });
 
@@ -146,11 +149,13 @@ app.delete('/api/admin/users/:id', verifyAdmin, (req, res) => {
   if (!result.success) {
     return res.status(400).json(result);
   }
+  io.emit('admin_event', { type: 'user_deleted', id: req.params.id });
   res.json(result);
 });
 
 app.post('/api/admin/clean-test-data', verifyAdmin, (req, res) => {
   const result = Database.cleanTestData();
+  io.emit('admin_event', { type: 'test_data_cleaned' });
   res.json(result);
 });
 
@@ -293,6 +298,7 @@ function saveCompletedGame(room, winner, winReason, scoreResult) {
       captures: room.game.captures || { 1: 0, 2: 0 },
       userIds
     });
+    io.emit('admin_event', { type: 'game_completed', roomId: room.id });
   }
 }
 
@@ -409,6 +415,7 @@ io.on('connection', (socket) => {
     rooms.set(roomId, room);
     currentRoomId = roomId;
     playerRole = 1;
+    io.emit('admin_event', { type: 'room_created', roomId });
 
     socket.join(roomId);
     socket.emit('room_created', {
@@ -422,11 +429,15 @@ io.on('connection', (socket) => {
   socket.on('start_bot_game', ({ size = 9, botLevel = 1, playerName = 'ผู้เล่น', timeLimit = 0, playerColor = 'black' }) => {
     const validSize = [9, 13, 19].includes(Number(size)) ? Number(size) : 9;
     const level = Math.max(1, Math.min(6, parseInt(botLevel, 10) || 1));
-    let roomId = 'BOT-' + generateRoomId().slice(0, 4);
+    const botName = `AI ${GoBot.LEVEL_NAMES[level] || 'บอท'}`;
+
+    let roomId = generateRoomId();
+    while (rooms.has(roomId)) {
+      roomId = generateRoomId();
+    }
 
     const game = new GoGame({ size: validSize });
-    const bot = new GoBot(level);
-    const botName = `AI ${GoBot.LEVEL_NAMES[level]}`;
+    const bot = new GoBot(level, validSize);
     const initialTime = Number(timeLimit) > 0 ? Number(timeLimit) * 60 : 0;
 
     // Resolve chosen color (support 'black', 'white', or 'random' / 'nigiri')
@@ -464,6 +475,7 @@ io.on('connection', (socket) => {
     rooms.set(roomId, room);
     currentRoomId = roomId;
     playerRole = assignedRole;
+    io.emit('admin_event', { type: 'room_created', roomId });
 
     socket.join(roomId);
     socket.emit('room_created', {
@@ -653,15 +665,20 @@ io.on('connection', (socket) => {
       room: getSanitizedRoomState(room),
       announcement: `${resolvedName} ได้เข้าร่วมห้องแล้ว`
     });
+    io.emit('admin_event', { type: 'room_updated', roomId });
   });
 
   // Play Move
   socket.on('play_move', ({ roomId, r, c }) => {
     const room = rooms.get(roomId);
-    if (!room) return socket.emit('move_error', { message: 'ไม่พบห้องนี้' });
+    if (!room) return;
 
     if (playerRole !== 1 && playerRole !== 2) {
-      return socket.emit('move_error', { message: 'คุณอยู่ในสถานะผู้ชม ไม่สามารถวางหมากได้' });
+      return socket.emit('move_error', { message: 'คุณเป็นเพียงผู้ชม ไม่สามารถวางหมากได้' });
+    }
+
+    if (room.game.isGameOver) {
+      return socket.emit('move_error', { message: 'เกมจบลงแล้ว ไม่สามารถวางหมากเพิ่มได้' });
     }
 
     if (room.game.turn !== playerRole) {
@@ -687,6 +704,7 @@ io.on('connection', (socket) => {
       lastMove: result.lastMove,
       sound: result.capturedStones.length > 0 ? 'capture' : 'stone'
     });
+    io.emit('admin_event', { type: 'move_played', roomId });
 
     // If stones were captured, analyze tactic and record in move history
     if (result.capturedStones.length > 0) {
