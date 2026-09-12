@@ -22,6 +22,18 @@
 </head>
 <body>
 
+  <!-- TOP TICKER SYSTEM BROADCAST (Smooth Right-to-Left Infinite Marquee) -->
+  <div id="topBroadcastTicker" class="top-broadcast-ticker" style="display: none;" role="alert">
+    <div class="ticker-badge">
+      <span class="ticker-badge-dot"></span>
+      <span class="ticker-badge-text">📢 ประกาศระบบ</span>
+    </div>
+    <div class="ticker-track">
+      <div id="tickerContent" class="ticker-content"></div>
+    </div>
+    <button id="tickerCloseBtn" class="ticker-close-btn" aria-label="ปิดแถบประกาศ" title="ปิดประกาศ">✕</button>
+  </div>
+
   <!-- MANDATORY AUTH GATE VIEW (Shown if not logged in) -->
   <div id="authGateView" class="auth-gate-container" style="display: flex;">
     <div class="brand-header" style="margin-bottom: 1.5rem;">

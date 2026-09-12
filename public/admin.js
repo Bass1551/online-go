@@ -83,6 +83,11 @@ const btnCancelReset = document.getElementById('btnCancelReset');
 // Broadcast
 const broadcastForm = document.getElementById('broadcastForm');
 const broadcastInput = document.getElementById('broadcastInput');
+const broadcastDurationSelect = document.getElementById('broadcastDurationSelect');
+const btnClearBroadcast = document.getElementById('btnClearBroadcast');
+const activeBroadcastCard = document.getElementById('activeBroadcastCard');
+const activeBroadcastTimerBadge = document.getElementById('activeBroadcastTimerBadge');
+const activeBroadcastText = document.getElementById('activeBroadcastText');
 
 // Toast
 const adminToast = document.getElementById('adminToast');
@@ -153,7 +158,8 @@ async function loadAllAdminData() {
       loadStats(),
       loadUsers(),
       loadRooms(),
-      loadGames()
+      loadGames(),
+      refreshActiveBroadcastStatus()
     ]);
   } catch (err) {
     console.error('Error loading admin data:', err);
@@ -439,20 +445,45 @@ window.forceCloseRoom = async function(roomId) {
   }
 };
 
-// Broadcast Form
+// Broadcast Form & Active Broadcast Tracking
+async function refreshActiveBroadcastStatus() {
+  try {
+    const res = await adminFetch('/api/broadcast/current');
+    if (res && res.success && res.broadcast) {
+      const b = res.broadcast;
+      if (activeBroadcastCard && activeBroadcastText && activeBroadcastTimerBadge) {
+        activeBroadcastText.textContent = b.message;
+        if (b.expiresAt) {
+          const remSec = Math.max(0, Math.round((b.expiresAt - Date.now()) / 1000));
+          activeBroadcastTimerBadge.textContent = remSec > 0 ? `⏳ เหลือ ${remSec} วิ` : '⚠️ หมดเวลาแล้ว';
+        } else {
+          activeBroadcastTimerBadge.textContent = '📌 แสดงค้างตลอด';
+        }
+        activeBroadcastCard.style.display = 'block';
+      }
+    } else {
+      if (activeBroadcastCard) activeBroadcastCard.style.display = 'none';
+    }
+  } catch (err) {
+    // Ignore error
+  }
+}
+
 broadcastForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const message = broadcastInput.value.trim();
   if (!message) return;
+  const duration = parseInt(broadcastDurationSelect ? broadcastDurationSelect.value : 60, 10) || 0;
 
   try {
     const res = await adminFetch('/api/admin/broadcast', {
       method: 'POST',
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ message, duration })
     });
     if (res.success) {
-      showToast('📢 ส่งข้อความประกาศเซิร์ฟเวอร์เรียบร้อยแล้ว!');
+      showToast(res.message || '📢 ส่งข้อความประกาศเซิร์ฟเวอร์เรียบร้อยแล้ว!');
       broadcastInput.value = '';
+      refreshActiveBroadcastStatus();
     } else {
       showToast(res.message || 'ส่งประกาศไม่สำเร็จ', true);
     }
@@ -460,6 +491,25 @@ broadcastForm.addEventListener('submit', async (e) => {
     showToast(err.message, true);
   }
 });
+
+if (btnClearBroadcast) {
+  btnClearBroadcast.addEventListener('click', async () => {
+    if (!confirm('ต้องการล้างและปิดแถบประกาศบนหน้าจอผู้เล่นทุกคนหรือไม่?')) return;
+    try {
+      const res = await adminFetch('/api/admin/broadcast/clear', {
+        method: 'POST'
+      });
+      if (res.success) {
+        showToast('🛑 ล้างและปิดแถบประกาศเรียบร้อยแล้ว');
+        refreshActiveBroadcastStatus();
+      } else {
+        showToast(res.message || 'ล้างประกาศไม่สำเร็จ', true);
+      }
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  });
+}
 
 // Search Filter
 userSearchInput.addEventListener('input', () => {
@@ -505,6 +555,10 @@ tabButtons.forEach(btn => {
     btn.classList.add('active');
     const targetContent = document.getElementById(`tab-${tabName}`);
     if (targetContent) targetContent.classList.add('active');
+
+    if (tabName === 'broadcast') {
+      refreshActiveBroadcastStatus();
+    }
   });
 });
 

@@ -87,6 +87,12 @@ const undoMessage = document.getElementById('undoMessage');
 const btnAcceptUndo = document.getElementById('btnAcceptUndo');
 const btnRejectUndo = document.getElementById('btnRejectUndo');
 
+// Top Marquee Broadcast Elements
+const topBroadcastTicker = document.getElementById('topBroadcastTicker');
+const tickerContent = document.getElementById('tickerContent');
+const tickerCloseBtn = document.getElementById('tickerCloseBtn');
+let broadcastExpiryTimer = null;
+
 // Solo Bot & Coach Elements
 const btnStartBotGame = document.getElementById('btnStartBotGame');
 const botPlayerName = document.getElementById('botPlayerName');
@@ -201,6 +207,63 @@ async function init() {
   setupCanvas();
   await checkAuth();
   checkUrlParams();
+  checkCurrentBroadcast();
+}
+
+function showTopBroadcastTicker(data) {
+  if (!data || !data.message) return;
+
+  if (broadcastExpiryTimer) {
+    clearTimeout(broadcastExpiryTimer);
+    broadcastExpiryTimer = null;
+  }
+
+  // Handle expiration time if set
+  if (data.expiresAt) {
+    const remainingMs = data.expiresAt - Date.now();
+    if (remainingMs <= 0) {
+      hideTopBroadcastTicker();
+      return;
+    }
+    broadcastExpiryTimer = setTimeout(() => {
+      hideTopBroadcastTicker();
+    }, remainingMs);
+  }
+
+  if (topBroadcastTicker && tickerContent) {
+    tickerContent.textContent = data.message;
+    // Calculate speed based on text length: smooth readable speed (14s to 60s)
+    const durationSeconds = Math.max(14, Math.min(60, Math.round(data.message.length * 0.45)));
+    tickerContent.style.animation = 'none';
+    tickerContent.offsetHeight; /* trigger reflow to restart animation */
+    tickerContent.style.animation = `marqueeSlide ${durationSeconds}s linear infinite`;
+
+    topBroadcastTicker.style.display = 'flex';
+    document.body.classList.add('has-top-ticker');
+  }
+}
+
+function hideTopBroadcastTicker() {
+  if (broadcastExpiryTimer) {
+    clearTimeout(broadcastExpiryTimer);
+    broadcastExpiryTimer = null;
+  }
+  if (topBroadcastTicker) {
+    topBroadcastTicker.style.display = 'none';
+  }
+  document.body.classList.remove('has-top-ticker');
+}
+
+async function checkCurrentBroadcast() {
+  try {
+    const res = await fetch('/api/broadcast/current');
+    const data = await res.json();
+    if (data && data.success && data.broadcast) {
+      showTopBroadcastTicker(data.broadcast);
+    }
+  } catch (err) {
+    // Ignore fetch error
+  }
 }
 
 function checkUrlParams() {
@@ -496,6 +559,10 @@ function getGridCoord(e) {
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
+  if (tickerCloseBtn) {
+    tickerCloseBtn.addEventListener('click', hideTopBroadcastTicker);
+  }
+
   // Canvas Mouse & Touch
   canvas.addEventListener('mousemove', (e) => {
     const coord = getGridCoord(e);
@@ -1767,9 +1834,14 @@ socket.on('new_message', (data) => {
 
 socket.on('system_announcement', (data) => {
   if (data && data.message) {
+    showTopBroadcastTicker(data);
     showToast(`📢 ประกาศจากผู้ดูแล: ${data.message}`);
     addChatMessage({ type: 'system', text: `📢 ประกาศจากผู้ดูแล: ${data.message}` });
   }
+});
+
+socket.on('system_announcement_clear', () => {
+  hideTopBroadcastTicker();
 });
 
 // Boot

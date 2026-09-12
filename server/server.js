@@ -211,17 +211,44 @@ app.get('/api/admin/games/:id', verifyAdmin, (req, res) => {
   res.json({ success: true, game });
 });
 
+let activeBroadcast = null;
+
 // Admin System Broadcast to all connected clients
 app.post('/api/admin/broadcast', verifyAdmin, (req, res) => {
-  const { message } = req.body || {};
+  const { message, duration = 60 } = req.body || {};
   if (!message || !message.trim()) {
     return res.status(400).json({ success: false, message: 'กรุณาระบุข้อความประกาศ' });
   }
-  io.emit('system_announcement', {
+
+  const durationSec = Math.max(0, parseInt(duration, 10) || 0);
+  const expiresAt = durationSec > 0 ? Date.now() + durationSec * 1000 : null;
+
+  activeBroadcast = {
     message: message.trim(),
-    timestamp: Date.now()
+    duration: durationSec,
+    timestamp: Date.now(),
+    expiresAt
+  };
+
+  io.emit('system_announcement', activeBroadcast);
+  res.json({
+    success: true,
+    message: `ส่งข้อความประกาศขึ้นแถบวิ่งเรียบร้อยแล้ว (${durationSec > 0 ? `แสดงผล ${durationSec} วินาที` : 'แสดงผลค้างไว้ตลอด'})`,
+    broadcast: activeBroadcast
   });
-  res.json({ success: true, message: 'ส่งข้อความประกาศถึงผู้เล่นทุกคนเรียบร้อยแล้ว' });
+});
+
+app.post('/api/admin/broadcast/clear', verifyAdmin, (req, res) => {
+  activeBroadcast = null;
+  io.emit('system_announcement_clear');
+  res.json({ success: true, message: 'ล้างและปิดแถบประกาศทั้งหมดเรียบร้อยแล้ว' });
+});
+
+app.get('/api/broadcast/current', (req, res) => {
+  if (activeBroadcast && activeBroadcast.expiresAt && Date.now() > activeBroadcast.expiresAt) {
+    activeBroadcast = null;
+  }
+  res.json({ success: true, broadcast: activeBroadcast });
 });
 
 // Admin Page Route
@@ -385,6 +412,15 @@ io.on('connection', (socket) => {
       callback({ success: !!currentUser, user: currentUser });
     }
   });
+
+  // Send active broadcast if any
+  if (activeBroadcast) {
+    if (activeBroadcast.expiresAt && Date.now() > activeBroadcast.expiresAt) {
+      activeBroadcast = null;
+    } else {
+      socket.emit('system_announcement', activeBroadcast);
+    }
+  }
 
   // Create Room (Human vs Human)
   socket.on('create_room', ({ size = 19, playerName = 'ผู้เล่น 1', timeLimit = 0 }) => {
