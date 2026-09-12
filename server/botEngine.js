@@ -605,19 +605,19 @@ class GoBot {
   }
 
   // ==========================================
+  // ==========================================
   // LEVEL 5: ปรมาจารย์ (Master ~5-7 Dan)
   // ==========================================
   level5Master(game, moves, botColor, opponent) {
-    // Pro Opening check for 9x9 / 13x13
     const bookMove = this.getProOpeningMove(game, moves, botColor, opponent);
     if (bookMove) return bookMove;
 
-    const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 8);
+    const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 10);
     let bestScore = -Infinity;
     let bestMove = candidates[0] || moves[0];
 
     for (const m of candidates) {
-      const score = this.alphaBetaSearch(game, m, 3, -Infinity, Infinity, false, botColor, opponent);
+      const score = this.alphaBetaSearch(game, m, 2, -Infinity, Infinity, true, botColor, opponent);
       if (score > bestScore) {
         bestScore = score;
         bestMove = m;
@@ -635,20 +635,14 @@ class GoBot {
     const bookMove = this.getProOpeningMove(game, moves, botColor, opponent);
     if (bookMove) return bookMove;
 
-    // 2. High-priority Candidate selection (top 8 sharpest candidates)
-    const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 8);
+    // 2. High-priority Candidate selection (top 12 sharpest candidates)
+    const candidates = this.getCandidateMoves(game, moves, botColor, opponent, 12);
     let bestScore = -Infinity;
     let bestMove = candidates[0] || moves[0];
 
-    // 3. Fast 3-ply Tactical Alpha-Beta Search + Double Atari Hunter
+    // 3. True 2-ply Deep Tactical Search with Opponent Reply & Double Atari
     for (const m of candidates) {
-      let score = this.alphaBetaSearch(game, m, 3, -Infinity, Infinity, false, botColor, opponent);
-
-      // Severe Double Atari & Cut bonus
-      score += this.detectDoubleAtari(game, m, botColor, opponent) * 2500;
-      score += this.detectCuttingPoints(game, m, botColor, opponent) * 450;
-      score += this.evaluateShapeIntegrity(game, m, botColor, opponent) * 350;
-
+      const score = this.alphaBetaSearch(game, m, 2, -Infinity, Infinity, true, botColor, opponent);
       if (score > bestScore) {
         bestScore = score;
         bestMove = m;
@@ -727,45 +721,50 @@ class GoBot {
     return scored.slice(0, maxCount).map(item => item.move);
   }
 
+  isTrueEye(game, r, c, color) {
+    if (game.board[r][c] !== 0) return false;
+    for (const n of game.getNeighbors(r, c)) {
+      if (game.board[n.r][n.c] !== color) return false;
+    }
+    const diags = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    let diagSame = 0;
+    let diagTotal = 0;
+    for (const [dr, dc] of diags) {
+      const nr = r + dr, nc = c + dc;
+      if (game.isInBounds(nr, nc)) {
+        diagTotal++;
+        if (game.board[nr][nc] === color) diagSame++;
+      }
+    }
+    return (diagTotal <= 2 && diagSame >= diagTotal) || (diagTotal > 2 && diagSame >= diagTotal - 1);
+  }
+
   alphaBetaSearch(game, candidateMove, depth, alpha, beta, isMaximizing, botColor, opponent) {
     const clone = game.cloneBoard();
-    const currentColor = isMaximizing ? botColor : opponent;
-    const enemyColor = isMaximizing ? opponent : botColor;
+    clone[candidateMove.r][candidateMove.c] = botColor;
+    this.removeDeadGroups(game, clone, candidateMove.r, candidateMove.c, opponent);
 
-    clone[candidateMove.r][candidateMove.c] = currentColor;
-    this.removeDeadGroups(game, clone, candidateMove.r, candidateMove.c, enemyColor);
+    let myScore = this.evaluateMoveTactics(game, candidateMove, botColor, opponent, 6);
+    myScore += this.detectDoubleAtari(game, candidateMove, botColor, opponent) * 3500;
+    myScore += this.detectCuttingPoints(game, candidateMove, botColor, opponent) * 400;
+    myScore += this.evaluateShapeIntegrity(game, candidateMove, botColor, opponent);
 
     if (depth <= 1) {
-      return this.evaluateStaticPosition(game, clone, botColor, opponent);
+      return myScore + this.evaluateStaticPosition(game, clone, botColor, opponent);
     }
 
-    const nextLegal = this.getQuickLegalMoves(game, clone, enemyColor);
-    if (nextLegal.length === 0) {
-      return this.evaluateStaticPosition(game, clone, botColor, opponent);
+    const oppLegal = this.getQuickLegalMoves(game, clone, opponent);
+    let maxOppResponse = 0;
+    const topReplies = oppLegal.slice(0, Math.min(8, oppLegal.length));
+    for (const oppMove of topReplies) {
+      const oppClone = game.cloneBoard(clone);
+      oppClone[oppMove.r][oppMove.c] = opponent;
+      this.removeDeadGroups(game, oppClone, oppMove.r, oppMove.c, botColor);
+      const oppVal = this.evaluateMoveTacticsOnBoard(game, oppClone, oppMove, opponent, botColor, 4);
+      if (oppVal > maxOppResponse) maxOppResponse = oppVal;
     }
 
-    // Sort next moves by basic capture/liberty potential
-    const topReplies = nextLegal.slice(0, Math.min(6, nextLegal.length));
-
-    if (isMaximizing) {
-      let maxEval = -Infinity;
-      for (const reply of topReplies) {
-        const ev = this.alphaBetaSearch(game, reply, depth - 1, alpha, beta, false, botColor, opponent);
-        maxEval = Math.max(maxEval, ev);
-        alpha = Math.max(alpha, ev);
-        if (beta <= alpha) break;
-      }
-      return maxEval;
-    } else {
-      let minEval = Infinity;
-      for (const reply of topReplies) {
-        const ev = this.alphaBetaSearch(game, reply, depth - 1, alpha, beta, true, botColor, opponent);
-        minEval = Math.min(minEval, ev);
-        beta = Math.min(beta, ev);
-        if (beta <= alpha) break;
-      }
-      return minEval;
-    }
+    return myScore - maxOppResponse * 0.75 + this.evaluateStaticPosition(game, clone, botColor, opponent);
   }
 
   evaluateStaticPosition(game, board, botColor, opponent) {
@@ -776,6 +775,8 @@ class GoBot {
     let oppStones = 0;
     let botLiberties = 0;
     let oppLiberties = 0;
+    let botTerritory = 0;
+    let oppTerritory = 0;
 
     for (let r = 0; r < game.size; r++) {
       for (let c = 0; c < game.size; c++) {
@@ -788,12 +789,23 @@ class GoBot {
           oppStones++;
           const grp = game.getGroup(r, c, board);
           if (grp) oppLiberties += grp.liberties;
+        } else {
+          // Territory estimate
+          let botNeighbors = 0;
+          let oppNeighbors = 0;
+          for (const n of game.getNeighbors(r, c)) {
+            if (board[n.r][n.c] === botColor) botNeighbors++;
+            else if (board[n.r][n.c] === opponent) oppNeighbors++;
+          }
+          if (botNeighbors >= 3 && oppNeighbors === 0) botTerritory += 60;
+          else if (oppNeighbors >= 3 && botNeighbors === 0) oppTerritory += 60;
         }
       }
     }
 
     score += (botStones - oppStones) * 120;
     score += (botLiberties - oppLiberties) * 15;
+    score += (botTerritory - oppTerritory);
 
     return score;
   }
@@ -812,6 +824,9 @@ class GoBot {
         const oppGroup = game.getGroup(n.r, n.c, clone);
         if (oppGroup && oppGroup.liberties === 0) {
           capturedStones += oppGroup.stones.length;
+          for (const s of oppGroup.stones) {
+            clone[s.r][s.c] = 0;
+          }
         }
       }
     }
@@ -881,10 +896,36 @@ class GoBot {
       score += 70; // 4th line (Influence line)
     }
 
-    // 8. VITAL POINTS (Corner 3-3, Tengen)
+    // 8. VITAL POINTS (Corner 3-3, Star Points, Tengen)
+    if (game.moveHistory.length <= 14) {
+      const is9x9Corner = game.size === 9 && ((r === 2 || r === 6) && (c === 2 || c === 6));
+      const isLargeCorner = (game.size === 19 || game.size === 13) && (
+        ((r === 2 || r === 3) || (r === game.size - 3 || r === game.size - 4)) &&
+        ((c === 2 || c === 3) || (c === game.size - 3 || c === game.size - 4))
+      );
+      if (is9x9Corner || isLargeCorner) {
+        let stonesNear = 0;
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const nr = r + dr, nc = c + dc;
+            if (game.isInBounds(nr, nc) && game.board[nr][nc] !== 0) stonesNear++;
+          }
+        }
+        if (stonesNear === 0) {
+          score += 1500; // Tremendous strategic bonus for claiming an empty corner!
+        }
+      }
+    }
+
     if (game.size === 9) {
-      if (r === 4 && c === 4) score += 90; // Tengen
-      if ((r === 2 || r === 6) && (c === 2 || c === 6)) score += 60; // 3-3 points
+      if (r === 4 && c === 4) score += 120; // Tengen
+    }
+
+    // 9. LIFE & DEATH / EYE PROTECTION
+    if (this.isTrueEye(game, r, c, botColor)) {
+      score -= 35000; // NEVER fill own true eye!
+    } else if (this.isTrueEye(game, r, c, opponent)) {
+      score += 2500; // Nakade / Poke opponent eye space!
     }
 
     return score;
@@ -967,14 +1008,15 @@ class GoBot {
         }
       }
 
-      // 4. Defend own head of two stones (extend to avoid being struck)
+      // 4. Defend own head of two stones (extend when in contact fight)
       const own1R = r + d.dr;
       const own1C = c + d.dc;
       const own2R = r + d.dr * 2;
       const own2C = c + d.dc * 2;
       if (game.isInBounds(own1R, own1C) && game.isInBounds(own2R, own2C)) {
         if (board[own1R][own1C] === botColor && board[own2R][own2C] === botColor) {
-          score += 650; // Extending own stones forward safely
+          const hasOppNear = game.getNeighbors(r, c).some(n => board[n.r][n.c] === opponent);
+          score += hasOppNear ? 300 : 80;
         }
       }
     }
@@ -1038,8 +1080,9 @@ class GoBot {
       if (game.board[n.r][n.c] === opponent) {
         const grp = game.getGroup(n.r, n.c, clone);
         if (grp && grp.liberties === 1) {
-          // Identify group uniquely by its first stone
-          const key = `${grp.stones[0].r},${grp.stones[0].c}`;
+          // Identify group uniquely by its min coordinate stone
+          const minStone = grp.stones.reduce((min, s) => (s.r < min.r || (s.r === min.r && s.c < min.c)) ? s : min, grp.stones[0]);
+          const key = `${minStone.r},${minStone.c}`;
           atariGroups.add(key);
         }
       }
