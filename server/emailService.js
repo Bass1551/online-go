@@ -30,9 +30,9 @@ class EmailService {
         user: gmailUser,
         pass: gmailPass
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000
+      connectionTimeout: 3500,
+      greetingTimeout: 3500,
+      socketTimeout: 5000
     });
   }
 
@@ -95,7 +95,37 @@ class EmailService {
       html: htmlContent
     };
 
-    // Attempt 1: Port 465 (SSL)
+    // Method 1: HTTPS Webhook relay (Google Apps Script / HTTP endpoint)
+    // Runs on port 443 which is NEVER blocked by Render free tier
+    const webhookUrl = process.env.GMAIL_WEBHOOK_URL || process.env.EMAIL_HTTP_URL;
+    if (webhookUrl) {
+      try {
+        const res = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: toEmail,
+            username,
+            otp: otpCode,
+            subject: mailOptions.subject,
+            text: mailOptions.text,
+            html: mailOptions.html
+          })
+        });
+        const d = await res.json().catch(() => ({ success: res.ok }));
+        if (d.success || res.ok) {
+          console.log(`✅ [EMAIL SENT] Sent OTP to ${toEmail} via HTTPS Webhook`);
+          return {
+            success: true,
+            message: `ส่งรหัส OTP ไปยังอีเมล ${toEmail} เรียบร้อยแล้ว กรุณาเปิดเช็คในกล่องข้อความหรืออีเมลขยะ (Spam)`
+          };
+        }
+      } catch (errWeb) {
+        console.warn('⚠️ Webhook email failed, trying direct SMTP:', errWeb.message);
+      }
+    }
+
+    // Method 2: Direct SMTP Port 465 (SSL)
     try {
       const transporter465 = EmailService.createTransporter(465, true);
       await transporter465.sendMail(mailOptions);
@@ -108,7 +138,7 @@ class EmailService {
       console.warn('⚠️ SMTP Port 465 failed, trying Port 587 fallback:', err465.message);
     }
 
-    // Attempt 2: Port 587 (TLS / STARTTLS)
+    // Method 3: Direct SMTP Port 587 (TLS / STARTTLS)
     try {
       const transporter587 = EmailService.createTransporter(587, false);
       await transporter587.sendMail(mailOptions);
@@ -118,10 +148,10 @@ class EmailService {
         message: `ส่งรหัส OTP ไปยังอีเมล ${toEmail} เรียบร้อยแล้ว กรุณาเปิดเช็คในกล่องข้อความหรืออีเมลขยะ (Spam)`
       };
     } catch (err587) {
-      console.error('❌ All SMTP ports failed to send email:', err587.message);
+      console.error('❌ All SMTP ports blocked by host:', err587.message);
       return {
         success: false,
-        message: 'ไม่สามารถส่งอีเมลได้ในขณะนี้ กรุณาตรวจสอบว่ากรอก Gmail ถูกต้อง หรือใช้แท็บ PIN 4 หลักเพื่อตั้งรหัสใหม่'
+        message: 'เซิร์ฟเวอร์ Render ฟรีบล็อกพอร์ตส่งอีเมล SMTP กรุณาใช้แท็บ "PIN 4 หลัก" หรือแท็บ "ขอความช่วยเหลือ" ให้แอดมินออกรหัสให้ครับ'
       };
     }
   }
