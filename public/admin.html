@@ -484,8 +484,8 @@
       <div class="icon">👑</div>
       <h1>ระบบหลังบ้าน (Admin Backoffice)</h1>
       <p>ระบบตรวจสอบและจัดการข้อมูลสำหรับผู้ดูแลระบบเท่านั้น กรุณากรอก Master Admin Key เพื่อปลดล็อก</p>
-      <form id="adminLoginForm">
-        <input type="password" id="adminKeyInput" placeholder="กรอก Master Admin Key..." autocomplete="off" required>
+      <form id="adminLoginForm" onsubmit="return false;">
+        <input type="text" id="adminKeyInput" style="-webkit-text-security: disc;" placeholder="กรอก Master Admin Key..." autocomplete="off" name="admin_secret_token" required>
         <button type="submit" class="btn-admin-primary">ปลดล็อกระบบหลังบ้าน 🔓</button>
       </form>
       <div style="margin-top: 1.2rem;">
