@@ -146,14 +146,33 @@ let gateMode = 'login'; // 'login' or 'register'
 
 const gateRecoveryPinGroup = document.getElementById('gateRecoveryPinGroup');
 const gateRecoveryPin = document.getElementById('gateRecoveryPin');
+const gateEmailGroup = document.getElementById('gateEmailGroup');
+const gateEmail = document.getElementById('gateEmail');
 const gateForgotRow = document.getElementById('gateForgotRow');
 const btnOpenForgotModal = document.getElementById('btnOpenForgotModal');
 
 // Forgot Password Modal Elements
 const forgotPasswordModal = document.getElementById('forgotPasswordModal');
 const btnCloseForgotModal = document.getElementById('btnCloseForgotModal');
+const tabForgotOtp = document.getElementById('tabForgotOtp');
 const tabForgotPin = document.getElementById('tabForgotPin');
 const tabForgotAdmin = document.getElementById('tabForgotAdmin');
+const boxForgotOtp = document.getElementById('boxForgotOtp');
+const formForgotOtpRequest = document.getElementById('formForgotOtpRequest');
+const forgotOtpIdentifier = document.getElementById('forgotOtpIdentifier');
+const btnSubmitOtpRequest = document.getElementById('btnSubmitOtpRequest');
+const btnHaveCodeAlready = document.getElementById('btnHaveCodeAlready');
+const formForgotOtpVerify = document.getElementById('formForgotOtpVerify');
+const otpSentBanner = document.getElementById('otpSentBanner');
+const forgotOtpTarget = document.getElementById('forgotOtpTarget');
+const forgotOtpCode = document.getElementById('forgotOtpCode');
+const forgotOtpNewPassword = document.getElementById('forgotOtpNewPassword');
+const btnSubmitOtpVerify = document.getElementById('btnSubmitOtpVerify');
+const btnBackToOtpRequest = document.getElementById('btnBackToOtpRequest');
+const otpCooldownText = document.getElementById('otpCooldownText');
+let otpCooldownTimer = null;
+let otpCooldownSeconds = 0;
+
 const formForgotWithPin = document.getElementById('formForgotWithPin');
 const formForgotWithAdmin = document.getElementById('formForgotWithAdmin');
 const forgotErrorMessage = document.getElementById('forgotErrorMessage');
@@ -863,11 +882,33 @@ function setupEventListeners() {
   if (btnCloseForgotModal) {
     btnCloseForgotModal.addEventListener('click', closeForgotModal);
   }
+  if (tabForgotOtp) {
+    tabForgotOtp.addEventListener('click', () => switchForgotSubtab('otp'));
+  }
   if (tabForgotPin) {
     tabForgotPin.addEventListener('click', () => switchForgotSubtab('pin'));
   }
   if (tabForgotAdmin) {
     tabForgotAdmin.addEventListener('click', () => switchForgotSubtab('admin'));
+  }
+  if (formForgotOtpRequest) {
+    formForgotOtpRequest.addEventListener('submit', handleForgotOtpRequest);
+  }
+  if (btnHaveCodeAlready) {
+    btnHaveCodeAlready.addEventListener('click', () => {
+      formForgotOtpRequest.style.display = 'none';
+      formForgotOtpVerify.style.display = 'block';
+      if (otpSentBanner) otpSentBanner.innerHTML = '🔑 กรอกรหัส OTP 6 หลักที่คุณได้รับ (จาก Gmail หรือจากแอดมิน)';
+    });
+  }
+  if (btnBackToOtpRequest) {
+    btnBackToOtpRequest.addEventListener('click', () => {
+      formForgotOtpVerify.style.display = 'none';
+      formForgotOtpRequest.style.display = 'block';
+    });
+  }
+  if (formForgotOtpVerify) {
+    formForgotOtpVerify.addEventListener('submit', handleForgotOtpVerify);
   }
   if (formForgotWithPin) {
     formForgotWithPin.addEventListener('submit', handleForgotWithPinSubmit);
@@ -1023,6 +1064,7 @@ function switchGateTab(mode) {
     gateTabRegister.classList.remove('active');
     btnGateSubmit.innerText = 'เข้าสู่ระบบและเริ่มเล่น';
     gateNoteText.innerText = '🔒 เข้าสู่ระบบเพื่อบันทึกประวัติการแข่งและดูรีเพลย์ย้อนหลังเฉพาะบัญชีของคุณ 100%';
+    if (gateEmailGroup) gateEmailGroup.style.display = 'none';
     if (gateRecoveryPinGroup) gateRecoveryPinGroup.style.display = 'none';
     if (gateForgotRow) gateForgotRow.style.display = 'block';
   } else {
@@ -1030,6 +1072,7 @@ function switchGateTab(mode) {
     gateTabLogin.classList.remove('active');
     btnGateSubmit.innerText = 'สมัครสมาชิกและเริ่มเล่น';
     gateNoteText.innerText = '✨ สมัครสมาชิกใหม่ ตรวจสอบชื่อไม่ให้ซ้ำ และบันทึกประวัติการแข่งขันแยกเฉพาะบัญชีคุณ 100%';
+    if (gateEmailGroup) gateEmailGroup.style.display = 'block';
     if (gateRecoveryPinGroup) gateRecoveryPinGroup.style.display = 'block';
     if (gateForgotRow) gateForgotRow.style.display = 'none';
   }
@@ -1041,6 +1084,7 @@ async function handleGateSubmit(e) {
   const username = gateUsername.value.trim();
   const password = gatePassword.value;
   const recoveryPin = gateRecoveryPin ? gateRecoveryPin.value.trim() : '';
+  const email = gateEmail ? gateEmail.value.trim() : '';
 
   gateErrorMessage.style.display = 'none';
   gateErrorMessage.innerText = '';
@@ -1053,7 +1097,7 @@ async function handleGateSubmit(e) {
 
   const endpoint = gateMode === 'register' ? '/api/register' : '/api/login';
   const bodyPayload = gateMode === 'register' 
-    ? { username, password, recoveryPin } 
+    ? { username, password, recoveryPin, email } 
     : { username, password };
 
   try {
@@ -1122,11 +1166,16 @@ function openForgotModal() {
   if (forgotPasswordModal) {
     if (forgotErrorMessage) forgotErrorMessage.style.display = 'none';
     if (forgotSuccessMessage) forgotSuccessMessage.style.display = 'none';
-    if (gateUsername && gateUsername.value.trim()) {
-      if (forgotUsernamePin) forgotUsernamePin.value = gateUsername.value.trim();
-      if (forgotUsernameAdmin) forgotUsernameAdmin.value = gateUsername.value.trim();
+    const initialInput = gateUsername ? gateUsername.value.trim() : '';
+    if (initialInput) {
+      if (forgotOtpIdentifier) forgotOtpIdentifier.value = initialInput;
+      if (forgotOtpTarget) forgotOtpTarget.value = initialInput;
+      if (forgotUsernamePin) forgotUsernamePin.value = initialInput;
+      if (forgotUsernameAdmin) forgotUsernameAdmin.value = initialInput;
     }
-    switchForgotSubtab('pin');
+    switchForgotSubtab('otp');
+    if (formForgotOtpRequest) formForgotOtpRequest.style.display = 'block';
+    if (formForgotOtpVerify) formForgotOtpVerify.style.display = 'none';
     forgotPasswordModal.style.display = 'flex';
   }
 }
@@ -1138,16 +1187,187 @@ function closeForgotModal() {
 function switchForgotSubtab(mode) {
   if (forgotErrorMessage) forgotErrorMessage.style.display = 'none';
   if (forgotSuccessMessage) forgotSuccessMessage.style.display = 'none';
-  if (mode === 'pin') {
-    if (tabForgotPin) tabForgotPin.classList.add('active');
-    if (tabForgotAdmin) tabForgotAdmin.classList.remove('active');
-    if (formForgotWithPin) formForgotWithPin.style.display = 'block';
-    if (formForgotWithAdmin) formForgotWithAdmin.style.display = 'none';
-  } else {
-    if (tabForgotAdmin) tabForgotAdmin.classList.add('active');
-    if (tabForgotPin) tabForgotPin.classList.remove('active');
-    if (formForgotWithAdmin) formForgotWithAdmin.style.display = 'block';
-    if (formForgotWithPin) formForgotWithPin.style.display = 'none';
+
+  if (tabForgotOtp) tabForgotOtp.classList.toggle('active', mode === 'otp');
+  if (tabForgotPin) tabForgotPin.classList.toggle('active', mode === 'pin');
+  if (tabForgotAdmin) tabForgotAdmin.classList.toggle('active', mode === 'admin');
+
+  if (boxForgotOtp) boxForgotOtp.style.display = mode === 'otp' ? 'block' : 'none';
+  if (formForgotWithPin) formForgotWithPin.style.display = mode === 'pin' ? 'block' : 'none';
+  if (formForgotWithAdmin) formForgotWithAdmin.style.display = mode === 'admin' ? 'block' : 'none';
+}
+
+function startOtpCooldown(seconds = 60) {
+  if (otpCooldownTimer) clearInterval(otpCooldownTimer);
+  otpCooldownSeconds = seconds;
+  if (btnSubmitOtpRequest) btnSubmitOtpRequest.disabled = true;
+
+  function updateText() {
+    if (otpCooldownText) {
+      otpCooldownText.innerText = otpCooldownSeconds > 0 ? `ขอรหัสใหม่ได้ใน ${otpCooldownSeconds} วินาที` : '';
+    }
+    if (otpCooldownSeconds <= 0) {
+      clearInterval(otpCooldownTimer);
+      if (btnSubmitOtpRequest) {
+        btnSubmitOtpRequest.disabled = false;
+        btnSubmitOtpRequest.innerText = '📩 ขอรับรหัส OTP 6 หลัก';
+      }
+    }
+  }
+
+  updateText();
+  otpCooldownTimer = setInterval(() => {
+    otpCooldownSeconds--;
+    updateText();
+  }, 1000);
+}
+
+async function handleForgotOtpRequest(e) {
+  if (e) e.preventDefault();
+  const identifier = forgotOtpIdentifier ? forgotOtpIdentifier.value.trim() : '';
+  if (!identifier) {
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'กรุณากรอกชื่อผู้ใช้หรืออีเมล (Gmail)';
+      forgotErrorMessage.style.display = 'block';
+    }
+    return;
+  }
+
+  if (forgotErrorMessage) forgotErrorMessage.style.display = 'none';
+  if (forgotSuccessMessage) forgotSuccessMessage.style.display = 'none';
+
+  if (btnSubmitOtpRequest) {
+    btnSubmitOtpRequest.disabled = true;
+    btnSubmitOtpRequest.innerText = '⏳ กำลังส่งรหัส OTP...';
+  }
+
+  try {
+    const res = await fetch('/api/auth/send-email-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier })
+    });
+    const data = await res.json();
+    if (btnSubmitOtpRequest) {
+      btnSubmitOtpRequest.disabled = false;
+      btnSubmitOtpRequest.innerText = '📩 ขอรับรหัส OTP 6 หลัก';
+    }
+
+    if (data.success) {
+      if (forgotOtpTarget) forgotOtpTarget.value = data.username || identifier;
+      if (otpSentBanner) {
+        if (data.simulated) {
+          otpSentBanner.innerHTML = `⚠️ <b>โหมดทดสอบ:</b> รหัส OTP ของคุณคือ <span style="font-size: 1.25rem; font-weight: bold; color: #fde047; letter-spacing: 2px;">${data.otpCode}</span><br><small style="color: #cbd5e1;">(จำลองการส่ง เนื่องจากเซิร์ฟเวอร์ยังไม่ได้ตั้งค่ารหัสผ่าน Gmail SMTP ใน Environment Variables)</small>`;
+        } else {
+          otpSentBanner.innerHTML = `📬 ส่งรหัส OTP 6 หลักไปยัง <b>${data.emailMasked || 'Gmail ของคุณ'}</b> เรียบร้อยแล้ว! กรุณาเปิดเช็คกล่องจดหมาย (หรืออีเมลขยะ)`;
+        }
+      }
+      if (formForgotOtpRequest) formForgotOtpRequest.style.display = 'none';
+      if (formForgotOtpVerify) formForgotOtpVerify.style.display = 'block';
+      if (forgotOtpCode) {
+        forgotOtpCode.value = data.simulated ? data.otpCode : '';
+        forgotOtpCode.focus();
+      }
+      startOtpCooldown(60);
+    } else {
+      if (forgotErrorMessage) {
+        forgotErrorMessage.innerText = data.message || 'ไม่สามารถส่งรหัส OTP ได้';
+        forgotErrorMessage.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (btnSubmitOtpRequest) {
+      btnSubmitOtpRequest.disabled = false;
+      btnSubmitOtpRequest.innerText = '📩 ขอรับรหัส OTP 6 หลัก';
+    }
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่';
+      forgotErrorMessage.style.display = 'block';
+    }
+  }
+}
+
+async function handleForgotOtpVerify(e) {
+  if (e) e.preventDefault();
+  const identifier = forgotOtpTarget ? forgotOtpTarget.value.trim() : '';
+  const otp = forgotOtpCode ? forgotOtpCode.value.trim() : '';
+  const newPassword = forgotOtpNewPassword ? forgotOtpNewPassword.value : '';
+
+  if (forgotErrorMessage) forgotErrorMessage.style.display = 'none';
+  if (forgotSuccessMessage) forgotSuccessMessage.style.display = 'none';
+
+  if (!identifier || !otp || !newPassword) {
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'กรุณากรอกข้อมูลให้ครบทุกช่อง';
+      forgotErrorMessage.style.display = 'block';
+    }
+    return;
+  }
+
+  if (otp.length !== 6) {
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'รหัส OTP ต้องเป็นตัวเลข 6 หลัก';
+      forgotErrorMessage.style.display = 'block';
+    }
+    return;
+  }
+
+  if (newPassword.length < 4) {
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 4 ตัวอักษร';
+      forgotErrorMessage.style.display = 'block';
+    }
+    return;
+  }
+
+  if (btnSubmitOtpVerify) {
+    btnSubmitOtpVerify.disabled = true;
+    btnSubmitOtpVerify.innerText = '⏳ กำลังตั้งรหัสผ่านใหม่...';
+  }
+
+  try {
+    const res = await fetch('/api/auth/reset-with-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, otp, newPassword })
+    });
+    const data = await res.json();
+    if (btnSubmitOtpVerify) {
+      btnSubmitOtpVerify.disabled = false;
+      btnSubmitOtpVerify.innerText = '🚀 ยืนยันตั้งรหัสผ่านใหม่';
+    }
+
+    if (data.success) {
+      if (forgotSuccessMessage) {
+        forgotSuccessMessage.innerText = data.message || 'รีเซ็ตรหัสผ่านสำเร็จ!';
+        forgotSuccessMessage.style.display = 'block';
+      }
+      if (formForgotOtpVerify) formForgotOtpVerify.reset();
+      showToast('🎉 ตั้งรหัสผ่านใหม่สำเร็จเรียบร้อย! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
+      setTimeout(() => {
+        closeForgotModal();
+        if (gateUsername) gateUsername.value = identifier;
+        if (gatePassword) {
+          gatePassword.value = '';
+          gatePassword.focus();
+        }
+        switchGateTab('login');
+      }, 1500);
+    } else {
+      if (forgotErrorMessage) {
+        forgotErrorMessage.innerText = data.message || 'รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว';
+        forgotErrorMessage.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (btnSubmitOtpVerify) {
+      btnSubmitOtpVerify.disabled = false;
+      btnSubmitOtpVerify.innerText = '🚀 ยืนยันตั้งรหัสผ่านใหม่';
+    }
+    if (forgotErrorMessage) {
+      forgotErrorMessage.innerText = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+      forgotErrorMessage.style.display = 'block';
+    }
   }
 }
 

@@ -249,13 +249,19 @@ function renderResetRequests(requests) {
     const tr = document.createElement('tr');
     const isPending = r.status === 'pending';
     const dateStr = new Date(r.createdAt).toLocaleString('th-TH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const statusBadge = isPending 
-      ? '<span class="badge-pill badge-yellow">รอดำเนินการ</span>'
-      : `<span class="badge-pill badge-green">ดำเนินการแล้ว (${escapeHtml(r.tempPassword || 'สำเร็จ')})</span>`;
+    let statusBadge = '';
+    if (r.status === 'pending') {
+      statusBadge = '<span class="badge-pill badge-yellow">รอดำเนินการ</span>';
+    } else if (r.status === 'approved_code') {
+      statusBadge = `<span class="badge-pill badge-green">⚡ ออกรหัส OTP: ${escapeHtml(r.otpCode || '-')}</span>`;
+    } else {
+      statusBadge = `<span class="badge-pill badge-green">ดำเนินการแล้ว (${escapeHtml(r.tempPassword || 'สำเร็จ')})</span>`;
+    }
 
     const actions = isPending ? `
-      <div style="display: flex; gap: 0.4rem;">
-        <button class="btn-sm btn-sm-primary" onclick="handleResolveResetPrompt('${escapeHtml(r.id)}', '${escapeHtml(r.username)}')">🔑 ตั้งรหัสให้</button>
+      <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+        <button class="btn-sm btn-sm-primary" onclick="handleGenerateResetCode('${escapeHtml(r.id)}', '${escapeHtml(r.username)}')">⚡ ออกรหัส OTP 6 หลัก</button>
+        <button class="btn-sm btn-outline" onclick="handleResolveResetPrompt('${escapeHtml(r.id)}', '${escapeHtml(r.username)}')">🔑 ตั้งรหัสให้</button>
         <button class="btn-sm btn-sm-danger" onclick="handleDeleteResetRequest('${escapeHtml(r.id)}')">ลบ</button>
       </div>
     ` : `
@@ -272,6 +278,21 @@ function renderResetRequests(requests) {
     resetRequestsTableBody.appendChild(tr);
   });
 }
+
+window.handleGenerateResetCode = function(requestId, username) {
+  adminFetch(`/api/admin/reset-requests/${requestId}/generate-code`, {
+    method: 'POST'
+  }).then(res => {
+    if (res.success) {
+      loadResetRequests();
+      navigator.clipboard.writeText(res.code).catch(() => {});
+      alert(`✅ ออกรหัส OTP 6 หลักให้คุณ "${username}" สำเร็จ!\n\nรหัส OTP คือ: ${res.code}\n(คัดลอกลงคลิปบอร์ดแล้ว)\n\n👉 ส่งเลข 6 หลักนี้ให้ผู้เล่น นำไปกรอกที่หน้าเว็บเพื่อ "พิมพ์ตั้งรหัสผ่านใหม่ด้วยตัวเอง" ได้เลยครับ!`);
+      showToast(`สร้างรหัส OTP 6 หลักสำเร็จ: ${res.code}`);
+    } else {
+      showToast(res.message || 'เกิดข้อผิดพลาด', true);
+    }
+  }).catch(err => showToast(err.message, true));
+};
 
 window.handleResolveResetPrompt = function(requestId, username) {
   const newPass = prompt(`กำหนดรหัสผ่านใหม่ให้กับผู้เล่น "${username}":`, '123456');
@@ -313,7 +334,7 @@ window.handleDeleteResetRequest = function(requestId) {
 function renderUsersTable(usersToRender) {
   usersTableBody.innerHTML = '';
   if (!usersToRender || usersToRender.length === 0) {
-    usersTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #8b949e; padding: 2rem;">ไม่พบข้อมูลผู้ใช้</td></tr>';
+    usersTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #8b949e; padding: 2rem;">ไม่พบข้อมูลผู้ใช้</td></tr>';
     return;
   }
 
@@ -326,11 +347,17 @@ function renderUsersTable(usersToRender) {
 
     const stats = u.stats || { totalGames: 0, wins: 0, losses: 0, winRate: 0 };
     const displayPassword = u.plainPassword || '(ไม่ได้บันทึก)';
+    const displayEmail = u.email && u.email !== '-' ? u.email : '-';
 
     tr.innerHTML = `
       <td>${index + 1}</td>
       <td>
         <strong style="color: #f0f6fc; font-size: 0.95rem;">${escapeHtml(u.username)}</strong>
+      </td>
+      <td>
+        ${displayEmail !== '-' 
+          ? `<span style="color: #79c0ff; font-size: 0.88rem;">${escapeHtml(displayEmail)}</span>` 
+          : '<span style="color: #6e7681;">-</span>'}
       </td>
       <td>
         <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.25rem 0.5rem;">

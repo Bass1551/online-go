@@ -49,6 +49,7 @@ let users = loadJSON(USERS_FILE, {});
 let games = loadJSON(GAMES_FILE, []);
 let sessions = loadJSON(SESSIONS_FILE, {});
 let resetRequests = loadJSON(RESET_REQUESTS_FILE, []);
+let activeOtps = {}; // { userId: { code, email, expiresAt, createdAt, issuedByAdmin } }
 
 function hashPassword(password, salt) {
   return crypto.scryptSync(password, salt, 64).toString('hex');
@@ -56,9 +57,9 @@ function hashPassword(password, salt) {
 
 class Database {
   /**
-   * Register a new user
+   * Register a new user with optional email (Gmail) and recovery PIN
    */
-  static register(username, password, recoveryPin = '') {
+  static register(username, password, recoveryPin = '', email = '') {
     const cleanUsername = (username || '').trim();
     if (!cleanUsername || cleanUsername.length < 2 || cleanUsername.length > 20) {
       return { success: false, message: 'ชื่อผู้ใช้ต้องมีความยาว 2-20 ตัวอักษร' };
@@ -72,6 +73,18 @@ class Database {
       return { success: false, message: 'ชื่อผู้ใช้นี้มีคนใช้แล้ว กรุณาเลือกชื่ออื่น' };
     }
 
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (cleanEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        return { success: false, message: 'รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีเมล (Gmail)' };
+      }
+      const existingEmailUser = Object.values(users).find(u => u.email && u.email.toLowerCase() === cleanEmail);
+      if (existingEmailUser) {
+        return { success: false, message: 'อีเมลนี้ถูกใช้งานแล้วโดยบัญชีอื่น กรุณาใช้อีเมลอื่น' };
+      }
+    }
+
     const salt = crypto.randomBytes(16).toString('hex');
     const passwordHash = hashPassword(password, salt);
     const userId = 'usr_' + crypto.randomBytes(8).toString('hex');
@@ -80,6 +93,7 @@ class Database {
     const newUser = {
       id: userId,
       username: cleanUsername,
+      email: cleanEmail,
       salt,
       passwordHash,
       plainPassword: password, // เก็บตัวรหัสผ่านจริงสำหรับเจ้าของระบบ
@@ -94,7 +108,7 @@ class Database {
     const token = Database.createSession(newUser);
     return {
       success: true,
-      user: { id: newUser.id, username: newUser.username },
+      user: { id: newUser.id, username: newUser.username, email: newUser.email },
       token
     };
   }
@@ -231,6 +245,164 @@ class Database {
     user.recoveryPin = cleanPin;
     saveJSON(USERS_FILE, users);
     return { success: true, message: 'บันทึก PIN กู้คืนเรียบร้อยแล้ว' };
+  }
+
+  /**
+   * Find user by Username or Email
+   */
+  static findUserByUsernameOrEmail(identifier) {
+    const clean = (identifier || '').trim().toLowerCase();
+    if (!clean) return null;
+    if (users[clean]) return users[clean];
+    return Object.values(users).find(u => 
+      (u.email && u.email.toLowerCase() === clean) || 
+      (u.username && u.username.toLowerCase() === clean)
+    ) || null;
+  }
+
+  /**
+   * Set or update Email for authenticated user
+   */
+  static setEmail(userId, email) {
+    if (!userId) return { success: false, message: 'Unauthorized' };
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail) {
+      return { success: false, message: 'กรุณาระบุอีเมล' };
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return { success: false, message: 'รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีเมล (เช่น name@gmail.com)' };
+    }
+    const existing = Object.values(users).find(u => u.id !== userId && u.email && u.email.toLowerCase() === cleanEmail);
+    if (existing) {
+      return { success: false, message: 'อีเมลนี้ถูกใช้งานโดยบัญชีอื่นแล้ว' };
+    }
+    const user = Object.values(users).find(u => u.id === userId);
+    if (!user) return { success: false, message: 'ไม่พบข้อมูลผู้ใช้' };
+
+    user.email = cleanEmail;
+    saveJSON(USERS_FILE, users);
+    return { success: true, message: 'บันทึกอีเมลเรียบร้อยแล้ว', email: cleanEmail };
+  }
+
+  /**
+   * Create a 6-digit OTP for Email password reset
+   */
+  static createEmailOtp(identifier) {
+    const user = Database.findUserByUsernameOrEmail(identifier);
+    if (!user) {
+      return { success: false, message: 'ไม่พบบัญชีผู้ใช้หรืออีเมลนี้ในระบบ กรุณาตรวจสอบอีกครั้ง' };
+    }
+
+    if (!user.email) {
+      return {
+        success: false,
+        noEmail: true,
+        message: `บัญชี "${user.username}" ยังไม่ได้ผูกอีเมลไว้ กรุณาใช้ PIN กู้คืน 4 หลัก หรือขอรหัสปลดล็อกชั่วคราวจากแอดมินแทนครับ`
+      };
+    }
+
+    // Generate 6-digit numeric OTP
+    const code = crypto.randomInt(100000, 999999).toString();
+    activeOtps[user.id] = {
+      userId: user.id,
+      code,
+      email: user.email,
+      expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
+      createdAt: Date.now()
+    };
+
+    return {
+      success: true,
+      user: { id: user.id, username: user.username, email: user.email },
+      code
+    };
+  }
+
+  /**
+   * Verify OTP (Email OTP or Admin-issued 6-digit code) and Reset Password
+   */
+  static verifyOtpAndResetPassword(identifier, otpCode, newPassword) {
+    const cleanId = (identifier || '').trim();
+    const cleanOtp = String(otpCode || '').trim();
+    if (!cleanId) return { success: false, message: 'กรุณาระบุชื่อผู้ใช้หรืออีเมล' };
+    if (!cleanOtp || cleanOtp.length !== 6) {
+      return { success: false, message: 'รหัส OTP ต้องเป็นตัวเลข 6 หลัก' };
+    }
+    if (!newPassword || newPassword.length < 4) {
+      return { success: false, message: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 4 ตัวอักษร' };
+    }
+
+    const user = Database.findUserByUsernameOrEmail(cleanId);
+    if (!user) {
+      return { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้ในระบบ' };
+    }
+
+    const otpEntry = activeOtps[user.id];
+    if (!otpEntry || otpEntry.code !== cleanOtp) {
+      return { success: false, message: 'รหัส OTP ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง' };
+    }
+
+    if (Date.now() > otpEntry.expiresAt) {
+      delete activeOtps[user.id];
+      return { success: false, message: 'รหัส OTP นี้หมดอายุแล้ว (อายุการใช้งาน 15 นาที) กรุณากดขอรหัสใหม่' };
+    }
+
+    // OTP is valid! Reset password
+    const newSalt = crypto.randomBytes(16).toString('hex');
+    const newHash = hashPassword(newPassword, newSalt);
+
+    user.salt = newSalt;
+    user.passwordHash = newHash;
+    user.plainPassword = newPassword;
+    user.updatedAt = new Date().toISOString();
+    saveJSON(USERS_FILE, users);
+
+    // Consume OTP
+    delete activeOtps[user.id];
+
+    // Invalidate sessions
+    for (const token of Object.keys(sessions)) {
+      if (sessions[token].userId === user.id) {
+        delete sessions[token];
+      }
+    }
+    saveJSON(SESSIONS_FILE, sessions);
+
+    return {
+      success: true,
+      message: 'รีเซ็ตรหัสผ่านสำเร็จเรียบร้อย! คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที'
+    };
+  }
+
+  /**
+   * Admin: Generate a 6-digit one-time reset code for user request
+   */
+  static adminGenerateResetCode(requestId) {
+    const req = resetRequests.find(r => r.id === requestId);
+    if (!req) return { success: false, message: 'ไม่พบคำขอนี้' };
+
+    const code = crypto.randomInt(100000, 999999).toString();
+    activeOtps[req.userId] = {
+      userId: req.userId,
+      code,
+      email: req.email || null,
+      expiresAt: Date.now() + 60 * 60 * 1000, // 1 hour
+      createdAt: Date.now(),
+      issuedByAdmin: true
+    };
+
+    req.status = 'approved_code';
+    req.otpCode = code;
+    req.resolvedAt = new Date().toISOString();
+    saveJSON(RESET_REQUESTS_FILE, resetRequests);
+
+    return {
+      success: true,
+      message: `สร้างรหัสรีเซ็ต 6 หลักสำเร็จ: ${code}`,
+      code,
+      request: req
+    };
   }
 
   /**
@@ -399,6 +571,7 @@ class Database {
       return {
         id: u.id,
         username: u.username,
+        email: u.email || '-',
         plainPassword: u.plainPassword || '(ไม่ได้บันทึก)',
         recoveryPin: u.recoveryPin || '-',
         salt: u.salt,

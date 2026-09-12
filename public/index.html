@@ -69,6 +69,14 @@
           </button>
         </div>
 
+        <div id="gateEmailGroup" class="form-group" style="text-align: left; display: none;">
+          <label class="form-label" for="gateEmail">
+            📧 อีเมล / Gmail <span style="font-size: 0.78rem; color: var(--accent-gold);">(ใช้รับ OTP กู้รหัสผ่าน)</span>
+          </label>
+          <input type="email" id="gateEmail" class="form-input" placeholder="เช่น yourname@gmail.com">
+          <small style="font-size: 0.75rem; color: var(--text-secondary);">กรอก Gmail ไว้ เผื่อลืมรหัสผ่านระบบจะส่ง OTP ให้คุณตั้งรหัสใหม่ได้ทันที</small>
+        </div>
+
         <div id="gateRecoveryPinGroup" class="form-group" style="text-align: left; display: none;">
           <label class="form-label" for="gateRecoveryPin">
             🛡️ PIN กู้คืนรหัสผ่าน 4 หลัก <span style="font-size: 0.78rem; color: var(--accent-gold);">(ใช้เมื่อลืมรหัสผ่าน)</span>
@@ -772,15 +780,66 @@
 
       <!-- Recovery Method Tabs -->
       <div class="auth-tabs" style="margin-bottom: 1.25rem;">
-        <button id="tabForgotPin" class="auth-tab active" style="font-size: 0.88rem;">⚡ ใช้ PIN กู้คืน 4 หลัก</button>
-        <button id="tabForgotAdmin" class="auth-tab" style="font-size: 0.88rem;">📩 ขอให้แอดมินช่วย</button>
+        <button id="tabForgotOtp" class="auth-tab active" style="font-size: 0.85rem;">📧 Gmail (OTP 6 หลัก)</button>
+        <button id="tabForgotPin" class="auth-tab" style="font-size: 0.85rem;">⚡ ใช้ PIN 4 หลัก</button>
+        <button id="tabForgotAdmin" class="auth-tab" style="font-size: 0.85rem;">👑 ขอความช่วยเหลือ</button>
       </div>
 
       <div id="forgotErrorMessage" class="auth-error" style="display: none; margin-bottom: 1rem;"></div>
       <div id="forgotSuccessMessage" class="auth-success" style="display: none; margin-bottom: 1rem; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 0.75rem; border-radius: 8px; font-size: 0.88rem;"></div>
 
-      <!-- Option 1: Reset with PIN -->
-      <form id="formForgotWithPin">
+      <!-- Option 1: Reset with Gmail OTP / 6-digit Code -->
+      <div id="boxForgotOtp">
+        <!-- Step 1: Request OTP -->
+        <form id="formForgotOtpRequest">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
+            กรอก <b>ชื่อผู้ใช้ (Username)</b> หรือ <b>อีเมล (Gmail)</b> ที่ผูกไว้กับบัญชีของคุณ ระบบจะส่งรหัส OTP 6 หลักไปให้ทางอีเมล
+          </p>
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="form-label" for="forgotOtpIdentifier">ชื่อผู้ใช้ หรือ Gmail</label>
+            <input type="text" id="forgotOtpIdentifier" class="form-input" placeholder="ใส่ชื่อผู้ใช้ หรือ user@gmail.com..." required>
+          </div>
+          <button type="submit" id="btnSubmitOtpRequest" class="btn btn-primary" style="width: 100%;">
+            📩 ขอรับรหัส OTP 6 หลัก
+          </button>
+          <div style="margin-top: 0.85rem; text-align: center;">
+            <button type="button" id="btnHaveCodeAlready" style="background: none; border: none; font-size: 0.82rem; color: var(--accent-gold); cursor: pointer; text-decoration: underline;">
+              มีรหัส 6 หลักอยู่แล้ว? (คลิกเพื่อตั้งรหัสผ่านใหม่)
+            </button>
+          </div>
+        </form>
+
+        <!-- Step 2: Verify OTP and Set New Password -->
+        <form id="formForgotOtpVerify" style="display: none;">
+          <div id="otpSentBanner" style="background: rgba(88, 166, 255, 0.12); border: 1px solid #58a6ff; color: #79c0ff; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.5;">
+            📬 ส่งรหัส OTP 6 หลักไปยังอีเมลของคุณเรียบร้อยแล้ว! กรุณาตรวจสอบกล่องข้อความหรืออีเมลขยะ
+          </div>
+          <div class="form-group" style="margin-bottom: 0.9rem;">
+            <label class="form-label" for="forgotOtpTarget">ชื่อผู้ใช้ หรือ Gmail</label>
+            <input type="text" id="forgotOtpTarget" class="form-input" placeholder="ใส่ชื่อผู้ใช้หรือ Gmail..." required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0.9rem;">
+            <label class="form-label" for="forgotOtpCode">🔑 รหัส OTP 6 หลัก</label>
+            <input type="text" id="forgotOtpCode" class="form-input" placeholder="เช่น 849201" maxlength="6" inputmode="numeric" required style="font-size: 1.2rem; letter-spacing: 3px; font-weight: bold; text-align: center;">
+          </div>
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="form-label" for="forgotOtpNewPassword">รหัสผ่านใหม่ที่ต้องการตั้ง</label>
+            <input type="password" id="forgotOtpNewPassword" class="form-input" placeholder="ตั้งรหัสผ่านใหม่ (อย่างน้อย 4 ตัว)..." minlength="4" required>
+          </div>
+          <button type="submit" id="btnSubmitOtpVerify" class="btn btn-primary" style="width: 100%;">
+            🚀 ยืนยันตั้งรหัสผ่านใหม่
+          </button>
+          <div style="margin-top: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" id="btnBackToOtpRequest" style="background: none; border: none; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer; text-decoration: underline;">
+              ← ขอรหัสใหม่
+            </button>
+            <span id="otpCooldownText" style="font-size: 0.78rem; color: var(--text-secondary);"></span>
+          </div>
+        </form>
+      </div>
+
+      <!-- Option 2: Reset with PIN -->
+      <form id="formForgotWithPin" style="display: none;">
         <div class="form-group" style="margin-bottom: 0.9rem;">
           <label class="form-label" for="forgotUsernamePin">ชื่อผู้ใช้ (Username)</label>
           <input type="text" id="forgotUsernamePin" class="form-input" placeholder="ใส่ชื่อผู้ใช้ของคุณ..." required>
@@ -798,10 +857,10 @@
         </button>
       </form>
 
-      <!-- Option 2: Request Admin Help -->
+      <!-- Option 3: Request Admin Help -->
       <form id="formForgotWithAdmin" style="display: none;">
         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
-          หากคุณไม่ได้ตั้ง PIN ไว้ หรือลืม PIN สามารถส่งชื่อผู้ใช้เพื่อให้เจ้าของระบบช่วยรีเซ็ตรหัสผ่านให้จากหลังบ้านได้ครับ
+          หากคุณไม่ได้ผูก Gmail หรือไม่มี PIN สามารถส่งคำขอเพื่อให้เจ้าของระบบออก <b>รหัสปลดล็อก 6 หลัก</b> ส่งให้คุณนำมาตั้งรหัสผ่านใหม่ได้ครับ
         </p>
         <div class="form-group" style="margin-bottom: 0.9rem;">
           <label class="form-label" for="forgotUsernameAdmin">ชื่อผู้ใช้ (Username)</label>
@@ -809,10 +868,10 @@
         </div>
         <div class="form-group" style="margin-bottom: 1.25rem;">
           <label class="form-label" for="forgotNoteAdmin">หมายเหตุ / ข้อมูลติดต่อ (ถ้ามี)</label>
-          <input type="text" id="forgotNoteAdmin" class="form-input" placeholder="เช่น 'ทักไลน์มาบอกรหัสที' หรือข้อความ">
+          <input type="text" id="forgotNoteAdmin" class="form-input" placeholder="เช่น 'ทักไลน์มาบอกรหัสที' หรืออีเมล">
         </div>
         <button type="submit" id="btnSubmitForgotAdmin" class="btn btn-secondary" style="width: 100%; border-color: var(--accent-gold); color: var(--accent-gold);">
-          📩 ส่งคำขอรีเซ็ตให้ผู้ดูแลระบบ
+          📩 ส่งคำขอให้แอดมินออกรหัสให้
         </button>
       </form>
     </div>

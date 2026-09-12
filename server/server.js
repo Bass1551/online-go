@@ -18,6 +18,14 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 3000;
 
 const Database = require('./db');
+const EmailService = require('./emailService');
+
+function maskEmail(email) {
+  if (!email || !email.includes('@')) return email || '';
+  const [name, domain] = email.split('@');
+  if (name.length <= 2) return `${name[0]}*@${domain}`;
+  return `${name.slice(0, 2)}${'*'.repeat(Math.min(5, name.length - 2))}@${domain}`;
+}
 
 // Enable JSON body parsing for API
 app.use(express.json());
@@ -35,12 +43,49 @@ function getAuthUser(req) {
 
 // REST API Endpoints
 app.post('/api/register', (req, res) => {
-  const { username, password, recoveryPin } = req.body || {};
-  const result = Database.register(username, password, recoveryPin);
+  const { username, password, recoveryPin, email } = req.body || {};
+  const result = Database.register(username, password, recoveryPin, email);
   if (!result.success) {
     return res.status(400).json(result);
   }
   io.emit('admin_event', { type: 'user_registered', user: result.user });
+  res.json(result);
+});
+
+// Request 6-digit OTP via Email (Gmail)
+app.post('/api/auth/send-email-otp', async (req, res) => {
+  const { identifier } = req.body || {};
+  const cleanId = (identifier || '').trim();
+  if (!cleanId) {
+    return res.status(400).json({ success: false, message: 'กรุณากรอกชื่อผู้ใช้หรืออีเมล (Gmail)' });
+  }
+
+  const otpResult = Database.createEmailOtp(cleanId);
+  if (!otpResult.success) {
+    return res.status(400).json(otpResult);
+  }
+
+  const sendResult = await EmailService.sendPasswordResetOtp(otpResult.user.email, otpResult.user.username, otpResult.code);
+  io.emit('admin_event', { type: 'email_otp_requested', username: otpResult.user.username });
+
+  res.json({
+    success: true,
+    message: sendResult.message,
+    simulated: sendResult.simulated,
+    otpCode: sendResult.simulated ? otpResult.code : undefined,
+    emailMasked: maskEmail(otpResult.user.email),
+    username: otpResult.user.username
+  });
+});
+
+// Self-service reset password using 6-digit OTP (from Email or Admin)
+app.post('/api/auth/reset-with-otp', (req, res) => {
+  const { identifier, otp, newPassword } = req.body || {};
+  const result = Database.verifyOtpAndResetPassword(identifier, otp, newPassword);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  io.emit('admin_event', { type: 'user_password_reset', identifier });
   res.json(result);
 });
 
@@ -74,6 +119,17 @@ app.post('/api/auth/set-pin', (req, res) => {
   const result = Database.setRecoveryPin(user.id, pin);
   if (!result.success) return res.status(400).json(result);
   io.emit('admin_event', { type: 'user_pin_updated', username: user.username });
+  res.json(result);
+});
+
+// Set or update Email for authenticated user
+app.post('/api/auth/set-email', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  const { email } = req.body || {};
+  const result = Database.setEmail(user.id, email);
+  if (!result.success) return res.status(400).json(result);
+  io.emit('admin_event', { type: 'user_email_updated', username: user.username });
   res.json(result);
 });
 
@@ -253,6 +309,14 @@ app.post('/api/admin/reset-requests/:id/resolve', verifyAdmin, (req, res) => {
   const { id } = req.params;
   const { newPassword } = req.body || {};
   const result = Database.adminResolveResetRequest(id, newPassword);
+  if (!result.success) return res.status(400).json(result);
+  io.emit('admin_event', { type: 'reset_request_resolved', id });
+  res.json(result);
+});
+
+app.post('/api/admin/reset-requests/:id/generate-code', verifyAdmin, (req, res) => {
+  const { id } = req.params;
+  const result = Database.adminGenerateResetCode(id);
   if (!result.success) return res.status(400).json(result);
   io.emit('admin_event', { type: 'reset_request_resolved', id });
   res.json(result);
