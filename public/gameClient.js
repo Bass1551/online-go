@@ -1707,3 +1707,76 @@ socket.on('new_message', (data) => {
 
 // Boot
 init();
+
+// ========================================================
+// PWA (Progressive Web App) & Mobile Installation Setup
+// ========================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => {
+        console.log('[PWA] ServiceWorker registered successfully:', reg.scope);
+      })
+      .catch((err) => {
+        console.warn('[PWA] ServiceWorker registration failed:', err);
+      });
+  });
+}
+
+let deferredPrompt = null;
+const btnInstallPwa = document.getElementById('btnInstallPwa');
+const pwaGuideModal = document.getElementById('pwaGuideModal');
+const btnClosePwaGuide = document.getElementById('btnClosePwaGuide');
+
+// Chrome, Edge, Android PWA Install Event
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (btnInstallPwa) {
+    btnInstallPwa.style.display = 'inline-flex';
+  }
+});
+
+// Detect iOS Safari (not in standalone mode yet)
+const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isAlreadyStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && navigator.standalone);
+
+if (isIosDevice && !isAlreadyStandalone && btnInstallPwa) {
+  btnInstallPwa.style.display = 'inline-flex';
+}
+
+if (btnInstallPwa) {
+  btnInstallPwa.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        btnInstallPwa.style.display = 'none';
+        showToast('ติดตั้งแอป Go Online สำเร็จแล้ว!', 'success');
+      }
+      deferredPrompt = null;
+    } else {
+      // Show iOS / Manual Installation guide modal
+      if (pwaGuideModal) {
+        pwaGuideModal.style.display = 'flex';
+      }
+    }
+  });
+}
+
+if (btnClosePwaGuide && pwaGuideModal) {
+  btnClosePwaGuide.addEventListener('click', () => {
+    pwaGuideModal.style.display = 'none';
+  });
+
+  pwaGuideModal.addEventListener('click', (e) => {
+    if (e.target === pwaGuideModal) {
+      pwaGuideModal.style.display = 'none';
+    }
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if (btnInstallPwa) btnInstallPwa.style.display = 'none';
+  showToast('Go Online ติดตั้งบนอุปกรณ์เรียบร้อยแล้ว!', 'success');
+});

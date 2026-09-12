@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>หมากล้อมออนไลน์ (Online Go / Baduk)</title>
+  
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1e1b2e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Go Online">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -59,7 +70,10 @@
         <span style="font-size: 1.1rem;">👤</span>
         <span>บัญชีผู้เล่น: <b id="currentUserName" style="color: var(--accent-gold);">ผู้ใช้</b></span>
       </div>
-      <div style="display: flex; gap: 0.6rem; margin-left: auto;">
+      <div style="display: flex; gap: 0.6rem; margin-left: auto; align-items: center;">
+        <button id="btnInstallPwa" class="btn btn-install-pwa" style="display: none;" title="ติดตั้งเป็นไอคอนแอปบนมือถือ">
+          📲 ติดตั้งแอป
+        </button>
         <button id="btnOpenHistory" class="btn btn-history-sm">
           📜 ประวัติการเล่นของฉัน
         </button>
@@ -640,6 +654,38 @@
         </button>
         <button id="btnRejectUndo" class="btn btn-secondary" style="flex: 1;">
           ❌ ไม่อนุญาต
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PWA Install Guide (iOS & Mobile) -->
+  <div id="pwaGuideModal" class="modal-backdrop">
+    <div class="modal-dialog pwa-guide-dialog" style="max-width: 440px;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem;">📲</div>
+      <h3 class="modal-title">ติดตั้งเป็นแอปบนหน้าจอมือถือ</h3>
+      <p class="modal-body" style="margin-bottom: 1rem; color: var(--text-secondary);">
+        ติดตั้งแล้วเปิดเล่นแบบเต็มจอ ไร้แถบ URL สัมผัสเสมือนแอปแท้ 100%!
+      </p>
+
+      <div class="pwa-steps-box">
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">1</div>
+          <div>กดปุ่ม <b>แชร์ (Share)</b> <span style="font-size: 1.15rem;">📤</span> ที่แถบเมนูด้านล่างของ Safari / Chrome</div>
+        </div>
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">2</div>
+          <div>เลื่อนลงมาแล้วกดเลือก <b>"เพิ่มไปยังหน้าจอโฮม (Add to Home Screen)"</b> <span style="font-size: 1.15rem;">➕</span></div>
+        </div>
+        <div class="pwa-step-item">
+          <div class="pwa-step-num">3</div>
+          <div>กดปุ่ม <b>"เพิ่ม (Add)"</b> ที่มุมบนขวา -> ไอคอน Go Online จะไปอยู่บนหน้าจอทันที!</div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 1.25rem;">
+        <button id="btnClosePwaGuide" class="btn btn-primary" style="width: 100%;">
+          เข้าใจแล้ว!
         </button>
       </div>
     </div>
