@@ -10,56 +10,30 @@ try {
   // Nodemailer will be available once npm install completes
 }
 
+const DEFAULT_GMAIL_USER = 'onlinegoonrender@gmail.com';
+const DEFAULT_GMAIL_PASS = 'bfknuizjkfrcndpq';
+
 class EmailService {
   /**
-   * Create nodemailer transporter using environment variables
-   * Supported configurations:
-   * 1. Gmail: GMAIL_USER and GMAIL_APP_PASS
-   * 2. Custom SMTP: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+   * Create nodemailer transporter for Gmail
+   * Supports port 465 (SSL) and port 587 (TLS/STARTTLS)
    */
-  static getTransporter() {
-    if (!nodemailer) {
-      try {
-        nodemailer = require('nodemailer');
-      } catch (e) {
-        return null;
-      }
-    }
+  static createTransporter(port = 465, secure = true) {
+    const gmailUser = process.env.GMAIL_USER || process.env.EMAIL_USER || DEFAULT_GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || DEFAULT_GMAIL_PASS;
 
-    const gmailUser = process.env.GMAIL_USER || process.env.EMAIL_USER;
-    const gmailPass = process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS;
-
-    if (gmailUser && gmailPass) {
-      return nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: gmailUser,
-          pass: gmailPass
-        },
-        connectionTimeout: 4000,
-        greetingTimeout: 4000,
-        socketTimeout: 4000
-      });
-    }
-
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpPort = process.env.SMTP_PORT || 587;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-
-    if (smtpHost && smtpUser && smtpPass) {
-      return nodemailer.createTransport({
-        host: smtpHost,
-        port: parseInt(smtpPort, 10),
-        secure: parseInt(smtpPort, 10) === 465,
-        auth: {
-          user: smtpUser,
-          pass: smtpPass
-        }
-      });
-    }
-
-    return null;
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: port,
+      secure: secure,
+      auth: {
+        user: gmailUser,
+        pass: gmailPass
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
+    });
   }
 
   /**
@@ -67,31 +41,14 @@ class EmailService {
    * @param {string} toEmail - Recipient email
    * @param {string} username - User account name
    * @param {string} otpCode - 6-digit verification code
-   * @returns {Promise<{success: boolean, message: string, simulated?: boolean}>}
+   * @returns {Promise<{success: boolean, message: string}>}
    */
   static async sendPasswordResetOtp(toEmail, username, otpCode) {
     if (!toEmail || !toEmail.includes('@')) {
-      return { success: false, message: 'รูปแบบอีเมลไม่ถูกต้อง' };
+      return { success: false, message: 'บัญชีนี้ไม่ได้ผูกอีเมลที่ถูกต้อง ไม่สามารถส่ง OTP ได้' };
     }
 
-    const transporter = EmailService.getTransporter();
-
-    // Fallback mode if SMTP credentials are not yet configured in environment variables
-    if (!transporter) {
-      console.log('----------------------------------------------------');
-      console.log(`📧 [EMAIL OTP SIMULATION] Sending to: ${toEmail} (${username})`);
-      console.log(`🔑 OTP Verification Code: [ ${otpCode} ] (Valid for 15 minutes)`);
-      console.log('💡 Note: Configure GMAIL_USER & GMAIL_APP_PASS in Render/Env to send live emails');
-      console.log('----------------------------------------------------');
-      return {
-        success: true,
-        simulated: true,
-        message: `สร้างรหัส OTP เรียบร้อยแล้ว (โหมดทดสอบ: ${otpCode})`,
-        otpCode
-      };
-    }
-
-    const senderEmail = process.env.GMAIL_USER || process.env.EMAIL_USER || process.env.SMTP_USER || 'no-reply@online-go.com';
+    const senderEmail = process.env.GMAIL_USER || process.env.EMAIL_USER || DEFAULT_GMAIL_USER;
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -130,31 +87,41 @@ class EmailService {
     </html>
     `;
 
-    try {
-      await Promise.race([
-        transporter.sendMail({
-          from: `"Go Online Game" <${senderEmail}>`,
-          to: toEmail,
-          subject: `🔑 รหัส OTP กู้คืนรหัสผ่าน: ${otpCode} (Go Online)`,
-          text: `สวัสดีคุณ ${username},\n\nรหัส OTP สำหรับรีเซ็ตรหัสผ่านของคุณคือ: ${otpCode}\n(รหัสมีอายุ 15 นาที)\n\nหากคุณไม่ได้ขอ สามารถเพิกเฉยอีเมลนี้ได้ครับ`,
-          html: htmlContent
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP timeout (Render blocks outbound SMTP ports 465/587)')), 4000))
-      ]);
+    const mailOptions = {
+      from: `"Go Online Game" <${senderEmail}>`,
+      to: toEmail,
+      subject: `🔑 รหัส OTP กู้คืนรหัสผ่าน: ${otpCode} (Go Online)`,
+      text: `สวัสดีคุณ ${username},\n\nรหัส OTP สำหรับรีเซ็ตรหัสผ่านของคุณคือ: ${otpCode}\n(รหัสมีอายุ 15 นาที)\n\nหากคุณไม่ได้ขอ สามารถเพิกเฉยอีเมลนี้ได้ครับ\n\n- Go Online`,
+      html: htmlContent
+    };
 
+    // Attempt 1: Port 465 (SSL)
+    try {
+      const transporter465 = EmailService.createTransporter(465, true);
+      await transporter465.sendMail(mailOptions);
+      console.log(`✅ [EMAIL SENT] Successfully sent OTP to ${toEmail} via Port 465`);
       return {
         success: true,
-        simulated: false,
         message: `ส่งรหัส OTP ไปยังอีเมล ${toEmail} เรียบร้อยแล้ว กรุณาเปิดเช็คในกล่องข้อความหรืออีเมลขยะ (Spam)`
       };
-    } catch (err) {
-      console.warn('⚠️ SMTP Error or blocked by host:', err.message);
+    } catch (err465) {
+      console.warn('⚠️ SMTP Port 465 failed, trying Port 587 fallback:', err465.message);
+    }
+
+    // Attempt 2: Port 587 (TLS / STARTTLS)
+    try {
+      const transporter587 = EmailService.createTransporter(587, false);
+      await transporter587.sendMail(mailOptions);
+      console.log(`✅ [EMAIL SENT] Successfully sent OTP to ${toEmail} via Port 587`);
       return {
         success: true,
-        simulated: true,
-        blockedByHost: true,
-        message: `สร้างรหัส OTP เรียบร้อยแล้ว: ${otpCode}`,
-        otpCode
+        message: `ส่งรหัส OTP ไปยังอีเมล ${toEmail} เรียบร้อยแล้ว กรุณาเปิดเช็คในกล่องข้อความหรืออีเมลขยะ (Spam)`
+      };
+    } catch (err587) {
+      console.error('❌ All SMTP ports failed to send email:', err587.message);
+      return {
+        success: false,
+        message: 'ไม่สามารถส่งอีเมลได้ในขณะนี้ กรุณาตรวจสอบว่ากรอก Gmail ถูกต้อง หรือใช้แท็บ PIN 4 หลักเพื่อตั้งรหัสใหม่'
       };
     }
   }

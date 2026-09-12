@@ -1268,7 +1268,7 @@ async function handleForgotOtpRequest(e) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const res = await fetch('/api/auth/send-email-otp', {
       method: 'POST',
@@ -1286,16 +1286,12 @@ async function handleForgotOtpRequest(e) {
     if (data.success) {
       if (forgotOtpTarget) forgotOtpTarget.value = data.username || identifier;
       if (otpSentBanner) {
-        if (data.blockedByHost || data.simulated) {
-          otpSentBanner.innerHTML = `⚠️ <b>รหัส OTP ของคุณคือ:</b> <span style="font-size: 1.3rem; font-weight: bold; color: #fde047; letter-spacing: 2px;">${data.otpCode}</span><br><small style="color: #cbd5e1;">(เซิร์ฟเวอร์ Cloud บล็อกพอร์ตส่งอีเมล SMTP ระบบจึงแสดงรหัสให้คุณนำไปตั้งรหัสใหม่ได้ทันทีครับ)</small>`;
-        } else {
-          otpSentBanner.innerHTML = `📬 ส่งรหัส OTP 6 หลักไปยัง <b>${data.emailMasked || 'Gmail ของคุณ'}</b> เรียบร้อยแล้ว! กรุณาเปิดเช็คกล่องจดหมาย (หรืออีเมลขยะ)`;
-        }
+        otpSentBanner.innerHTML = `📬 ส่งรหัส OTP 6 หลักไปยัง <b>${data.emailMasked || 'Gmail ของคุณ'}</b> เรียบร้อยแล้ว!<br><small style="color: #cbd5e1;">กรุณาเปิดเช็คกล่องจดหมายเข้า (หรือกล่องจดหมายขยะ / Spam) แล้วนำรหัสมากรอกด้านล่างนี้</small>`;
       }
       if (formForgotOtpRequest) formForgotOtpRequest.style.display = 'none';
       if (formForgotOtpVerify) formForgotOtpVerify.style.display = 'block';
       if (forgotOtpCode) {
-        forgotOtpCode.value = (data.blockedByHost || data.simulated) ? data.otpCode : '';
+        forgotOtpCode.value = '';
         forgotOtpCode.focus();
       }
       startOtpCooldown(60);

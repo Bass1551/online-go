@@ -82,13 +82,15 @@ app.post('/api/auth/send-email-otp', async (req, res) => {
   }
 
   const sendResult = await EmailService.sendPasswordResetOtp(otpResult.user.email, otpResult.user.username, otpResult.code);
+  if (!sendResult.success) {
+    return res.status(500).json(sendResult);
+  }
+
   io.emit('admin_event', { type: 'email_otp_requested', username: otpResult.user.username });
 
   res.json({
     success: true,
     message: sendResult.message,
-    simulated: sendResult.simulated,
-    otpCode: sendResult.simulated ? otpResult.code : undefined,
     emailMasked: maskEmail(otpResult.user.email),
     username: otpResult.user.username
   });
