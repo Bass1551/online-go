@@ -900,18 +900,29 @@ function normalizeThai(str) {
 Database.searchUsers = function(query, selfId) {
   const rawQ = (query || '').trim().toLowerCase();
   const normQ = normalizeThai(query);
-  if (!rawQ || normQ.length < 1) return [];
+  if (!rawQ) return { results: [], searchedSelf: false };
 
-  return Object.values(users)
-    .filter(u => {
-      if (u.id === selfId) return false;
-      const uname = (u.username || '').toLowerCase();
-      const normUname = normalizeThai(uname);
-      // Match exact substring OR normalized substring (ignoring tone marks)
-      return uname.includes(rawQ) || normUname.includes(normQ);
-    })
-    .slice(0, 10)
-    .map(u => ({ id: u.id, username: u.username }));
+  let searchedSelf = false;
+  const results = [];
+
+  for (const u of Object.values(users)) {
+    const uname = (u.username || '').toLowerCase();
+    const normUname = normalizeThai(uname);
+    // Match exact substring OR tone-normalized substring
+    const matches = uname.includes(rawQ) || (normQ.length > 0 && normUname.includes(normQ));
+    if (matches) {
+      if (u.id === selfId) {
+        searchedSelf = true;
+      } else {
+        results.push({ id: u.id, username: u.username });
+      }
+    }
+  }
+
+  return {
+    results: results.slice(0, 10),
+    searchedSelf
+  };
 };
 
 Database.sendFriendRequest = function(fromId, toId) {

@@ -2382,7 +2382,7 @@ const viewFriendsList = document.getElementById('viewFriendsList');
 const viewFriendsInbox = document.getElementById('viewFriendsInbox');
 const viewFriendsAdd = document.getElementById('viewFriendsAdd');
 const friendsCountBadge = document.getElementById('friendsCountBadge');
-const inboxCountDot = document.getElementById('inboxCountDot');
+const inboxTabBadge = document.getElementById('inboxTabBadge');
 const friendSentList = document.getElementById('friendSentList');
 const btnOpenFriendsBar = document.getElementById('btnOpenFriendsBar');
 const topBarFriendsBadge = document.getElementById('topBarFriendsBadge');
@@ -2411,13 +2411,9 @@ function switchFriendsTab(tabName) {
     if (t.btn && t.view) {
       if (t.name === tabName) {
         t.btn.classList.add('active');
-        t.btn.style.color = 'var(--text-primary)';
-        t.btn.style.borderBottom = '2px solid var(--accent-gold)';
         t.view.style.display = 'block';
       } else {
         t.btn.classList.remove('active');
-        t.btn.style.color = 'var(--text-secondary)';
-        t.btn.style.borderBottom = 'none';
         t.view.style.display = 'none';
       }
     }
@@ -2475,7 +2471,7 @@ function renderSelectInviteFriend() {
 function renderFriendsUI() {
   const onlineCount = friendsCache.friends.filter(f => f.online).length;
   const totalCount = friendsCache.friends.length;
-  if (friendsCountBadge) friendsCountBadge.innerText = totalCount;
+  if (friendsCountBadge) friendsCountBadge.innerText = `(${totalCount})`;
 
   if (friendsOnlineBadge) {
     if (onlineCount > 0) {
@@ -2503,8 +2499,13 @@ function renderFriendsUI() {
       topBarFriendsBadge.style.display = 'none';
     }
   }
-  if (inboxCountDot) {
-    inboxCountDot.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+  if (inboxTabBadge) {
+    if (pendingCount > 0) {
+      inboxTabBadge.innerText = pendingCount;
+      inboxTabBadge.style.display = 'inline-block';
+    } else {
+      inboxTabBadge.style.display = 'none';
+    }
   }
 
   // Render Incoming Pending Requests
@@ -2588,25 +2589,47 @@ function renderModalFriendInviteList() {
 if (btnFriendSearch && friendSearchInput) {
   const doSearch = () => {
     const q = friendSearchInput.value.trim();
-    if (!q || q.length < 2) {
-      showToast('กรุณากรอกชื่ออย่างน้อย 2 ตัวอักษร');
+    if (!q) {
+      showToast('กรุณากรอกชื่อผู้ใช้ที่ต้องการค้นหา');
       return;
     }
     btnFriendSearch.disabled = true;
+    btnFriendSearch.innerText = 'ค้น...';
     socket.emit('friend_search', { query: q }, (res) => {
       btnFriendSearch.disabled = false;
-      if (!res || !res.success || !res.results || res.results.length === 0) {
-        friendSearchResults.innerHTML = '<div style="padding:0.5rem;font-size:0.8rem;color:var(--text-secondary);text-align:center;">ไม่พบผู้ใช้ชื่อนี้</div>';
+      btnFriendSearch.innerText = 'ค้นหา';
+      if (!res || !res.success) {
+        friendSearchResults.innerHTML = '<div style="padding:0.7rem;font-size:0.82rem;color:var(--text-secondary);text-align:center;">เกิดข้อผิดพลาดในการค้นหา</div>';
         friendSearchResults.style.display = 'block';
         return;
       }
-      friendSearchResults.innerHTML = res.results.map(u => {
+      if (!res.results || res.results.length === 0) {
+        if (res.searchedSelf) {
+          friendSearchResults.innerHTML = `
+            <div style="padding:0.85rem 0.6rem;font-size:0.84rem;color:var(--accent-gold);text-align:center;line-height:1.5;">
+              👤 <b>นี่คือชื่อบัญชีของคุณเอง</b><br>
+              <span style="color:var(--text-secondary);font-size:0.76rem;">ไม่สามารถส่งคำขอเป็นเพื่อนกับตัวเองได้ครับ</span>
+            </div>
+          `;
+        } else {
+          friendSearchResults.innerHTML = `
+            <div style="padding:0.85rem 0.6rem;font-size:0.84rem;color:var(--text-secondary);text-align:center;line-height:1.5;">
+              🔍 ไม่พบผู้ใช้ที่ตรงกับ "<b>${escapeHtml(q)}</b>"<br>
+              <span style="font-size:0.75rem;opacity:0.7;">ลองตรวจสอบตัวสะกดดูนะครับ</span>
+            </div>
+          `;
+        }
+        friendSearchResults.style.display = 'block';
+        return;
+      }
+
+      let itemsHtml = res.results.map(u => {
         const isFriend = friendsCache.friends.some(f => f.id === u.id);
         const isPendingOut = friendsCache.pendingOut.some(p => p.id === u.id);
         const isPendingIn = friendsCache.pendingIn.some(p => p.id === u.id);
         let actionBtn = '';
         if (isFriend) {
-          actionBtn = '<span style="font-size:0.75rem;color:var(--accent-green);">✓ เป็นเพื่อนแล้ว</span>';
+          actionBtn = '<span style="font-size:0.75rem;color:var(--accent-green);font-weight:600;">✓ เป็นเพื่อนแล้ว</span>';
         } else if (isPendingOut) {
           actionBtn = '<span style="font-size:0.75rem;color:var(--text-secondary);">รอตอบรับ</span>';
         } else if (isPendingIn) {
@@ -2616,11 +2639,17 @@ if (btnFriendSearch && friendSearchInput) {
         }
         return `
           <div class="friend-search-item">
-            <span>${escapeHtml(u.username)}</span>
+            <span style="font-weight:600;">${escapeHtml(u.username)}</span>
             ${actionBtn}
           </div>
         `;
       }).join('');
+
+      if (res.searchedSelf) {
+        itemsHtml += '<div style="padding:0.35rem 0.5rem;font-size:0.72rem;color:var(--text-secondary);text-align:center;border-top:1px solid rgba(255,255,255,0.05);">(ไม่รวมชื่อบัญชีของคุณเอง)</div>';
+      }
+
+      friendSearchResults.innerHTML = itemsHtml;
       friendSearchResults.style.display = 'block';
     });
   };

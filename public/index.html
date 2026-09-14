@@ -349,15 +349,17 @@
     </div>
 
     <!-- Friends Tabs -->
-    <div class="friends-tabs" style="display:flex; border-bottom:1px solid var(--panel-border); background:rgba(0,0,0,0.2);">
-      <button id="tabFriendsList" class="friends-tab active" style="flex:1; padding:0.45rem 0.2rem; background:none; border:none; color:var(--text-primary); font-size:0.78rem; font-weight:600; cursor:pointer; border-bottom:2px solid var(--accent-gold);">
-        เพื่อน (<span id="friendsCountBadge">0</span>)
+    <div class="friends-tabs">
+      <button id="tabFriendsList" class="friends-tab active" type="button">
+        <span>👥 เพื่อน</span>
+        <span id="friendsCountBadge" style="opacity:0.85;">(0)</span>
       </button>
-      <button id="tabFriendsInbox" class="friends-tab" style="flex:1; padding:0.45rem 0.2rem; background:none; border:none; color:var(--text-secondary); font-size:0.78rem; font-weight:600; cursor:pointer; position:relative;">
-        📬 กล่องคำขอ <span id="inboxCountDot" style="display:none; width:7px; height:7px; background:var(--accent-pink); border-radius:50%; display:inline-block; margin-left:2px; vertical-align:middle;"></span>
+      <button id="tabFriendsInbox" class="friends-tab" type="button">
+        <span>📬 คำขอ</span>
+        <span id="inboxTabBadge" class="friends-tab-badge" style="display:none;">0</span>
       </button>
-      <button id="tabFriendsAdd" class="friends-tab" style="flex:1; padding:0.45rem 0.2rem; background:none; border:none; color:var(--text-secondary); font-size:0.78rem; font-weight:600; cursor:pointer;">
-        🔍 ค้นหา
+      <button id="tabFriendsAdd" class="friends-tab" type="button">
+        <span>🔍 เพิ่มเพื่อน</span>
       </button>
     </div>
 
@@ -365,7 +367,7 @@
       <!-- 1. Friends List Tab Content -->
       <div id="viewFriendsList" class="friends-subview">
         <div id="friendsList" class="friends-list">
-          <div class="friends-empty">ยังไม่มีเพื่อน กดแท็บ "🔍 ค้นหา" ด้านบนเพื่อเพิ่มเพื่อนได้เลยครับ</div>
+          <div class="friends-empty">ยังไม่มีเพื่อน กดแท็บ "🔍 เพิ่มเพื่อน" ด้านบนเพื่อค้นหาเพื่อนได้เลยครับ</div>
         </div>
       </div>
 
@@ -384,8 +386,8 @@
       <!-- 3. Add Friend Search Tab Content -->
       <div id="viewFriendsAdd" class="friends-subview" style="display:none;">
         <div class="friends-search-row">
-          <input type="text" id="friendSearchInput" class="friends-search-input" placeholder="พิมพ์ชื่อผู้ใช้..." maxlength="20">
-          <button id="btnFriendSearch" class="btn-friend-search">ค้นหา</button>
+          <input type="text" id="friendSearchInput" class="friends-search-input" placeholder="พิมพ์ชื่อผู้ใช้ เช่น กิ้บ หรือ บาส..." maxlength="30">
+          <button id="btnFriendSearch" class="btn-friend-search" type="button">ค้นหา</button>
         </div>
         <div id="friendSearchResults" class="friends-search-results" style="display:none;"></div>
       </div>

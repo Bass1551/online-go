@@ -655,19 +655,24 @@ io.on('connection', (socket) => {
   });
 
   socket.on('friend_search', ({ query }, callback) => {
-    if (!currentUser) return typeof callback === 'function' && callback({ success: false, results: [] });
-    const results = Database.searchUsers(query, currentUser.id);
-    if (typeof callback === 'function') callback({ success: true, results });
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false, results: [], searchedSelf: false });
+    const searchRes = Database.searchUsers(query, currentUser.id);
+    const results = Array.isArray(searchRes) ? searchRes : (searchRes.results || []);
+    const searchedSelf = Array.isArray(searchRes) ? false : (searchRes.searchedSelf || false);
+    if (typeof callback === 'function') callback({ success: true, results, searchedSelf });
   });
 
   socket.on('friend_request', ({ toId }, callback) => {
     if (!currentUser) return typeof callback === 'function' && callback({ success: false, message: 'กรุณาเข้าสู่ระบบ' });
     const result = Database.sendFriendRequest(currentUser.id, toId);
     if (result.success) {
-      // Notify the recipient room in real-time
+      // 1. Notify the recipient room in real-time
       io.to(`user_${toId}`).emit('friend_request_received', {
         fromId: currentUser.id, fromUsername: currentUser.username
       });
+      io.to(`user_${toId}`).emit('friend_request_updated');
+      // 2. Notify the sender room so other tabs update outgoing list
+      io.to(`user_${currentUser.id}`).emit('friend_request_updated');
     }
     if (typeof callback === 'function') callback(result);
   });
@@ -680,10 +685,14 @@ io.on('connection', (socket) => {
       io.to(`user_${fromId}`).emit('friend_accepted', {
         byId: currentUser.id, byUsername: currentUser.username
       });
-      // 2. Notify requester that self is online
+      // 2. Notify both users that requests/friends list changed
+      io.to(`user_${fromId}`).emit('friend_request_updated');
+      io.to(`user_${currentUser.id}`).emit('friend_request_updated');
+
+      // 3. Notify requester that self is online
       io.to(`user_${fromId}`).emit('friend_online', { id: currentUser.id, username: currentUser.username });
       
-      // 3. Notify self if requester is online
+      // 4. Notify self if requester is online
       const fromSocks = onlineUsers.get(fromId);
       if (fromSocks && fromSocks.size > 0) {
         socket.emit('friend_online', { id: fromId, username: result.fromUsername });
@@ -695,8 +704,9 @@ io.on('connection', (socket) => {
   socket.on('friend_reject', ({ fromId }, callback) => {
     if (!currentUser) return typeof callback === 'function' && callback({ success: false });
     const result = Database.rejectFriendRequest(currentUser.id, fromId);
-    // Notify requester that their pending request was updated
+    // Notify both users that pending request was updated
     io.to(`user_${fromId}`).emit('friend_request_updated');
+    io.to(`user_${currentUser.id}`).emit('friend_request_updated');
     if (typeof callback === 'function') callback(result);
   });
 
@@ -704,8 +714,9 @@ io.on('connection', (socket) => {
     if (!currentUser) return typeof callback === 'function' && callback({ success: false });
     const result = Database.removeFriend(currentUser.id, friendId);
     if (result.success) {
-      // Notify the removed friend to update their friends list instantly
+      // Notify both parties to update friends list instantly across all tabs
       io.to(`user_${friendId}`).emit('friend_removed', { byId: currentUser.id });
+      io.to(`user_${currentUser.id}`).emit('friend_removed', { byId: friendId });
     }
     if (typeof callback === 'function') callback(result);
   });

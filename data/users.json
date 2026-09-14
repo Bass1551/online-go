@@ -16,5 +16,14 @@
     "passwordHash": "982dc3cec7334fff1893067d134ca660d2fdaa8f8921123a4f111c5c57519c6cf8c1ca504f59d12a8ac1b296411379d7cc955dd0ec99ab8ae5e3d29437be6b3a",
     "recoveryPin": "0752",
     "createdAt": "2026-09-14T14:37:59.325Z"
+  },
+  "บาส": {
+    "id": "usr_d251383e0ac6624f",
+    "username": "บาส",
+    "email": "",
+    "salt": "080aa982e642b94750129333010d74ec",
+    "passwordHash": "581524afb3e7ef0fe0f3285ae3c19550b92354ef7a63ef99bf34d77d2e570b3625a3051560955feecb6443ee4ce4dd37a66d67e9235ec559d070ffc2037af1ea",
+    "recoveryPin": "",
+    "createdAt": "2026-09-14T15:17:05.453Z"
   }
 }
