@@ -450,6 +450,9 @@ app.get('/admin', (req, res) => {
 // Key: roomId, Value: Room object
 const rooms = new Map();
 
+// Track online users for friend presence: userId -> socketId
+const onlineUsers = new Map();
+
 function generateRoomId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let id = '';
@@ -601,7 +604,148 @@ io.on('connection', (socket) => {
     if (typeof callback === 'function') {
       callback({ success: !!currentUser, user: currentUser });
     }
+    // Register as online and notify friends
+    if (currentUser) {
+      onlineUsers.set(currentUser.id, socket.id);
+      notifyFriendsOnlineStatus(currentUser.id, true);
+    }
   });
+
+  // Register online presence if already authed at handshake
+  if (currentUser) {
+    onlineUsers.set(currentUser.id, socket.id);
+    notifyFriendsOnlineStatus(currentUser.id, true);
+  }
+
+  function notifyFriendsOnlineStatus(userId, isOnline) {
+    const data = Database.getFriends(userId);
+    const user = currentUser || { id: userId, username: userId };
+    for (const friend of data.friends) {
+      const friendSocketId = onlineUsers.get(friend.id);
+      if (friendSocketId) {
+        io.to(friendSocketId).emit(isOnline ? 'friend_online' : 'friend_offline', {
+          id: userId, username: user.username
+        });
+      }
+    }
+  }
+
+  // ── FRIENDS SYSTEM ──────────────────────────────────────
+  socket.on('get_friends', (callback) => {
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false });
+    const data = Database.getFriends(currentUser.id);
+    // Enrich with online status
+    data.friends = data.friends.map(f => ({ ...f, online: onlineUsers.has(f.id) }));
+    if (typeof callback === 'function') callback({ success: true, ...data });
+  });
+
+  socket.on('friend_search', ({ query }, callback) => {
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false, results: [] });
+    const results = Database.searchUsers(query, currentUser.id);
+    if (typeof callback === 'function') callback({ success: true, results });
+  });
+
+  socket.on('friend_request', ({ toId }, callback) => {
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false });
+    const result = Database.sendFriendRequest(currentUser.id, toId);
+    if (result.success) {
+      // Notify the recipient if they're online
+      const toSocketId = onlineUsers.get(toId);
+      if (toSocketId) {
+        io.to(toSocketId).emit('friend_request_received', {
+          fromId: currentUser.id, fromUsername: currentUser.username
+        });
+      }
+    }
+    if (typeof callback === 'function') callback(result);
+  });
+
+  socket.on('friend_accept', ({ fromId }, callback) => {
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false });
+    const result = Database.acceptFriendRequest(currentUser.id, fromId);
+    if (result.success) {
+      // Notify the requester
+      const fromSocketId = onlineUsers.get(fromId);
+      if (fromSocketId) {
+        io.to(fromSocketId).emit('friend_accepted', {
+          byId: currentUser.id, byUsername: currentUser.username
+        });
+        // Also notify them you're online
+        io.to(fromSocketId).emit('friend_online', { id: currentUser.id, username: currentUser.username });
+      }
+      // Notify self that friend is online (if they are)
+      if (onlineUsers.has(fromId)) {
+        socket.emit('friend_online', { id: fromId, username: result.fromUsername });
+      }
+    }
+    if (typeof callback === 'function') callback(result);
+  });
+
+  socket.on('friend_reject', ({ fromId }, callback) => {
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false });
+    const result = Database.rejectFriendRequest(currentUser.id, fromId);
+    if (typeof callback === 'function') callback(result);
+  });
+
+  socket.on('friend_remove', ({ friendId }, callback) => {
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false });
+    const result = Database.removeFriend(currentUser.id, friendId);
+    if (typeof callback === 'function') callback(result);
+  });
+
+  // ── ROOM INVITE ──────────────────────────────────────────
+  socket.on('room_invite', ({ friendId, roomId }, callback) => {
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false, message: 'กรุณาเข้าสู่ระบบก่อน' });
+    const room = rooms.get(roomId);
+    if (!room) return typeof callback === 'function' && callback({ success: false, message: 'ไม่พบห้องนี้' });
+    if (room.white && room.black) return typeof callback === 'function' && callback({ success: false, message: 'ห้องเต็มแล้ว' });
+    const friendSocketId = onlineUsers.get(friendId);
+    if (!friendSocketId) return typeof callback === 'function' && callback({ success: false, message: 'เพื่อนออฟไลน์อยู่' });
+    io.to(friendSocketId).emit('room_invite_received', {
+      fromId: currentUser.id,
+      fromUsername: currentUser.username,
+      roomId,
+      size: room.size,
+      timeLimit: room.timeLimit
+    });
+    if (typeof callback === 'function') callback({ success: true, message: `ส่งคำเชิญให้เพื่อนแล้ว!` });
+  });
+
+  socket.on('room_invite_accepted', ({ roomId }) => {
+    if (!currentUser) return;
+    const targetRoom = (roomId || '').trim().toUpperCase();
+    const room = rooms.get(targetRoom);
+    if (!room) {
+      return socket.emit('join_error', { message: `ไม่พบห้อง "${targetRoom}" หรือห้องอาจถูกปิดไปแล้ว` });
+    }
+    const playerName = currentUser.username;
+    // Join as player if slot available, otherwise spectator
+    if (!room.white && room.black && room.black.socketId !== socket.id) {
+      room.white = { socketId: socket.id, name: playerName, userId: currentUser.id, connected: true };
+      playerRole = 2;
+    } else if (!room.black && room.white && room.white.socketId !== socket.id) {
+      room.black = { socketId: socket.id, name: playerName, userId: currentUser.id, connected: true };
+      playerRole = 1;
+    } else {
+      room.spectators.push({ socketId: socket.id, name: playerName, isAdmin: false });
+      playerRole = 'spectator';
+    }
+
+    currentRoomId = targetRoom;
+    socket.join(targetRoom);
+
+    socket.emit('room_joined', {
+      roomId: targetRoom,
+      role: playerRole,
+      room: getSanitizedRoomState(room)
+    });
+
+    io.to(targetRoom).emit('room_updated', {
+      room: getSanitizedRoomState(room),
+      announcement: `${playerName} เข้าร่วมห้องเรียบร้อยแล้ว!`
+    });
+  });
+  // ─────────────────────────────────────────────────────────
 
   // Send active broadcast if any
   if (activeBroadcast) {
@@ -1249,6 +1393,12 @@ io.on('connection', (socket) => {
 
   // Disconnection
   socket.on('disconnect', () => {
+    // Clean up online presence and notify friends
+    if (currentUser) {
+      onlineUsers.delete(currentUser.id);
+      notifyFriendsOnlineStatus(currentUser.id, false);
+    }
+
     if (!currentRoomId) return;
     const room = rooms.get(currentRoomId);
     if (!room) return;

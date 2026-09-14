@@ -322,6 +322,50 @@
     </footer>
   </div>
 
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- FRIENDS PANEL (Floating, visible in lobby) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="friendsPanel" class="friends-panel" style="display:none;">
+    <div class="friends-panel-header" id="friendsPanelToggle">
+      <span>👥 เพื่อน <span id="friendsOnlineBadge" class="friends-online-badge" style="display:none;">0</span></span>
+      <span id="friendsPendingBadge" class="friends-pending-badge" style="display:none;">0</span>
+      <button class="friends-panel-collapse-btn" id="btnToggleFriendsPanel">▼</button>
+    </div>
+    <div id="friendsPanelBody" class="friends-panel-body">
+      <!-- Search bar -->
+      <div class="friends-search-row">
+        <input type="text" id="friendSearchInput" class="friends-search-input" placeholder="🔍 ค้นหาชื่อผู้ใช้..." maxlength="20">
+        <button id="btnFriendSearch" class="btn-friend-search">ค้นหา</button>
+      </div>
+      <!-- Search results -->
+      <div id="friendSearchResults" class="friends-search-results" style="display:none;"></div>
+
+      <!-- Pending incoming requests -->
+      <div id="friendPendingSection" style="display:none;">
+        <div class="friends-section-label">📩 คำขอเป็นเพื่อน</div>
+        <div id="friendPendingList"></div>
+      </div>
+
+      <!-- Friends list -->
+      <div class="friends-section-label" style="margin-top:0.5rem;">เพื่อนทั้งหมด</div>
+      <div id="friendsList" class="friends-list">
+        <div class="friends-empty">ยังไม่มีเพื่อน ค้นหาและเพิ่มเพื่อนได้เลยครับ!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room Invite Popup -->
+  <div id="roomInvitePopup" class="room-invite-popup" style="display:none;">
+    <div class="room-invite-card">
+      <div class="room-invite-title">🎮 คำเชิญเข้าห้อง!</div>
+      <div id="roomInviteMsg" class="room-invite-msg"></div>
+      <div class="room-invite-actions">
+        <button id="btnAcceptInvite" class="btn btn-primary" style="flex:1;">✅ เข้าร่วม</button>
+        <button id="btnRejectInvite" class="btn btn-secondary" style="flex:1;">❌ ปฏิเสธ</button>
+      </div>
+    </div>
+  </div>
+
   <!-- GAME SCREEN VIEW -->
   <div id="gameView" class="game-screen">
     <!-- Top Bar -->
@@ -511,6 +555,16 @@
         <button id="btnCopyRoomCode" class="btn btn-primary" style="margin-top: 0.85rem; width: 100%; font-size: 1rem; padding: 0.65rem 1rem;">
           📋 คัดลอกเฉพาะรหัสห้อง
         </button>
+      </div>
+
+      <!-- Quick Friend Invite in Modal -->
+      <div id="modalFriendInviteSection" style="margin-bottom: 1.25rem; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--panel-border); border-radius: 0.75rem; padding: 0.75rem;">
+        <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 0.5rem;">
+          ⚡ ชวนเพื่อนออนไลน์เข้าห้องทันที:
+        </div>
+        <div id="modalFriendInviteList" style="display: flex; flex-direction: column; gap: 0.35rem; max-height: 140px; overflow-y: auto;">
+          <div style="color: var(--text-secondary); font-size: 0.8rem; text-align: center; padding: 0.5rem 0;">กำลังโหลดรายชื่อเพื่อน...</div>
+        </div>
       </div>
 
       <div style="display: flex; gap: 0.6rem; justify-content: center; align-items: center;">

@@ -17,6 +17,7 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const GAMES_FILE = path.join(DATA_DIR, 'games.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const RESET_REQUESTS_FILE = path.join(DATA_DIR, 'reset_requests.json');
+const FRIENDS_FILE = path.join(DATA_DIR, 'friends.json');
 
 // Ensure data directory and files exist
 if (!fs.existsSync(DATA_DIR)) {
@@ -99,6 +100,7 @@ let users = loadJSON(USERS_FILE, {});
 let games = loadJSON(GAMES_FILE, []);
 let sessions = loadJSON(SESSIONS_FILE, {});
 let resetRequests = loadJSON(RESET_REQUESTS_FILE, []);
+let friendsData = loadJSON(FRIENDS_FILE, {}); // { userId: { friends: [], pendingOut: [], pendingIn: [] } }
 let activeOtps = {}; // { userId: { code, email, expiresAt, createdAt, issuedByAdmin } }
 
 function hashPassword(password, salt) {
@@ -868,6 +870,92 @@ class Database {
     });
   }
 }
+
+// ─────────────────────────────────────────────
+// FRIENDS SYSTEM
+// ─────────────────────────────────────────────
+
+function getFriendRecord(userId) {
+  if (!friendsData[userId]) {
+    friendsData[userId] = { friends: [], pendingOut: [], pendingIn: [] };
+  }
+  return friendsData[userId];
+}
+
+// Attach friends methods to Database class (after class definition)
+Database.searchUsers = function(query, selfId) {
+  const q = (query || '').trim().toLowerCase();
+  if (!q || q.length < 2) return [];
+  return Object.values(users)
+    .filter(u => u.id !== selfId && u.username.toLowerCase().includes(q))
+    .slice(0, 10)
+    .map(u => ({ id: u.id, username: u.username }));
+};
+
+Database.sendFriendRequest = function(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return { success: false, message: 'ข้อมูลไม่ถูกต้อง' };
+  const toUser = Object.values(users).find(u => u.id === toId);
+  if (!toUser) return { success: false, message: 'ไม่พบผู้ใช้นี้' };
+  const from = getFriendRecord(fromId);
+  const to = getFriendRecord(toId);
+  if (from.friends.includes(toId)) return { success: false, message: 'เป็นเพื่อนกันอยู่แล้ว' };
+  if (from.pendingOut.includes(toId)) return { success: false, message: 'ส่งคำขอไปแล้ว กรุณารอการตอบรับ' };
+  // If the other already sent a request, auto-accept
+  if (from.pendingIn.includes(toId)) {
+    return Database.acceptFriendRequest(fromId, toId);
+  }
+  from.pendingOut.push(toId);
+  to.pendingIn.push(fromId);
+  saveJSON(FRIENDS_FILE, friendsData);
+  return { success: true, message: `ส่งคำขอเป็นเพื่อนให้ ${toUser.username} แล้ว`, toUserId: toId, toUsername: toUser.username };
+};
+
+Database.acceptFriendRequest = function(selfId, fromId) {
+  const self = getFriendRecord(selfId);
+  const from = getFriendRecord(fromId);
+  if (!self.pendingIn.includes(fromId)) return { success: false, message: 'ไม่มีคำขอเป็นเพื่อนจากผู้ใช้นี้' };
+  // Add each other as friends
+  if (!self.friends.includes(fromId)) self.friends.push(fromId);
+  if (!from.friends.includes(selfId)) from.friends.push(selfId);
+  // Remove pending entries
+  self.pendingIn = self.pendingIn.filter(id => id !== fromId);
+  from.pendingOut = from.pendingOut.filter(id => id !== selfId);
+  saveJSON(FRIENDS_FILE, friendsData);
+  const fromUser = Object.values(users).find(u => u.id === fromId);
+  return { success: true, message: `ยืนยันเป็นเพื่อนกับ ${fromUser ? fromUser.username : fromId} แล้ว`, fromUserId: fromId, fromUsername: fromUser ? fromUser.username : fromId };
+};
+
+Database.rejectFriendRequest = function(selfId, fromId) {
+  const self = getFriendRecord(selfId);
+  const from = getFriendRecord(fromId);
+  self.pendingIn = self.pendingIn.filter(id => id !== fromId);
+  from.pendingOut = from.pendingOut.filter(id => id !== selfId);
+  saveJSON(FRIENDS_FILE, friendsData);
+  return { success: true };
+};
+
+Database.removeFriend = function(selfId, friendId) {
+  const self = getFriendRecord(selfId);
+  const friend = getFriendRecord(friendId);
+  self.friends = self.friends.filter(id => id !== friendId);
+  friend.friends = friend.friends.filter(id => id !== selfId);
+  saveJSON(FRIENDS_FILE, friendsData);
+  return { success: true };
+};
+
+Database.getFriends = function(userId) {
+  const record = getFriendRecord(userId);
+  const resolveUser = (id) => {
+    const u = Object.values(users).find(u => u.id === id);
+    return u ? { id: u.id, username: u.username } : { id, username: id };
+  };
+  return {
+    friends: record.friends.map(resolveUser),
+    pendingIn: record.pendingIn.map(resolveUser),
+    pendingOut: record.pendingOut.map(resolveUser)
+  };
+};
+
 
 // Auto-sync from cloud on startup
 setTimeout(() => {

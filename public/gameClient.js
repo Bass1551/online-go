@@ -736,6 +736,8 @@ function setupEventListeners() {
   // Share Modal
   btnShareModal.addEventListener('click', () => {
     if (shareRoomCodeDisplay) shareRoomCodeDisplay.innerText = currentRoomId || '------';
+    if (typeof loadFriendsData === 'function') loadFriendsData();
+    if (typeof renderModalFriendInviteList === 'function') renderModalFriendInviteList();
     shareModal.style.display = 'flex';
   });
 
@@ -1052,15 +1054,21 @@ async function checkAuth() {
 
 function renderUserBar() {
   const accountPlayerNames = document.querySelectorAll('.account-player-name');
+  const friendsPanel = document.getElementById('friendsPanel');
   if (currentUser) {
     if (authGateView) authGateView.style.display = 'none';
     if (lobbyView && (!gameView || gameView.style.display !== 'flex')) lobbyView.style.display = 'block';
     if (currentUserName) currentUserName.innerText = currentUser.username;
     accountPlayerNames.forEach(el => el.innerText = currentUser.username);
+    if (friendsPanel) {
+      friendsPanel.style.display = 'block';
+      if (typeof loadFriendsData === 'function') loadFriendsData();
+    }
   } else {
     if (authGateView) authGateView.style.display = 'flex';
     if (lobbyView) lobbyView.style.display = 'none';
     if (gameView) gameView.style.display = 'none';
+    if (friendsPanel) friendsPanel.style.display = 'none';
   }
 }
 
@@ -2348,6 +2356,308 @@ socket.on('system_announcement', (data) => {
 socket.on('system_announcement_clear', () => {
   hideTopBroadcastTicker();
 });
+
+// ========================================================
+// FRIENDS SYSTEM & ROOM INVITES
+// ========================================================
+let friendsCache = { friends: [], pendingIn: [], pendingOut: [] };
+let pendingRoomInvite = null;
+
+const friendsPanel = document.getElementById('friendsPanel');
+const friendsPanelToggle = document.getElementById('friendsPanelToggle');
+const btnToggleFriendsPanel = document.getElementById('btnToggleFriendsPanel');
+const friendsOnlineBadge = document.getElementById('friendsOnlineBadge');
+const friendsPendingBadge = document.getElementById('friendsPendingBadge');
+const friendSearchInput = document.getElementById('friendSearchInput');
+const btnFriendSearch = document.getElementById('btnFriendSearch');
+const friendSearchResults = document.getElementById('friendSearchResults');
+const friendPendingSection = document.getElementById('friendPendingSection');
+const friendPendingList = document.getElementById('friendPendingList');
+const friendsList = document.getElementById('friendsList');
+const roomInvitePopup = document.getElementById('roomInvitePopup');
+const roomInviteMsg = document.getElementById('roomInviteMsg');
+const btnAcceptInvite = document.getElementById('btnAcceptInvite');
+const btnRejectInvite = document.getElementById('btnRejectInvite');
+const modalFriendInviteList = document.getElementById('modalFriendInviteList');
+
+// Panel Toggle Collapse
+if (friendsPanelToggle) {
+  friendsPanelToggle.addEventListener('click', (e) => {
+    if (e.target === btnToggleFriendsPanel || friendsPanelToggle.contains(e.target)) {
+      friendsPanel.classList.toggle('collapsed');
+    }
+  });
+}
+
+function loadFriendsData() {
+  if (!currentUser) return;
+  socket.emit('get_friends', (res) => {
+    if (!res || !res.success) return;
+    friendsCache = {
+      friends: res.friends || [],
+      pendingIn: res.pendingIn || [],
+      pendingOut: res.pendingOut || []
+    };
+    renderFriendsUI();
+    renderModalFriendInviteList();
+  });
+}
+
+function renderFriendsUI() {
+  const onlineCount = friendsCache.friends.filter(f => f.online).length;
+  if (friendsOnlineBadge) {
+    if (onlineCount > 0) {
+      friendsOnlineBadge.innerText = onlineCount;
+      friendsOnlineBadge.style.display = 'inline-block';
+    } else {
+      friendsOnlineBadge.style.display = 'none';
+    }
+  }
+
+  const pendingCount = friendsCache.pendingIn.length;
+  if (friendsPendingBadge) {
+    if (pendingCount > 0) {
+      friendsPendingBadge.innerText = pendingCount;
+      friendsPendingBadge.style.display = 'inline-block';
+    } else {
+      friendsPendingBadge.style.display = 'none';
+    }
+  }
+
+  // Render Pending Requests
+  if (friendPendingSection && friendPendingList) {
+    if (pendingCount > 0) {
+      friendPendingSection.style.display = 'block';
+      friendPendingList.innerHTML = friendsCache.pendingIn.map(req => `
+        <div class="friend-pending-item">
+          <span style="font-weight:600;">${escapeHtml(req.username)}</span>
+          <div class="friend-pending-actions">
+            <button class="btn-accept-friend" onclick="window.acceptFriendRequest('${req.id}')">รับ</button>
+            <button class="btn-reject-friend" onclick="window.rejectFriendRequest('${req.id}')">✕</button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      friendPendingSection.style.display = 'none';
+      friendPendingList.innerHTML = '';
+    }
+  }
+
+  // Render Friends List
+  if (friendsList) {
+    if (friendsCache.friends.length === 0) {
+      friendsList.innerHTML = '<div class="friends-empty">ยังไม่มีเพื่อน ค้นหาชื่อและเพิ่มเพื่อนได้เลยครับ!</div>';
+    } else {
+      // Sort: online first, then alphabetical
+      const sorted = [...friendsCache.friends].sort((a, b) => {
+        if (a.online === b.online) return a.username.localeCompare(b.username);
+        return a.online ? -1 : 1;
+      });
+
+      friendsList.innerHTML = sorted.map(f => `
+        <div class="friend-item">
+          <div class="friend-dot ${f.online ? 'online' : 'offline'}" title="${f.online ? 'ออนไลน์' : 'ออฟไลน์'}"></div>
+          <span class="friend-name" title="${escapeHtml(f.username)}">${escapeHtml(f.username)}</span>
+          <div class="friend-item-actions">
+            ${currentRoomId && f.online ? `
+              <button class="btn-invite-friend" onclick="window.inviteFriendToCurrentRoom('${f.id}')">ชวน</button>
+            ` : ''}
+            <button class="btn-remove-friend" title="ลบเพื่อน" onclick="window.removeFriendById('${f.id}', '${escapeHtml(f.username)}')">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+function renderModalFriendInviteList() {
+  if (!modalFriendInviteList) return;
+  const onlineFriends = friendsCache.friends.filter(f => f.online);
+  if (onlineFriends.length === 0) {
+    modalFriendInviteList.innerHTML = '<div style="color:var(--text-secondary);font-size:0.8rem;text-align:center;padding:0.4rem 0;">ไม่มีเพื่อนที่ออนไลน์อยู่ในขณะนี้</div>';
+    return;
+  }
+  modalFriendInviteList.innerHTML = onlineFriends.map(f => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.05);padding:0.35rem 0.6rem;border-radius:6px;font-size:0.83rem;">
+      <div style="display:flex;align-items:center;gap:0.4rem;">
+        <span style="width:7px;height:7px;border-radius:50%;background:var(--accent-green);"></span>
+        <b>${escapeHtml(f.username)}</b>
+      </div>
+      <button class="btn-invite-friend" style="padding:0.25rem 0.6rem;" onclick="window.inviteFriendToCurrentRoom('${f.id}')">ชวนเข้าห้อง</button>
+    </div>
+  `).join('');
+}
+
+// User Search Handler
+if (btnFriendSearch && friendSearchInput) {
+  const doSearch = () => {
+    const q = friendSearchInput.value.trim();
+    if (!q || q.length < 2) {
+      showToast('กรุณากรอกชื่ออย่างน้อย 2 ตัวอักษร');
+      return;
+    }
+    btnFriendSearch.disabled = true;
+    socket.emit('friend_search', { query: q }, (res) => {
+      btnFriendSearch.disabled = false;
+      if (!res || !res.success || !res.results || res.results.length === 0) {
+        friendSearchResults.innerHTML = '<div style="padding:0.5rem;font-size:0.8rem;color:var(--text-secondary);text-align:center;">ไม่พบผู้ใช้ชื่อนี้</div>';
+        friendSearchResults.style.display = 'block';
+        return;
+      }
+      friendSearchResults.innerHTML = res.results.map(u => {
+        const isFriend = friendsCache.friends.some(f => f.id === u.id);
+        const isPendingOut = friendsCache.pendingOut.some(p => p.id === u.id);
+        const isPendingIn = friendsCache.pendingIn.some(p => p.id === u.id);
+        let actionBtn = '';
+        if (isFriend) {
+          actionBtn = '<span style="font-size:0.75rem;color:var(--accent-green);">✓ เป็นเพื่อนแล้ว</span>';
+        } else if (isPendingOut) {
+          actionBtn = '<span style="font-size:0.75rem;color:var(--text-secondary);">รอตอบรับ</span>';
+        } else if (isPendingIn) {
+          actionBtn = `<button class="btn-add-friend" onclick="window.acceptFriendRequest('${u.id}')">ตอบรับ</button>`;
+        } else {
+          actionBtn = `<button class="btn-add-friend" onclick="window.sendFriendRequestTo('${u.id}')">+ เพิ่มเพื่อน</button>`;
+        }
+        return `
+          <div class="friend-search-item">
+            <span>${escapeHtml(u.username)}</span>
+            ${actionBtn}
+          </div>
+        `;
+      }).join('');
+      friendSearchResults.style.display = 'block';
+    });
+  };
+
+  btnFriendSearch.addEventListener('click', doSearch);
+  friendSearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch();
+  });
+}
+
+// Global actions for inline button clicks
+window.sendFriendRequestTo = function(toId) {
+  socket.emit('friend_request', { toId }, (res) => {
+    if (res && res.success) {
+      showToast(res.message || 'ส่งคำขอเป็นเพื่อนแล้ว');
+      loadFriendsData();
+      if (friendSearchResults) friendSearchResults.style.display = 'none';
+      if (friendSearchInput) friendSearchInput.value = '';
+    } else {
+      showToast(res?.message || 'ส่งคำขอไม่สำเร็จ');
+    }
+  });
+};
+
+window.acceptFriendRequest = function(fromId) {
+  socket.emit('friend_accept', { fromId }, (res) => {
+    if (res && res.success) {
+      showToast(res.message || 'ยอมรับคำขอเป็นเพื่อนแล้ว');
+      loadFriendsData();
+    } else {
+      showToast(res?.message || 'เกิดข้อผิดพลาด');
+    }
+  });
+};
+
+window.rejectFriendRequest = function(fromId) {
+  socket.emit('friend_reject', { fromId }, () => {
+    loadFriendsData();
+  });
+};
+
+window.removeFriendById = function(friendId, username) {
+  if (confirm(`คุณต้องการลบ "${username}" ออกจากรายชื่อเพื่อนหรือไม่?`)) {
+    socket.emit('friend_remove', { friendId }, (res) => {
+      if (res && res.success) {
+        showToast(`ลบ "${username}" ออกจากเพื่อนแล้ว`);
+        loadFriendsData();
+      }
+    });
+  }
+};
+
+window.inviteFriendToCurrentRoom = function(friendId) {
+  if (!currentRoomId) {
+    showToast('กรุณาสร้างหรือเข้าห้องก่อนชวนเพื่อนครับ');
+    return;
+  }
+  socket.emit('room_invite', { friendId, roomId: currentRoomId }, (res) => {
+    showToast(res?.message || (res?.success ? 'ส่งคำเชิญแล้ว' : 'ส่งคำเชิญไม่สำเร็จ'));
+  });
+};
+
+// Room Invite Popup Events
+if (btnAcceptInvite && btnRejectInvite && roomInvitePopup) {
+  btnAcceptInvite.addEventListener('click', () => {
+    if (pendingRoomInvite) {
+      const targetRoom = pendingRoomInvite.roomId;
+      roomInvitePopup.style.display = 'none';
+      socket.emit('room_invite_accepted', { roomId: targetRoom });
+      showToast(`กำลังเข้าร่วมห้อง ${targetRoom}...`);
+      pendingRoomInvite = null;
+    }
+  });
+
+  btnRejectInvite.addEventListener('click', () => {
+    roomInvitePopup.style.display = 'none';
+    pendingRoomInvite = null;
+  });
+}
+
+// Socket events for Friends & Invites
+socket.on('friend_request_received', (data) => {
+  showToast(`📩 ${data.fromUsername} ส่งคำขอเป็นเพื่อนถึงคุณ!`);
+  loadFriendsData();
+});
+
+socket.on('friend_accepted', (data) => {
+  showToast(`🎉 ${data.byUsername} ยอมรับคำขอเป็นเพื่อนของคุณแล้ว!`);
+  loadFriendsData();
+});
+
+socket.on('friend_online', (data) => {
+  const friend = friendsCache.friends.find(f => f.id === data.id);
+  if (friend) {
+    friend.online = true;
+    renderFriendsUI();
+    renderModalFriendInviteList();
+    showToast(`🟢 ${data.username} เข้าสู่ระบบแล้ว`);
+  }
+});
+
+socket.on('friend_offline', (data) => {
+  const friend = friendsCache.friends.find(f => f.id === data.id);
+  if (friend) {
+    friend.online = false;
+    renderFriendsUI();
+    renderModalFriendInviteList();
+  }
+});
+
+socket.on('room_invite_received', (data) => {
+  pendingRoomInvite = data;
+  if (roomInviteMsg && roomInvitePopup) {
+    const timeText = data.timeLimit > 0 ? `${Math.round(data.timeLimit / 60)} นาที` : 'ไม่จำกัดเวลา';
+    roomInviteMsg.innerHTML = `
+      <b style="color:var(--accent-gold);font-size:1.05rem;">${escapeHtml(data.fromUsername)}</b><br>
+      ชวนคุณเข้าประลองหมากล้อมในห้อง <b>${escapeHtml(data.roomId)}</b><br>
+      <span style="font-size:0.8rem;color:var(--text-secondary);">ขนาด: ${data.size}×${data.size} | เวลา: ${timeText}</span>
+    `;
+    roomInvitePopup.style.display = 'block';
+    window.goAudio?.playClick?.();
+  }
+});
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // Boot
 init();
