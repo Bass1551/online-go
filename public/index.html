@@ -111,6 +111,9 @@
         <button id="btnSetPin" class="btn btn-history-sm" title="ตั้งค่าหรือเปลี่ยน PIN กู้คืนรหัสผ่าน">
           🛡️ PIN กู้คืน
         </button>
+        <button id="btnOpenFriendsBar" class="btn btn-history-sm" style="position:relative;" title="เปิดแผงเพื่อนและกล่องคำขอ">
+          👥 เพื่อน <span id="topBarFriendsBadge" class="friends-pending-badge" style="display:none; position:static; margin-left:4px;">0</span>
+        </button>
         <button id="btnOpenHistory" class="btn btn-history-sm">
           📜 ประวัติการเล่นของฉัน
         </button>
@@ -283,8 +286,16 @@
           </select>
         </div>
 
+        <!-- Quick friend selector before creating room -->
+        <div class="form-group">
+          <label class="form-label" for="selectInviteFriend">👥 ชวนเพื่อนเข้าห้องทันที (ถ้าต้องการ)</label>
+          <select id="selectInviteFriend" class="form-input">
+            <option value="">-- ไม่ระบุ (สร้างห้องก่อนแล้วชวนทีหลัง) --</option>
+          </select>
+        </div>
+
         <button id="btnCreateRoom" class="btn btn-secondary" style="margin-top: auto;">
-          🎮 สร้างห้องและรับลิงก์ชวน
+          🎮 สร้างห้องและเชิญเพื่อน
         </button>
       </div>
 
@@ -327,29 +338,56 @@
   <!-- ═══════════════════════════════════════════ -->
   <div id="friendsPanel" class="friends-panel" style="display:none;">
     <div class="friends-panel-header" id="friendsPanelToggle">
-      <span>👥 เพื่อน <span id="friendsOnlineBadge" class="friends-online-badge" style="display:none;">0</span></span>
-      <span id="friendsPendingBadge" class="friends-pending-badge" style="display:none;">0</span>
-      <button class="friends-panel-collapse-btn" id="btnToggleFriendsPanel">▼</button>
+      <div style="display:flex; align-items:center; gap:0.4rem;">
+        <span>👥 ระบบเพื่อน</span>
+        <span id="friendsOnlineBadge" class="friends-online-badge" style="display:none;">0</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.4rem;">
+        <span id="friendsPendingBadge" class="friends-pending-badge" style="display:none;">0 คำขอ</span>
+        <button class="friends-panel-collapse-btn" id="btnToggleFriendsPanel" title="ย่อ/ขยาย">▼</button>
+      </div>
     </div>
+
+    <!-- Friends Tabs -->
+    <div class="friends-tabs" style="display:flex; border-bottom:1px solid var(--panel-border); background:rgba(0,0,0,0.2);">
+      <button id="tabFriendsList" class="friends-tab active" style="flex:1; padding:0.45rem 0.2rem; background:none; border:none; color:var(--text-primary); font-size:0.78rem; font-weight:600; cursor:pointer; border-bottom:2px solid var(--accent-gold);">
+        เพื่อน (<span id="friendsCountBadge">0</span>)
+      </button>
+      <button id="tabFriendsInbox" class="friends-tab" style="flex:1; padding:0.45rem 0.2rem; background:none; border:none; color:var(--text-secondary); font-size:0.78rem; font-weight:600; cursor:pointer; position:relative;">
+        📬 กล่องคำขอ <span id="inboxCountDot" style="display:none; width:7px; height:7px; background:var(--accent-pink); border-radius:50%; display:inline-block; margin-left:2px; vertical-align:middle;"></span>
+      </button>
+      <button id="tabFriendsAdd" class="friends-tab" style="flex:1; padding:0.45rem 0.2rem; background:none; border:none; color:var(--text-secondary); font-size:0.78rem; font-weight:600; cursor:pointer;">
+        🔍 ค้นหา
+      </button>
+    </div>
+
     <div id="friendsPanelBody" class="friends-panel-body">
-      <!-- Search bar -->
-      <div class="friends-search-row">
-        <input type="text" id="friendSearchInput" class="friends-search-input" placeholder="🔍 ค้นหาชื่อผู้ใช้..." maxlength="20">
-        <button id="btnFriendSearch" class="btn-friend-search">ค้นหา</button>
-      </div>
-      <!-- Search results -->
-      <div id="friendSearchResults" class="friends-search-results" style="display:none;"></div>
-
-      <!-- Pending incoming requests -->
-      <div id="friendPendingSection" style="display:none;">
-        <div class="friends-section-label">📩 คำขอเป็นเพื่อน</div>
-        <div id="friendPendingList"></div>
+      <!-- 1. Friends List Tab Content -->
+      <div id="viewFriendsList" class="friends-subview">
+        <div id="friendsList" class="friends-list">
+          <div class="friends-empty">ยังไม่มีเพื่อน กดแท็บ "🔍 ค้นหา" ด้านบนเพื่อเพิ่มเพื่อนได้เลยครับ</div>
+        </div>
       </div>
 
-      <!-- Friends list -->
-      <div class="friends-section-label" style="margin-top:0.5rem;">เพื่อนทั้งหมด</div>
-      <div id="friendsList" class="friends-list">
-        <div class="friends-empty">ยังไม่มีเพื่อน ค้นหาและเพิ่มเพื่อนได้เลยครับ!</div>
+      <!-- 2. Inbox (Pending Requests) Tab Content -->
+      <div id="viewFriendsInbox" class="friends-subview" style="display:none;">
+        <div class="friends-section-label" style="margin-bottom:0.4rem;">📩 คำขอเป็นเพื่อนที่รอคุณตอบรับ</div>
+        <div id="friendPendingList">
+          <div class="friends-empty">ไม่มีคำขอเป็นเพื่อนใหม่</div>
+        </div>
+        <div class="friends-section-label" style="margin-top:0.75rem; margin-bottom:0.4rem;">📤 คำขอที่คุณส่งไป (รออีกฝ่ายตอบ)</div>
+        <div id="friendSentList">
+          <div class="friends-empty" style="padding:0.4rem 0;">ไม่มีคำขอที่ค้างอยู่</div>
+        </div>
+      </div>
+
+      <!-- 3. Add Friend Search Tab Content -->
+      <div id="viewFriendsAdd" class="friends-subview" style="display:none;">
+        <div class="friends-search-row">
+          <input type="text" id="friendSearchInput" class="friends-search-input" placeholder="พิมพ์ชื่อผู้ใช้..." maxlength="20">
+          <button id="btnFriendSearch" class="btn-friend-search">ค้นหา</button>
+        </div>
+        <div id="friendSearchResults" class="friends-search-results" style="display:none;"></div>
       </div>
     </div>
   </div>
