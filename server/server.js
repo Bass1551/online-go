@@ -35,6 +35,9 @@ const PORT = process.env.PORT || 3000;
 
 const Database = require('./db');
 const EmailService = require('./emailService');
+const QuoteDatabase = require('./quoteDb');
+const QuoteGameEngine = require('./quoteEngine');
+const quoteEngine = new QuoteGameEngine(io);
 
 function maskEmail(email) {
   if (!email || !email.includes('@')) return email || '';
@@ -189,6 +192,69 @@ app.get('/api/games/:id', (req, res) => {
   const game = Database.getGameById(req.params.id, user.id);
   if (!game) return res.status(404).json({ success: false, message: 'ไม่พบประวัติเกมนี้ หรือคุณไม่มีสิทธิ์เข้าถึง' });
   res.json({ success: true, game });
+});
+
+// ================= THAI QUOTE GAME API =================
+app.get('/api/quote/categories', (req, res) => {
+  const allQ = QuoteDatabase.getAllQuestions();
+  const categories = [
+    { id: 'all', name: 'รวมทุกประเภท', count: allQ.length, icon: '🌟' },
+    { id: 'movie', name: 'ภาพยนตร์ไทย', count: allQ.filter(q => q.mediaType === 'movie').length, icon: '🎬' },
+    { id: 'drama', name: 'ละครไทย', count: allQ.filter(q => q.mediaType === 'drama').length, icon: '📺' },
+    { id: 'series', name: 'ซีรีส์ไทย', count: allQ.filter(q => q.mediaType === 'series').length, icon: '🍿' },
+    { id: 'y_series', name: 'ซีรีส์วายไทย', count: allQ.filter(q => q.mediaType === 'y_series').length, icon: '👬' },
+    { id: 'sitcom', name: 'ซิตคอมไทย', count: allQ.filter(q => q.mediaType === 'sitcom').length, icon: '🎭' },
+    { id: 'legendary', name: 'ประโยคระดับตำนาน', count: allQ.filter(q => (q.categories || []).includes('legendary')).length, icon: '👑' },
+    { id: 'trending', name: 'เรื่องกระแสฮิต', count: allQ.filter(q => (q.categories || []).includes('trending')).length, icon: '🔥' },
+    { id: 'comedy', name: 'ตลก/ฮา', count: allQ.filter(q => (q.categories || []).includes('comedy')).length, icon: '🤣' },
+    { id: 'romantic', name: 'โรแมนติก', count: allQ.filter(q => (q.categories || []).includes('romantic')).length, icon: '💖' },
+    { id: 'drama_genre', name: 'ดราม่าเข้มข้น', count: allQ.filter(q => (q.categories || []).includes('drama')).length, icon: '😭' }
+  ];
+  res.json({ success: true, categories });
+});
+
+app.post('/api/quote/single/start', (req, res) => {
+  const { category = 'all', difficulty = 'mixed' } = req.body || {};
+  const selectedQuestions = QuoteDatabase.selectRoundQuestions(category, difficulty);
+  const clientQuestions = selectedQuestions.map(q => QuoteDatabase.formatQuestionForClient(q, true));
+  res.json({ success: true, totalQuestions: clientQuestions.length, questions: clientQuestions });
+});
+
+app.post('/api/quote/single/answer', (req, res) => {
+  const { questionId, selectedOption } = req.body || {};
+  if (!questionId) return res.status(400).json({ success: false, message: 'Missing questionId' });
+  const result = QuoteDatabase.verifyAnswer(questionId, selectedOption);
+  res.json(result);
+});
+
+app.post('/api/quote/single/finish', (req, res) => {
+  QuoteDatabase.recordRoundCompleted();
+  res.json({ success: true });
+});
+
+app.post('/api/quote/report', (req, res) => {
+  const { questionId, reason, details } = req.body || {};
+  if (!questionId || !reason) return res.status(400).json({ success: false, message: 'Missing fields' });
+  const report = QuoteDatabase.addReport({ questionId, reason, details });
+  res.json({ success: true, report });
+});
+
+app.get('/api/quote/admin/questions', (req, res) => {
+  res.json({ success: true, questions: QuoteDatabase.getAllQuestions() });
+});
+
+app.post('/api/quote/admin/questions', (req, res) => {
+  const newQ = QuoteDatabase.addQuestion(req.body);
+  res.json({ success: true, question: newQ });
+});
+
+app.delete('/api/quote/admin/questions/:id', (req, res) => {
+  const deleted = QuoteDatabase.deleteQuestion(req.params.id);
+  res.json({ success: deleted });
+});
+
+app.get('/api/quote/admin/reports', (req, res) => {
+  res.json({ success: true, reports: QuoteDatabase.getReports() });
 });
 
 // ================= ADMIN BACKOFFICE API =================
@@ -738,6 +804,44 @@ io.on('connection', (socket) => {
       timeLimit: room.timeLimit
     });
     if (typeof callback === 'function') callback({ success: true, message: `ส่งคำเชิญให้เพื่อนแล้ว!` });
+  });
+
+  // ── THAI QUOTE GAME MULTIPLAYER EVENTS ───────────────────
+  socket.on('quote_create_room', ({ hostName }, callback) => {
+    const name = hostName || (currentUser ? currentUser.username : 'ผู้เล่น');
+    const res = quoteEngine.createRoom(socket, name);
+    if (typeof callback === 'function') callback(res);
+  });
+
+  socket.on('quote_join_room', ({ roomCode, username }, callback) => {
+    const name = username || (currentUser ? currentUser.username : 'ผู้เล่น');
+    const res = quoteEngine.joinRoom(roomCode, socket, name);
+    if (typeof callback === 'function') callback(res);
+  });
+
+  socket.on('quote_toggle_ready', ({ roomCode }) => {
+    quoteEngine.toggleReady(roomCode, socket.id);
+  });
+
+  socket.on('quote_update_room_settings', ({ roomCode, category, difficulty }) => {
+    quoteEngine.updateSettings(roomCode, socket.id, { category, difficulty });
+  });
+
+  socket.on('quote_kick_player', ({ roomCode, targetSocketId }) => {
+    quoteEngine.kickPlayer(roomCode, socket.id, targetSocketId);
+  });
+
+  socket.on('quote_start_game', ({ roomCode }, callback) => {
+    const res = quoteEngine.startGame(roomCode, socket.id);
+    if (typeof callback === 'function') callback(res);
+  });
+
+  socket.on('quote_submit_answer', ({ roomCode, selectedOption }) => {
+    quoteEngine.submitAnswer(roomCode, socket.id, selectedOption);
+  });
+
+  socket.on('quote_send_chat', ({ roomCode, message }) => {
+    quoteEngine.sendChatMessage(roomCode, socket.id, message);
   });
 
   socket.on('room_invite_accepted', ({ roomId }) => {
@@ -1433,6 +1537,8 @@ io.on('connection', (socket) => {
         }
       }
     }
+
+    quoteEngine.handleDisconnect(socket.id);
 
     if (!currentRoomId) return;
     const room = rooms.get(currentRoomId);

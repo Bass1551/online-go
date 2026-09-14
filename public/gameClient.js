@@ -1071,6 +1071,7 @@ async function checkAuth() {
 }
 
 function renderUserBar() {
+  window.currentUser = currentUser;
   const accountPlayerNames = document.querySelectorAll('.account-player-name');
   const friendsPanel = document.getElementById('friendsPanel');
   if (currentUser) {
@@ -1089,6 +1090,7 @@ function renderUserBar() {
     if (friendsPanel) friendsPanel.style.display = 'none';
   }
 }
+
 
 function switchGateTab(mode) {
   gateMode = mode;
@@ -2895,3 +2897,60 @@ window.addEventListener('appinstalled', () => {
   if (btnInstallPwa) btnInstallPwa.style.display = 'none';
   showToast('Go Online ติดตั้งบนอุปกรณ์เรียบร้อยแล้ว!', 'success');
 });
+
+// ========================================================
+// GAME HUB CONTROLLER (Multi-game Switching)
+// ========================================================
+let activeGameHub = 'go'; // 'go' or 'quote'
+let quoteGameInitialized = false;
+
+function switchGameHub(gameId) {
+  activeGameHub = gameId;
+  const btnHubGo = document.getElementById('btnHubGo');
+  const btnHubQuote = document.getElementById('btnHubQuote');
+  const goLobbyContent = document.getElementById('goLobbyContent');
+  const quoteGameContainer = document.getElementById('quoteGameContainer');
+
+  if (gameId === 'quote') {
+    btnHubGo?.classList.remove('active');
+    btnHubQuote?.classList.add('active');
+    if (goLobbyContent) goLobbyContent.style.display = 'none';
+    if (quoteGameContainer) quoteGameContainer.style.display = 'block';
+
+    if (!quoteGameInitialized && typeof window.initQuoteGame === 'function') {
+      window.initQuoteGame();
+      quoteGameInitialized = true;
+    }
+  } else {
+    btnHubQuote?.classList.remove('active');
+    btnHubGo?.classList.add('active');
+    if (quoteGameContainer) quoteGameContainer.style.display = 'none';
+    if (goLobbyContent) goLobbyContent.style.display = 'block';
+  }
+}
+
+window.switchGameHub = switchGameHub;
+
+document.getElementById('btnHubGo')?.addEventListener('click', () => switchGameHub('go'));
+document.getElementById('btnHubQuote')?.addEventListener('click', () => switchGameHub('quote'));
+
+// Handle query params on page load (e.g. ?game=quote or ?quote_room=AB12)
+(function checkGameHubUrlParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const game = urlParams.get('game');
+  const quoteRoom = urlParams.get('quote_room');
+
+  if (game === 'quote' || quoteRoom) {
+    switchGameHub('quote');
+    if (quoteRoom) {
+      setTimeout(() => {
+        const inp = document.getElementById('inputQQuickCode');
+        if (inp) {
+          inp.value = quoteRoom.toUpperCase();
+          document.getElementById('btnQQuickJoin')?.click();
+        }
+      }, 600);
+    }
+  }
+})();
+

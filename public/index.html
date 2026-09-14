@@ -19,6 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="quoteStyle.css">
 </head>
 <body>
 
@@ -123,13 +124,38 @@
       </div>
     </div>
 
-    <div class="brand-header">
-      <div class="brand-logo">
-        <span>⚫⚪</span>
-        <span>Go Online</span>
+    <!-- GAME HUB SELECTOR BAR -->
+    <div class="game-hub-bar" id="gameHubBar">
+      <div class="game-hub-title">
+        <span style="font-size: 1.15rem;">🎮</span>
+        <span>ศูนย์รวมเกมออนไลน์ (Game Hub):</span>
       </div>
-      <p class="brand-sub">เว็บเกมหมากล้อมออนไลน์ เล่นง่ายๆ กับเพื่อนหรือคนรู้ใจได้แบบเรียลไทม์</p>
+      <div class="game-hub-tabs">
+        <button type="button" id="btnHubGo" class="game-hub-tab active">
+          <span>⚫⚪</span>
+          <span>หมากล้อมออนไลน์</span>
+        </button>
+        <button type="button" id="btnHubQuote" class="game-hub-tab">
+          <span>🎬</span>
+          <span>ประโยคนี้...พูดว่าอะไร?</span>
+          <span class="hub-tab-badge">ใหม่! 🔥</span>
+        </button>
+        <button type="button" class="game-hub-tab disabled" title="เร็วๆ นี้...">
+          <span>✨</span>
+          <span>เกมอื่นๆ (เร็วๆ นี้)</span>
+        </button>
+      </div>
     </div>
+
+    <!-- GO GAME LOBBY CONTAINER -->
+    <div id="goLobbyContent">
+      <div class="brand-header">
+        <div class="brand-logo">
+          <span>⚫⚪</span>
+          <span>Go Online</span>
+        </div>
+        <p class="brand-sub">เว็บเกมหมากล้อมออนไลน์ เล่นง่ายๆ กับเพื่อนหรือคนรู้ใจได้แบบเรียลไทม์</p>
+      </div>
 
     <div class="lobby-cards">
       <!-- Solo AI Practice Mode -->
@@ -331,6 +357,251 @@
     <footer style="margin-top: 3rem; padding: 1.5rem 0; text-align: center; border-top: 1px solid var(--panel-border); font-size: 0.85rem; color: var(--text-secondary);">
       <span>🏯 Online Go (หมากล้อมออนไลน์) &copy; 2026</span>
     </footer>
+    </div>
+    <!-- /GO GAME LOBBY CONTAINER -->
+
+    <!-- QUOTE GAME SHOW CONTAINER -->
+    <div id="quoteGameContainer" style="display: none;">
+      <!-- Quote Brand Header -->
+      <div class="brand-header" style="margin-bottom: 1.5rem;">
+        <div class="brand-logo" style="background: linear-gradient(135deg, #fde047 0%, #f59e0b 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+          <span>🎬</span>
+          <span>ประโยคนี้...พูดว่าอะไร?</span>
+        </div>
+        <p class="brand-sub">เกมโชว์ทายประโยคเด็ด หนัง ละคร ซีรีส์ ซิตคอมไทยในตำนาน</p>
+        <div style="display: flex; justify-content: center; gap: 0.6rem; margin-top: 0.8rem;">
+          <button type="button" class="btn btn-history-sm" id="btnQOpenRules">❓ กติกาการเล่น</button>
+          <button type="button" class="btn btn-history-sm" id="btnOpenQAdmin">⚙️ ระบบคำถาม (Admin)</button>
+        </div>
+      </div>
+
+      <!-- 1. HOME SCREEN -->
+      <div id="qScreenHome" class="game-screen active">
+        <div class="hero-banner">
+          <span class="hero-badge">✨ เกมโชว์ทายประโยคเด็ดอันดับ 1 ของไทย</span>
+          <h1 class="hero-title">ประโยคนี้...พูดว่าอะไร?</h1>
+          <p class="hero-desc">ทายประโยคเด็ดจากหนัง ละคร ซีรีส์ และซิตคอมไทยในตำนาน! ดูคลิป ฟังบริบท แล้วทายประโยคที่ถูกปิดเสียงให้ถูกต้อง!</p>
+        </div>
+
+        <div class="mode-grid">
+          <!-- Single Player -->
+          <div class="mode-card" id="btnQModeSingle">
+            <div class="mode-icon">🎮</div>
+            <h3>โหมดเล่นคนเดียว</h3>
+            <p>ท้าทายความจำ 10 ข้อเต็มรอบ ทำคะแนนสูงสุดและเก็บประวัติส่วนตัว</p>
+            <span class="mode-tag">เล่นได้ทันที • 10 ข้อ</span>
+          </div>
+
+          <!-- Multiplayer -->
+          <div class="mode-card multiplayer" id="btnQModeMulti">
+            <div class="mode-icon">👥</div>
+            <h3>แข่งกับเพื่อนออนไลน์</h3>
+            <p>สร้างห้องชวนเพื่อน 2–10 คน แข่งแบบเรียลไทม์ พร้อมตารางคะแนนสด</p>
+            <span class="mode-tag">เรียลไทม์ • 2-10 คน</span>
+          </div>
+        </div>
+
+        <!-- Quick Join Room Input -->
+        <div style="width:100%; max-width:420px; background:var(--bg-card); padding:1rem; border-radius:16px; border:1px solid var(--bg-card-border); text-align:center; margin: 0 auto 2rem auto;">
+          <span style="font-size:0.88rem; color:var(--text-secondary); display:block; margin-bottom:0.6rem;">มีรหัสห้องจากเพื่อนแล้ว?</span>
+          <div style="display:flex; gap:0.5rem;">
+            <input type="text" id="inputQQuickCode" placeholder="พิมพ์รหัส 4 ตัว เช่น 8K9X" maxlength="6" style="flex:1; text-transform:uppercase; text-align:center; font-weight:800; letter-spacing:0.1em; background:rgba(255,255,255,0.08); border:1px solid var(--bg-card-border); color:#fff; border-radius:10px; padding:0.6rem; font-family:var(--font-main);">
+            <button class="btn btn-primary" id="btnQQuickJoin" style="padding:0.6rem 1.2rem; font-size:0.95rem;">เข้าห้อง</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. CATEGORY & DIFFICULTY SELECTION -->
+      <div id="qScreenCategory" class="game-screen" style="display:none;">
+        <div class="selection-container" style="width:100%;">
+          <h2 style="font-size:1.8rem; font-weight:800; margin-bottom:0.4rem; text-align:center;">เลือกหมวดหมู่และระดับความยาก</h2>
+          <p style="color:var(--text-secondary); text-align:center; margin-bottom:1.5rem;">1 รอบมี 10 ข้อ ผสมผสานเรื่องดังไม่มีซ้ำ</p>
+
+          <!-- Category Grid -->
+          <div class="section-label">📂 เลือกหมวดหมู่</div>
+          <div class="category-grid" id="qCategoryGrid"></div>
+
+          <!-- Difficulty Group -->
+          <div class="section-label">⚡ เลือกระดับความยาก</div>
+          <div class="difficulty-group">
+            <div class="q-diff-pill active" data-diff="mixed">รวมระดับ (4 ง่าย : 4 กลาง : 2 ยาก)</div>
+            <div class="q-diff-pill" data-diff="easy">ง่าย (ประโยคฮิตติดหู)</div>
+            <div class="q-diff-pill" data-diff="medium">ปานกลาง (ต้องจำบริบทได้)</div>
+            <div class="q-diff-pill" data-diff="hard">ยาก (เซียนหนังตัวจริง)</div>
+          </div>
+
+          <div style="display:flex; justify-content:center; gap:1rem; margin-top:1.5rem;">
+            <button class="btn btn-secondary" id="btnQBackFromCategory">ย้อนกลับ</button>
+            <button class="btn btn-primary" id="btnQStartSingle" style="padding:0.9rem 3rem;">🚀 เริ่มเล่นเลย!</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. MULTIPLAYER LOBBY -->
+      <div id="qScreenLobby" class="game-screen" style="display:none;">
+        <div class="room-box">
+          <div class="room-code-banner">
+            <div>
+              <span style="font-size:0.8rem; color:var(--text-secondary); display:block;">รหัสห้องประลอง</span>
+              <span class="room-code-val" id="displayQRoomCode">----</span>
+            </div>
+            <button class="btn btn-secondary" id="btnQCopyInvite" style="padding:0.5rem 1rem; font-size:0.85rem;">📋 คัดลอกลิงก์ชวนเพื่อน</button>
+          </div>
+
+          <!-- Player List -->
+          <div class="section-label">👥 ผู้เล่นในห้อง (<span id="qLobbyCount">1</span>/10 คน)</div>
+          <div class="player-list" id="qLobbyPlayerList"></div>
+
+          <!-- Chat Box -->
+          <div class="chat-container" style="margin-bottom:1.2rem;">
+            <div class="chat-messages" id="qChatMessages"></div>
+            <div class="chat-input-row">
+              <input type="text" id="inputQChat" class="chat-input" placeholder="พิมพ์ข้อความคุยในห้อง..." maxlength="80">
+              <button class="btn btn-secondary" id="btnQSendChat" style="padding:0.4rem 0.9rem;">ส่ง</button>
+            </div>
+          </div>
+
+          <!-- Lobby Actions -->
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <button class="btn btn-secondary" id="btnQLeaveRoom">ออกจากห้อง</button>
+            <div style="display:flex; gap:0.6rem;">
+              <button class="btn btn-secondary" id="btnQToggleReady">พร้อมแล้ว</button>
+              <button class="btn btn-primary" id="btnQHostStart" style="display:none;">เริ่มเกมเลย!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. IN-GAME STAGE & QUESTION SCREEN -->
+      <div id="qScreenGame" class="game-screen" style="display:none;">
+        <!-- Round Info Bar -->
+        <div class="game-header-bar">
+          <span class="q-counter-badge" id="qCounterText">ข้อที่ 1/10</span>
+          <span class="round-score-badge" id="qScoreText">คะแนน: 0</span>
+        </div>
+
+        <!-- Timer Bar -->
+        <div class="timer-container">
+          <span class="timer-text-float" id="qTimerText">15s</span>
+          <div class="timer-bar-track">
+            <div class="timer-bar-fill" id="qTimerBarFill"></div>
+          </div>
+        </div>
+
+        <!-- Cinema / Video Canvas Stage -->
+        <div class="stage-container">
+          <!-- Interstitial Countdown Overlay -->
+          <div class="interstitial-overlay" id="qInterstitialOverlay" style="display:none;">
+            <span class="interstitial-qnum" id="qInterstitialNum">ข้อที่ 1/10</span>
+            <span class="interstitial-title" id="qInterstitialTitle">เตรียมตัว...</span>
+            <span style="font-size:0.95rem; color:var(--text-secondary);">ชมคลิปและจับตาดูประโยคเด็ด!</span>
+          </div>
+
+          <canvas id="stageCanvas" width="720" height="405"></canvas>
+          <video id="stageVideo" playsinline></video>
+        </div>
+
+        <!-- Question & 4 Options -->
+        <div class="question-block">
+          <div class="question-title">ตัวละครนี้...พูดว่าอะไร?</div>
+          <div class="options-grid" id="qOptionsGrid">
+            <button class="q-option-btn" data-opt="0">
+              <span class="opt-letter">A</span>
+              <span class="opt-text">ตัวเลือก A</span>
+            </button>
+            <button class="q-option-btn" data-opt="1">
+              <span class="opt-letter">B</span>
+              <span class="opt-text">ตัวเลือก B</span>
+            </button>
+            <button class="q-option-btn" data-opt="2">
+              <span class="opt-letter">C</span>
+              <span class="opt-text">ตัวเลือก C</span>
+            </button>
+            <button class="q-option-btn" data-opt="3">
+              <span class="opt-letter">D</span>
+              <span class="opt-text">ตัวเลือก D</span>
+            </button>
+          </div>
+
+          <!-- Multiplayer Live Answer Status Indicator -->
+          <div id="qMultiStatusBar" style="display:none; text-align:center; margin-top:0.8rem; font-size:0.85rem; color:var(--accent-cyan);">
+            ตอบแล้ว <span id="qMultiAnsweredCount">0</span>/<span id="qMultiTotalCount">0</span> คน
+          </div>
+
+          <!-- Reveal Feedback Banner -->
+          <div class="reveal-banner" id="qRevealBanner" style="display:none;">
+            <div class="reveal-heading" id="qRevealHeading">ถูกต้อง! 🎉</div>
+            <div class="reveal-quote" id="qRevealQuote">"..."</div>
+            <div class="reveal-exp" id="qRevealExp">คำอธิบายที่มาของประโยคนี้</div>
+            <div style="margin-top:0.75rem; display:flex; justify-content:center; gap:0.6rem;">
+              <button class="btn btn-secondary" id="btnQReport" style="padding:0.35rem 0.8rem; font-size:0.75rem;">⚠️ รายงานปัญหานี้</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. MULTIPLAYER INTER-ROUND LEADERBOARD -->
+      <div id="qScreenLeaderboard" class="game-screen" style="display:none;">
+        <div class="room-box" style="text-align:center;">
+          <h2 style="font-size:1.6rem; font-weight:800; color:var(--accent-gold); margin-bottom:0.4rem;">ตารางคะแนนล่าสุด 🏆</h2>
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.25rem;">เตรียมเข้าสู่ข้อถัดไปใน 3 วินาที...</p>
+
+          <div id="qLeaderboardCommentary" style="background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); padding:0.6rem 1rem; border-radius:12px; margin-bottom:1.25rem; font-size:0.95rem; font-weight:700; color:#fbcfe8;"></div>
+
+          <div class="player-list" id="qRoundLeaderboardList"></div>
+        </div>
+      </div>
+
+      <!-- 6. ROUND SUMMARY & RESULTS SCREEN -->
+      <div id="qScreenResults" class="game-screen" style="display:none;">
+        <div class="results-card">
+          <div class="results-trophy" id="qResultsTrophy">🏆</div>
+          <div class="results-score-big" id="qResultsScore">8/10</div>
+          <div class="results-verdict" id="qResultsVerdict">ตัวจริงสายหนังและซีรีส์!</div>
+
+          <!-- Quick Stats Grid -->
+          <div class="results-stats-grid">
+            <div class="stat-box">
+              <div class="val" id="qStatCorrect" style="color:var(--accent-green);">8</div>
+              <div class="lbl">ตอบถูก (ข้อ)</div>
+            </div>
+            <div class="stat-box">
+              <div class="val" id="qStatWrong" style="color:var(--accent-rose);">2</div>
+              <div class="lbl">ตอบผิด (ข้อ)</div>
+            </div>
+            <div class="stat-box">
+              <div class="val" id="qStatStreak" style="color:var(--accent-gold);">5</div>
+              <div class="lbl">ถูกติดกันสูงสุด</div>
+            </div>
+          </div>
+
+          <!-- Multiplayer Podium -->
+          <div id="qMultiPodium" style="display:none; margin-bottom:1.5rem; background:rgba(0,0,0,0.3); padding:1rem; border-radius:16px;">
+            <h3 style="color:var(--accent-gold); font-size:1.1rem; margin-bottom:0.8rem;">👑 ผลการจัดอันดับประจำห้อง</h3>
+            <div id="qMultiPodiumList" class="player-list"></div>
+          </div>
+
+          <!-- Questions Review List -->
+          <div style="text-align:left; margin-bottom:1.5rem;">
+            <span style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); display:block; margin-bottom:0.5rem;">📝 สรุปประโยคเด็ดในรอบนี้:</span>
+            <div id="qResultsReviewList" style="max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:0.4rem; padding-right:4px;"></div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btnQPlayAgain">🔄 เล่นอีกรอบ</button>
+            <button class="btn btn-secondary" id="btnQChangeCat">📂 เปลี่ยนหมวด</button>
+            <button class="btn btn-secondary" id="btnQShare">📤 แชร์คะแนน</button>
+            <button class="btn btn-secondary" id="btnQBackHome">🏠 กลับหน้าแรก</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quote Game Footer -->
+      <footer style="margin-top: 3rem; padding: 1.5rem 0; text-align: center; border-top: 1px solid var(--panel-border); font-size: 0.85rem; color: var(--text-secondary);">
+        <span>🎬 ประโยคนี้...พูดว่าอะไร? &copy; 2026</span>
+      </footer>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
@@ -987,6 +1258,145 @@
     </div>
   </div>
 
+  <!-- MODAL: Quote Game - How to Play -->
+  <div class="modal-backdrop" id="modalQHowToPlay">
+    <div class="modal-dialog" style="max-width: 520px; text-align: left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 class="modal-title" style="margin:0; font-weight:800; color:var(--accent-gold);">❓ กติกาการเล่น: ประโยคนี้...พูดว่าอะไร?</h3>
+        <button style="background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closeQuoteModal('modalQHowToPlay')">&times;</button>
+      </div>
+      <div style="font-size:0.92rem; line-height:1.6; color:var(--text-secondary); margin-bottom:1.5rem;">
+        <p style="margin-bottom:0.6rem;">1. <b>หนึ่งรอบมี 10 ข้อ:</b> ครอบคลุมทั้งหนัง ละคร ซีรีส์ ซีรีส์วาย และซิตคอมชื่อดังของไทย</p>
+        <p style="margin-bottom:0.6rem;">2. <b>ดูคลิปและสังเกตบริบท:</b> ช่วงแรกจะมีเสียงปกติ เมื่อถึงประโยคสำคัญเสียงจะถูกปิด 🔇</p>
+        <p style="margin-bottom:0.6rem;">3. <b>จับเวลา 15 วินาที:</b> เลือก 1 คำตอบจาก 4 ตัวเลือก เมื่อกดเลือกแล้วจะล็อกคำตอบทันที</p>
+        <p style="margin-bottom:0.6rem;">4. <b>เฉลยพร้อมเสียงจริง:</b> หลังหมดเวลาหรือทุกคนตอบครบ จะเฉลยพร้อมเปิดเสียงพูดจริงของตัวละคร</p>
+        <p>5. <b>โหมดแข่งกับเพื่อน:</b> หากคะแนนเท่ากัน คนที่ใช้เวลาตอบข้อที่ถูกน้อยกว่าจะอยู่อันดับสูงกว่า!</p>
+      </div>
+      <button type="button" class="btn btn-primary" style="width:100%;" onclick="closeQuoteModal('modalQHowToPlay')">เข้าใจแล้ว ลุยเลย! 🚀</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Quote Game - Report Question -->
+  <div class="modal-backdrop" id="modalQReport">
+    <div class="modal-dialog" style="max-width: 480px; text-align: left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 class="modal-title" style="margin:0; font-weight:800; color:var(--accent-rose);">⚠️ รายงานปัญหาข้อนี้</h3>
+        <button style="background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closeQuoteModal('modalQReport')">&times;</button>
+      </div>
+      <form id="formQReport" style="display:flex; flex-direction:column; gap:0.85rem;">
+        <div>
+          <label class="form-label" style="margin-bottom:0.3rem;">สาเหตุของปัญหา:</label>
+          <select id="qReportReason" class="form-input" style="font-family:var(--font-main);">
+            <option value="คลิปเล่นไม่ได้">คลิปเล่นไม่ได้ / โหลดไม่ขึ้น</option>
+            <option value="ปิดเสียงผิดช่วง">ปิดเสียงผิดช่วง / ไม่ตรงประโยค</option>
+            <option value="ยังได้ยินคำตอบ">ยังได้ยินคำตอบ / เสียงไม่เงียบ</option>
+            <option value="มีคำบรรยายหลุด">มีคำบรรยายหรือสปอยล์หลุด</option>
+            <option value="เฉลยไม่ถูกต้อง">เฉลยไม่ถูกต้อง</option>
+            <option value="ตัวเลือกมีปัญหา">ตัวเลือกมีปัญหา / ซ้ำซ้อน</option>
+            <option value="เนื้อหาไม่เหมาะสม">เนื้อหาไม่เหมาะสม</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" style="margin-bottom:0.3rem;">รายละเอียดเพิ่มเติม (ถ้ามี):</label>
+          <textarea id="qReportDetails" class="form-input" rows="3" placeholder="เช่น เสียงปิดช้าไป 1 วินาที..."></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:0.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeQuoteModal('modalQReport')">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary" style="padding:0.6rem 1.4rem;">ส่งรายงาน</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Quote Game - Admin Backoffice -->
+  <div class="modal-backdrop" id="modalQAdmin">
+    <div class="modal-dialog" style="max-width: 740px; text-align: left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 class="modal-title" style="margin:0; font-weight:800; color:var(--accent-gold);">⚙️ ระบบจัดการคำถาม (Admin Backoffice)</h3>
+        <button style="background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closeQuoteModal('modalQAdmin')">&times;</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1.2rem;">
+        <!-- Add Question Form -->
+        <form id="formQAddQuestion" style="background:rgba(255,255,255,0.03); border:1px solid var(--panel-border); border-radius:12px; padding:1rem; display:flex; flex-direction:column; gap:0.65rem;">
+          <b style="color:var(--accent-gold); font-size:0.95rem;">➕ เพิ่มคำถามใหม่เข้าระบบ</b>
+          <div style="display:grid; grid-template-columns:2fr 1fr; gap:0.5rem;">
+            <div>
+              <label class="form-label">ชื่อเรื่อง:</label>
+              <input type="text" id="qAddTitle" class="form-input" required placeholder="เช่น แฟนฉัน">
+            </div>
+            <div>
+              <label class="form-label">ประเภท:</label>
+              <select id="qAddMediaType" class="form-input">
+                <option value="movie">ภาพยนตร์ไทย</option>
+                <option value="drama">ละครไทย</option>
+                <option value="series">ซีรีส์ไทย</option>
+                <option value="y_series">ซีรีส์วายไทย</option>
+                <option value="sitcom">ซิตคอมไทย</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
+            <div>
+              <label class="form-label">ชื่อตัวละคร:</label>
+              <input type="text" id="qAddCharacter" class="form-input" required placeholder="เช่น เจี๊ยบ">
+            </div>
+            <div>
+              <label class="form-label">ปี:</label>
+              <input type="number" id="qAddYear" class="form-input" value="2020">
+            </div>
+            <div>
+              <label class="form-label">ระดับความยาก:</label>
+              <select id="qAddDifficulty" class="form-input">
+                <option value="easy">ง่าย</option>
+                <option value="medium">ปานกลาง</option>
+                <option value="hard">ยาก</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+            <div>
+              <label class="form-label">เริ่มปิดเสียง (วินาที):</label>
+              <input type="number" step="0.1" id="qAddMuteStart" class="form-input" value="4.5">
+            </div>
+            <div>
+              <label class="form-label">จบปิดเสียง (วินาที):</label>
+              <input type="number" step="0.1" id="qAddMuteEnd" class="form-input" value="8.0">
+            </div>
+          </div>
+          <div>
+            <label class="form-label" style="color:var(--accent-green);">ประโยคคำตอบจริง (Correct Answer):</label>
+            <input type="text" id="qAddAnswer" class="form-input" required placeholder="ประโยคจริงที่ตัวละครพูด" style="border-color:var(--accent-green);">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
+            <div>
+              <label class="form-label">ตัวเลือกหลอก 1:</label>
+              <input type="text" id="qAddOpt2" class="form-input" required placeholder="ตัวเลือกหลอก 1">
+            </div>
+            <div>
+              <label class="form-label">ตัวเลือกหลอก 2:</label>
+              <input type="text" id="qAddOpt3" class="form-input" required placeholder="ตัวเลือกหลอก 2">
+            </div>
+            <div>
+              <label class="form-label">ตัวเลือกหลอก 3:</label>
+              <input type="text" id="qAddOpt4" class="form-input" required placeholder="ตัวเลือกหลอก 3">
+            </div>
+          </div>
+          <div>
+            <label class="form-label">คำอธิบายที่มา/บริบท:</label>
+            <input type="text" id="qAddExp" class="form-input" placeholder="คำอธิบายที่มาของประโยคนี้">
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top:0.3rem;">💾 บันทึกคำถามลงระบบ</button>
+        </form>
+
+        <!-- Current Questions List -->
+        <div>
+          <b style="color:var(--accent-cyan); font-size:0.95rem; display:block; margin-bottom:0.5rem;">📚 คลังคำถามที่มีอยู่</b>
+          <div id="qAdminList" style="display:flex; flex-direction:column; gap:0.5rem; max-height:220px; overflow-y:auto; padding-right:4px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
@@ -994,5 +1404,8 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="audio.js"></script>
   <script src="gameClient.js"></script>
+  <script src="quoteAudio.js"></script>
+  <script src="quoteVideo.js"></script>
+  <script src="quoteGame.js"></script>
 </body>
 </html>

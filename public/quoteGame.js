@@ -1,0 +1,677 @@
+/**
+ * Thai Quote Game Controller for Online Go Hub
+ * Integrated with unified user authentication and friends system
+ */
+
+(function() {
+  let videoStage = null;
+  let quoteMode = 'single';
+  let quoteCategory = 'all';
+  let quoteDifficulty = 'mixed';
+
+  let quoteSingleQuestions = [];
+  let quoteSingleIndex = 0;
+  let quoteSingleScore = 0;
+  let quoteSingleStreak = 0;
+  let quoteSingleMaxStreak = 0;
+  let quoteSingleCorrectCount = 0;
+  let quoteSingleWrongCount = 0;
+  let quoteSingleStartTime = 0;
+  let quoteSingleHistory = [];
+
+  let quoteRoom = null;
+  let isQuoteHost = false;
+  let quoteTimer = null;
+  let quoteTimerSec = 15;
+
+  const qScreens = {};
+
+  function initQuoteGame() {
+    qScreens.home = document.getElementById('qScreenHome');
+    qScreens.category = document.getElementById('qScreenCategory');
+    qScreens.lobby = document.getElementById('qScreenLobby');
+    qScreens.game = document.getElementById('qScreenGame');
+    qScreens.leaderboard = document.getElementById('qScreenLeaderboard');
+    qScreens.results = document.getElementById('qScreenResults');
+
+    if (document.getElementById('stageCanvas')) {
+      videoStage = new VideoStageController('stageCanvas', 'stageVideo');
+    }
+
+    setupQuoteEvents();
+    setupQuoteSocketListeners();
+    loadQuoteCategories();
+  }
+
+  function switchQScreen(screenKey) {
+    Object.values(qScreens).forEach(s => s && (s.style.display = 'none'));
+    if (qScreens[screenKey]) {
+      qScreens[screenKey].style.display = 'flex';
+    }
+  }
+
+  window.openQuoteModal = function(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.add('active');
+  };
+
+  window.closeQuoteModal = function(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('active');
+  };
+
+  async function loadQuoteCategories() {
+    try {
+      const res = await fetch('/api/quote/categories');
+      const data = await res.json();
+      if (data.success && data.categories) {
+        const grid = document.getElementById('qCategoryGrid');
+        if (!grid) return;
+        grid.innerHTML = data.categories.map(c => `
+          <div class="cat-card ${c.id === quoteCategory ? 'active' : ''}" data-cat="${c.id}">
+            <div class="cat-icon">${c.icon}</div>
+            <div class="cat-name">${c.name}</div>
+            <div class="cat-count">${c.count} ข้อ</div>
+          </div>
+        `).join('');
+
+        grid.querySelectorAll('.cat-card').forEach(card => {
+          card.addEventListener('click', () => {
+            grid.querySelectorAll('.cat-card').forEach(el => el.classList.remove('active'));
+            card.classList.add('active');
+            quoteCategory = card.getAttribute('data-cat');
+          });
+        });
+      }
+    } catch (err) {}
+  }
+
+  function setupQuoteEvents() {
+    // Mode selection
+    document.getElementById('btnQModeSingle')?.addEventListener('click', () => {
+      quoteMode = 'single';
+      switchQScreen('category');
+    });
+
+    document.getElementById('btnQModeMulti')?.addEventListener('click', () => {
+      quoteMode = 'multi';
+      const name = window.currentUser?.username || 'ผู้เล่น 1';
+      socket.emit('quote_create_room', { hostName: name }, (res) => {
+        if (res && res.success) {
+          quoteRoom = res.room;
+          isQuoteHost = true;
+          renderQLobby(quoteRoom);
+          switchQScreen('lobby');
+        } else {
+          alert('ไม่สามารถสร้างห้องได้');
+        }
+      });
+    });
+
+    document.getElementById('btnQQuickJoin')?.addEventListener('click', () => {
+      const code = document.getElementById('inputQQuickCode')?.value.trim().toUpperCase();
+      if (!code) return alert('กรุณากรอกรหัสห้อง');
+      const name = window.currentUser?.username || 'ผู้เล่น 1';
+      socket.emit('quote_join_room', { roomCode: code, username: name }, (res) => {
+        if (res && res.success) {
+          quoteRoom = res.room;
+          isQuoteHost = res.room.hostId === socket.id;
+          renderQLobby(quoteRoom);
+          switchQScreen('lobby');
+        } else {
+          alert(res?.message || 'ไม่สามารถเข้าร่วมห้องได้');
+        }
+      });
+    });
+
+    // Difficulty selection
+    document.querySelectorAll('.q-diff-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.q-diff-pill').forEach(el => el.classList.remove('active'));
+        pill.classList.add('active');
+        quoteDifficulty = pill.getAttribute('data-diff');
+      });
+    });
+
+    document.getElementById('btnQBackFromCategory')?.addEventListener('click', () => switchQScreen('home'));
+    document.getElementById('btnQStartSingle')?.addEventListener('click', startSingleQuoteGame);
+
+    // Lobby events
+    document.getElementById('btnQCopyInvite')?.addEventListener('click', () => {
+      if (!quoteRoom) return;
+      const link = `${window.location.origin}?quote_room=${quoteRoom.code}`;
+      navigator.clipboard.writeText(link).then(() => alert(`คัดลอกลิงก์ห้องแล้ว:\n${link}`));
+    });
+
+    document.getElementById('btnQToggleReady')?.addEventListener('click', () => {
+      if (!quoteRoom) return;
+      socket.emit('quote_toggle_ready', { roomCode: quoteRoom.code });
+    });
+
+    document.getElementById('btnQLeaveRoom')?.addEventListener('click', () => {
+      quoteRoom = null;
+      switchQScreen('home');
+    });
+
+    document.getElementById('btnQHostStart')?.addEventListener('click', () => {
+      if (!quoteRoom || !isQuoteHost) return;
+      socket.emit('quote_start_game', { roomCode: quoteRoom.code }, (res) => {
+        if (res && !res.success) alert(res.message || 'ไม่สามารถเริ่มเกมได้');
+      });
+    });
+
+    // Chat
+    document.getElementById('btnQSendChat')?.addEventListener('click', sendQChat);
+    document.getElementById('inputQChat')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendQChat();
+    });
+
+    // Option Clicking
+    document.querySelectorAll('.q-option-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.querySelector('.opt-text')?.innerText || '';
+        handleQAnswer(btn, text);
+      });
+    });
+
+    // Rules & Report
+    document.getElementById('btnQOpenRules')?.addEventListener('click', () => openQuoteModal('modalQHowToPlay'));
+    document.getElementById('btnQReport')?.addEventListener('click', () => openQuoteModal('modalQReport'));
+    document.getElementById('formQReport')?.addEventListener('submit', handleQReportSubmit);
+
+
+    // Results buttons
+    document.getElementById('btnQPlayAgain')?.addEventListener('click', () => {
+      if (quoteMode === 'single') startSingleQuoteGame();
+      else switchQScreen('lobby');
+    });
+    document.getElementById('btnQChangeCat')?.addEventListener('click', () => switchQScreen('category'));
+    document.getElementById('btnQBackHome')?.addEventListener('click', () => switchQScreen('home'));
+    document.getElementById('btnQShare')?.addEventListener('click', shareQuoteResult);
+
+    // Admin
+    document.getElementById('btnOpenQAdmin')?.addEventListener('click', () => {
+      loadQAdminQuestions();
+      openQuoteModal('modalQAdmin');
+    });
+    setupQAdminControls();
+  }
+
+  function sendQChat() {
+    const input = document.getElementById('inputQChat');
+    const msg = input.value.trim();
+    if (!msg || !quoteRoom) return;
+    socket.emit('quote_send_chat', { roomCode: quoteRoom.code, message: msg });
+    input.value = '';
+  }
+
+  // ── SINGLE PLAYER LOGIC ────────────────────────────────────
+  async function startSingleQuoteGame() {
+    try {
+      const res = await fetch('/api/quote/single/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: quoteCategory, difficulty: quoteDifficulty })
+      });
+      const data = await res.json();
+      if (!data.success || !data.questions || data.questions.length === 0) {
+        alert('ไม่พบคำถามในหมวดนี้');
+        return;
+      }
+
+      quoteSingleQuestions = data.questions;
+      quoteSingleIndex = 0;
+      quoteSingleScore = 0;
+      quoteSingleStreak = 0;
+      quoteSingleMaxStreak = 0;
+      quoteSingleCorrectCount = 0;
+      quoteSingleWrongCount = 0;
+      quoteSingleHistory = [];
+
+      switchQScreen('game');
+      runSingleQ(0);
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการโหลดคำถาม');
+    }
+  }
+
+  function runSingleQ(index) {
+    if (index >= quoteSingleQuestions.length || index >= 10) {
+      finishSingleQuoteGame();
+      return;
+    }
+
+    quoteSingleIndex = index;
+    const q = quoteSingleQuestions[index];
+
+    document.getElementById('qCounterText').innerText = `ข้อที่ ${index + 1}/10`;
+    document.getElementById('qScoreText').innerText = `คะแนน: ${quoteSingleScore}`;
+    document.getElementById('qRevealBanner').style.display = 'none';
+    document.getElementById('qMultiStatusBar').style.display = 'none';
+
+    const btns = document.querySelectorAll('.q-option-btn');
+    btns.forEach((btn, i) => {
+      btn.classList.remove('selected', 'correct', 'wrong');
+      btn.disabled = true;
+      const t = btn.querySelector('.opt-text');
+      if (t && q.options[i]) t.innerText = q.options[i];
+    });
+
+    const overlay = document.getElementById('qInterstitialOverlay');
+    document.getElementById('qInterstitialNum').innerText = `ข้อที่ ${index + 1}/10`;
+    document.getElementById('qInterstitialTitle').innerText = `เรื่อง: ${q.title}`;
+    overlay.style.display = 'flex';
+    window.gameAudio?.playWhoosh?.();
+
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      videoStage.loadQuestion(q, 'question', () => {
+        btns.forEach(b => b.disabled = false);
+        startQTimer(() => handleQAnswer(null, ''));
+      });
+    }, 1500);
+  }
+
+  function startQTimer(onTimeout) {
+    clearInterval(quoteTimer);
+    quoteTimerSec = 15;
+    quoteSingleStartTime = Date.now();
+
+    const text = document.getElementById('qTimerText');
+    const bar = document.getElementById('qTimerBarFill');
+    text.innerText = '15s';
+    bar.style.width = '100%';
+
+    quoteTimer = setInterval(() => {
+      quoteTimerSec--;
+      text.innerText = `${quoteTimerSec}s`;
+      bar.style.width = `${(quoteTimerSec / 15) * 100}%`;
+
+      window.gameAudio?.playCountdownTick?.(quoteTimerSec <= 5);
+
+      if (quoteTimerSec <= 0) {
+        clearInterval(quoteTimer);
+        if (typeof onTimeout === 'function') onTimeout();
+      }
+    }, 1000);
+  }
+
+  function stopQTimer() {
+    clearInterval(quoteTimer);
+    const bar = document.getElementById('qTimerBarFill');
+    if (bar) bar.style.width = '0%';
+  }
+
+  function handleQAnswer(selectedBtn, text) {
+    if (quoteMode === 'single') {
+      handleSingleQAnswer(selectedBtn, text);
+    } else {
+      handleMultiQAnswer(selectedBtn, text);
+    }
+  }
+
+  async function handleSingleQAnswer(selectedBtn, text) {
+    stopQTimer();
+    const btns = document.querySelectorAll('.q-option-btn');
+    btns.forEach(b => b.disabled = true);
+    if (selectedBtn) selectedBtn.classList.add('selected');
+
+    const q = quoteSingleQuestions[quoteSingleIndex];
+    const timeTaken = Math.min(15, (Date.now() - quoteSingleStartTime) / 1000);
+
+    try {
+      const res = await fetch('/api/quote/single/answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: q.id, selectedOption: text })
+      });
+      const result = await res.json();
+
+      if (result.isCorrect) {
+        quoteSingleScore++;
+        quoteSingleCorrectCount++;
+        quoteSingleStreak++;
+        if (quoteSingleStreak > quoteSingleMaxStreak) quoteSingleMaxStreak = quoteSingleStreak;
+        if (selectedBtn) selectedBtn.classList.add('correct');
+        window.gameAudio?.playDing?.();
+      } else {
+        quoteSingleWrongCount++;
+        quoteSingleStreak = 0;
+        if (selectedBtn) selectedBtn.classList.add('wrong');
+        btns.forEach(b => {
+          if (b.querySelector('.opt-text')?.innerText === result.correctAnswer) b.classList.add('correct');
+        });
+        window.gameAudio?.playBuzzer?.();
+      }
+
+      quoteSingleHistory.push({
+        title: q.title,
+        character: q.character,
+        isCorrect: result.isCorrect,
+        chosen: text || '(หมดเวลา)',
+        correct: result.correctAnswer
+      });
+
+      const banner = document.getElementById('qRevealBanner');
+      banner.className = `reveal-banner ${result.isCorrect ? 'correct' : 'wrong'}`;
+      document.getElementById('qRevealHeading').innerText = result.isCorrect ? 'ถูกต้อง! 🎉' : 'ยังไม่ถูกต้อง! ❌';
+      document.getElementById('qRevealQuote').innerText = `"${result.correctAnswer}"`;
+      document.getElementById('qRevealExp').innerText = `${result.character} (${q.title}) - ${result.explanation || ''}`;
+      banner.style.display = 'block';
+
+      videoStage.loadQuestion({ ...q, correctAnswer: result.correctAnswer }, 'reveal', () => {
+        setTimeout(() => runSingleQ(quoteSingleIndex + 1), 2000);
+      });
+
+    } catch (err) {
+      runSingleQ(quoteSingleIndex + 1);
+    }
+  }
+
+  function finishSingleQuoteGame() {
+    videoStage.stop();
+    stopQTimer();
+    fetch('/api/quote/single/finish', { method: 'POST' }).catch(() => {});
+
+    document.getElementById('qResultsScore').innerText = `${quoteSingleScore}/10`;
+    document.getElementById('qStatCorrect').innerText = quoteSingleCorrectCount;
+    document.getElementById('qStatWrong').innerText = quoteSingleWrongCount;
+    document.getElementById('qStatStreak').innerText = quoteSingleMaxStreak;
+
+    const verdicts = {
+      0: 'ต้องกลับไปดูเพิ่มแล้ว! 🎬',
+      1: 'ต้องกลับไปดูเพิ่มแล้ว! 🎬',
+      2: 'ต้องกลับไปดูเพิ่มแล้ว! 🎬',
+      3: 'เริ่มคุ้น ๆ อยู่บ้างนะ 👍',
+      4: 'เริ่มคุ้น ๆ อยู่บ้างนะ 👍',
+      5: 'ดูมาไม่น้อยนะเรา! 🍿',
+      6: 'ดูมาไม่น้อยนะเรา! 🍿',
+      7: 'ตัวจริงสายหนังและซีรีส์! 🌟',
+      8: 'ตัวจริงสายหนังและซีรีส์! 🌟',
+      9: 'เกือบเซียน ขาดอีกแค่ข้อเดียว! 🔥',
+      10: 'เทพประโยคเด็ด จำได้ทุกเรื่อง! 👑'
+    };
+    document.getElementById('qResultsVerdict').innerText = verdicts[quoteSingleScore] || 'ยอดเยี่ยม!';
+
+    const list = document.getElementById('qResultsReviewList');
+    list.innerHTML = quoteSingleHistory.map((h, i) => `
+      <div style="background:rgba(255,255,255,0.03); padding:0.5rem; border-radius:8px; font-size:0.85rem; border-left:3px solid ${h.isCorrect ? 'var(--accent-green)' : 'var(--accent-rose)'};">
+        <b>ข้อที่ ${i + 1}: ${h.title} (${h.character})</b>
+        <div style="color:#fde047;">ประโยคจริง: "${h.correct}"</div>
+      </div>
+    `).join('');
+
+    document.getElementById('qMultiPodium').style.display = 'none';
+    window.gameAudio?.playFanfare?.();
+    switchQScreen('results');
+  }
+
+  // ── MULTIPLAYER LOGIC ──────────────────────────────────────
+  function renderQLobby(room) {
+    document.getElementById('displayQRoomCode').innerText = room.code;
+    document.getElementById('qLobbyCount').innerText = room.players.length;
+
+    const isSelfHost = room.hostId === socket.id;
+    isQuoteHost = isSelfHost;
+
+    document.getElementById('btnQHostStart').style.display = isSelfHost ? 'inline-block' : 'none';
+
+    const myPlayer = room.players.find(p => p.id === socket.id);
+    const btnReady = document.getElementById('btnQToggleReady');
+    if (myPlayer?.isHost) {
+      btnReady.style.display = 'none';
+    } else {
+      btnReady.style.display = 'inline-block';
+      btnReady.innerText = myPlayer?.isReady ? 'ยกเลิกพร้อม' : 'พร้อมแล้ว';
+    }
+
+    const listEl = document.getElementById('qLobbyPlayerList');
+    listEl.innerHTML = room.players.map(p => `
+      <div class="player-row">
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <span>${p.isHost ? '👑' : '👤'}</span>
+          <b>${escapeHtml(p.username)}</b>
+          ${p.id === socket.id ? '<span style="font-size:0.75rem; color:var(--accent-cyan);">(คุณ)</span>' : ''}
+        </div>
+        <span class="${p.isReady || p.isHost ? 'player-badge-ready' : 'player-badge-waiting'}">
+          ${p.isHost ? 'หัวหน้าห้อง' : (p.isReady ? '✓ พร้อมแล้ว' : 'รอพร้อม')}
+        </span>
+      </div>
+    `).join('');
+  }
+
+  function handleMultiQAnswer(selectedBtn, text) {
+    stopQTimer();
+    const btns = document.querySelectorAll('.q-option-btn');
+    btns.forEach(b => b.disabled = true);
+    if (selectedBtn) selectedBtn.classList.add('selected');
+
+    socket.emit('quote_submit_answer', { roomCode: quoteRoom.code, selectedOption: text });
+  }
+
+  function setupQuoteSocketListeners() {
+    socket.on('room_update', (room) => {
+      if (quoteRoom && room.code === quoteRoom.code) {
+        quoteRoom = room;
+        renderQLobby(room);
+      }
+    });
+
+    socket.on('new_chat_message', (chat) => {
+      const box = document.getElementById('qChatMessages');
+      if (!box) return;
+      const row = document.createElement('div');
+      row.className = 'chat-row';
+      row.innerHTML = `<b>${escapeHtml(chat.sender)}</b>: ${escapeHtml(chat.text)}`;
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+    });
+
+    socket.on('game_interstitial', (data) => {
+      switchQScreen('game');
+      document.getElementById('qRevealBanner').style.display = 'none';
+      const overlay = document.getElementById('qInterstitialOverlay');
+      document.getElementById('qInterstitialNum').innerText = `ข้อที่ ${data.questionNumber}/${data.totalQuestions}`;
+      document.getElementById('qInterstitialTitle').innerText = `เรื่อง: ${data.title}`;
+      overlay.style.display = 'flex';
+      window.gameAudio?.playWhoosh?.();
+    });
+
+    socket.on('game_clip_start', (data) => {
+      document.getElementById('qInterstitialOverlay').style.display = 'none';
+      document.getElementById('qCounterText').innerText = `ข้อที่ ${data.questionNumber}/${data.totalQuestions}`;
+      document.getElementById('qMultiStatusBar').style.display = 'none';
+
+      const btns = document.querySelectorAll('.q-option-btn');
+      btns.forEach((btn, i) => {
+        btn.classList.remove('selected', 'correct', 'wrong');
+        btn.disabled = true;
+        const t = btn.querySelector('.opt-text');
+        if (t && data.question.options[i]) t.innerText = data.question.options[i];
+      });
+
+      videoStage.loadQuestion(data.question, 'question');
+    });
+
+    socket.on('game_question_start', (data) => {
+      const btns = document.querySelectorAll('.q-option-btn');
+      btns.forEach(b => b.disabled = false);
+
+      document.getElementById('qMultiStatusBar').style.display = 'block';
+      document.getElementById('qMultiAnsweredCount').innerText = '0';
+      document.getElementById('qMultiTotalCount').innerText = quoteRoom?.players?.length || 1;
+
+      startQTimer();
+    });
+
+    socket.on('player_answered', () => {
+      const el = document.getElementById('qMultiAnsweredCount');
+      if (el) el.innerText = parseInt(el.innerText, 10) + 1;
+    });
+
+    socket.on('game_reveal', (data) => {
+      stopQTimer();
+      const btns = document.querySelectorAll('.q-option-btn');
+      btns.forEach(b => b.disabled = true);
+
+      const myResult = data.playersResults.find(p => p.id === socket.id);
+      const isCorrect = myResult?.isCorrect || false;
+
+      btns.forEach(btn => {
+        const txt = btn.querySelector('.opt-text')?.innerText;
+        if (txt === data.correctAnswer) btn.classList.add('correct');
+        else if (txt === myResult?.selected && !isCorrect) btn.classList.add('wrong');
+      });
+
+      if (isCorrect) window.gameAudio?.playDing?.();
+      else window.gameAudio?.playBuzzer?.();
+
+      const banner = document.getElementById('qRevealBanner');
+      banner.className = `reveal-banner ${isCorrect ? 'correct' : 'wrong'}`;
+      document.getElementById('qRevealHeading').innerText = isCorrect ? 'ถูกต้อง! 🎉' : 'ยังไม่ถูกต้อง! ❌';
+      document.getElementById('qRevealQuote').innerText = `"${data.correctAnswer}"`;
+      document.getElementById('qRevealExp').innerText = `${data.character} (${data.title}) - ${data.explanation || ''}`;
+      banner.style.display = 'block';
+
+      videoStage.loadQuestion({ ...data, clipDuration: data.quoteEnd || 8.0, muteStart: 99, muteEnd: 99 }, 'reveal');
+
+      setTimeout(() => {
+        renderQRoundLeaderboard(data.rankings, data.commentary);
+        switchQScreen('leaderboard');
+      }, 3500);
+    });
+
+    socket.on('game_finished', (data) => {
+      videoStage.stop();
+      stopQTimer();
+
+      const myRanking = data.rankings.find(p => p.id === socket.id);
+      const myScore = myRanking ? myRanking.score : 0;
+
+      document.getElementById('qResultsScore').innerText = `${myScore}/10`;
+      document.getElementById('qStatCorrect').innerText = myScore;
+      document.getElementById('qStatWrong').innerText = 10 - myScore;
+      document.getElementById('qStatStreak').innerText = myRanking?.maxStreak || 0;
+
+      const winner = data.winner;
+      document.getElementById('qResultsVerdict').innerText = 
+        winner?.id === socket.id ? '🎉 ยินดีด้วย! คุณคือผู้ชนะประจำห้อง!' : `ผู้ชนะคือ: ${winner?.username} (${winner?.score}/10 คะแนน)`;
+
+      const podium = document.getElementById('qMultiPodium');
+      podium.style.display = 'block';
+      podium.innerHTML = data.rankings.map((p, idx) => `
+        <div class="player-row" style="background:${idx === 0 ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.04)'};">
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span>${idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `#${idx + 1}`))}</span>
+            <b>${escapeHtml(p.username)}</b>
+          </div>
+          <span style="color:var(--accent-green); font-weight:800;">${p.score}/10 คะแนน (${p.totalCorrectTime}s)</span>
+        </div>
+      `).join('');
+
+      window.gameAudio?.playFanfare?.();
+      switchQScreen('results');
+    });
+  }
+
+  function renderQRoundLeaderboard(rankings, commentary) {
+    const box = document.getElementById('qLeaderboardCommentary');
+    if (box) {
+      box.innerHTML = commentary?.length ? commentary.join('<br>') : '';
+      box.style.display = commentary?.length ? 'block' : 'none';
+    }
+
+    const list = document.getElementById('qRoundLeaderboardList');
+    list.innerHTML = rankings.map((p, idx) => `
+      <div class="player-row">
+        <b>${idx + 1}. ${escapeHtml(p.username)}</b>
+        <span style="color:var(--accent-green); font-weight:800;">${p.score} คะแนน (${p.totalCorrectTime}s)</span>
+      </div>
+    `).join('');
+  }
+
+  async function handleQReportSubmit(e) {
+    e.preventDefault();
+    const reason = document.getElementById('qReportReason').value;
+    const details = document.getElementById('qReportDetails').value;
+    const currentQ = quoteSingleQuestions[quoteSingleIndex];
+    if (!currentQ) return;
+
+    await fetch('/api/quote/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questionId: currentQ.id, reason, details })
+    });
+    alert('ส่งรายงานปัญหาเรียบร้อยแล้ว ขอบคุณครับ!');
+    closeQuoteModal('modalQReport');
+  }
+
+  function shareQuoteResult() {
+    const score = document.getElementById('qResultsScore').innerText;
+    const text = `🎬 ผมทายประโยคเด็ดในเกม "ประโยคนี้...พูดว่าอะไร?" ได้ ${score} คะแนน!\nมาเล่นกันได้ที่: ${window.location.href}`;
+    navigator.clipboard.writeText(text).then(() => alert('คัดลอกข้อความผลคะแนนแล้ว!'));
+  }
+
+  function setupQAdminControls() {
+    document.getElementById('formQAddQuestion')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('qAddTitle').value,
+        mediaType: document.getElementById('qAddMediaType').value,
+        character: document.getElementById('qAddCharacter').value,
+        year: document.getElementById('qAddYear').value,
+        difficulty: document.getElementById('qAddDifficulty').value,
+        muteStart: document.getElementById('qAddMuteStart').value,
+        muteEnd: document.getElementById('qAddMuteEnd').value,
+        correctAnswer: document.getElementById('qAddAnswer').value,
+        option2: document.getElementById('qAddOpt2').value,
+        option3: document.getElementById('qAddOpt3').value,
+        option4: document.getElementById('qAddOpt4').value,
+        explanation: document.getElementById('qAddExp').value
+      };
+
+      const res = await fetch('/api/quote/admin/questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('เพิ่มคำถามใหม่สำเร็จ!');
+        document.getElementById('formQAddQuestion').reset();
+        loadQAdminQuestions();
+      }
+    });
+  }
+
+  async function loadQAdminQuestions() {
+    const res = await fetch('/api/quote/admin/questions');
+    const data = await res.json();
+    if (data.success && data.questions) {
+      document.getElementById('qAdminList').innerHTML = data.questions.map(q => `
+        <div style="background:rgba(255,255,255,0.04); padding:0.6rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <b>${q.title}</b> (${q.character})
+            <span style="font-size:0.75rem; color:var(--accent-gold); display:block;">"${q.correctAnswer}"</span>
+          </div>
+          <button style="background:none; border:1px solid var(--accent-rose); color:#fecdd3; border-radius:4px; padding:0.2rem 0.4rem; cursor:pointer;" onclick="deleteQAdminQuestion('${q.id}')">ลบ</button>
+        </div>
+      `).join('');
+    }
+  }
+
+  window.deleteQAdminQuestion = async function(id) {
+    if (confirm('คุณแน่ใจว่าต้องการลบคำถามนี้?')) {
+      await fetch(`/api/quote/admin/questions/${id}`, { method: 'DELETE' });
+      loadQAdminQuestions();
+    }
+  };
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Export
+  window.initQuoteGame = initQuoteGame;
+  window.switchQScreen = switchQScreen;
+})();
