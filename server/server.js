@@ -598,35 +598,47 @@ io.on('connection', (socket) => {
     currentUser = Database.verifyToken(socket.handshake.auth.token);
   }
 
+  function registerUserOnline(user) {
+    if (!user) return;
+    currentUser = user;
+    socket.join(`user_${user.id}`);
+    
+    // Track in onlineUsers Map (store Set of socketIds for each user)
+    if (!onlineUsers.has(user.id)) {
+      onlineUsers.set(user.id, new Set());
+    }
+    const userSockets = onlineUsers.get(user.id);
+    const wasOffline = userSockets.size === 0;
+    userSockets.add(socket.id);
+
+    if (wasOffline) {
+      notifyFriendsOnlineStatus(user.id, true);
+    }
+  }
+
   // Allow client to authenticate session dynamically after connect
   socket.on('auth_session', ({ token }, callback) => {
-    currentUser = Database.verifyToken(token);
+    const user = Database.verifyToken(token);
     if (typeof callback === 'function') {
-      callback({ success: !!currentUser, user: currentUser });
+      callback({ success: !!user, user });
     }
-    // Register as online and notify friends
-    if (currentUser) {
-      onlineUsers.set(currentUser.id, socket.id);
-      notifyFriendsOnlineStatus(currentUser.id, true);
+    if (user) {
+      registerUserOnline(user);
     }
   });
 
   // Register online presence if already authed at handshake
   if (currentUser) {
-    onlineUsers.set(currentUser.id, socket.id);
-    notifyFriendsOnlineStatus(currentUser.id, true);
+    registerUserOnline(currentUser);
   }
 
   function notifyFriendsOnlineStatus(userId, isOnline) {
     const data = Database.getFriends(userId);
     const user = currentUser || { id: userId, username: userId };
     for (const friend of data.friends) {
-      const friendSocketId = onlineUsers.get(friend.id);
-      if (friendSocketId) {
-        io.to(friendSocketId).emit(isOnline ? 'friend_online' : 'friend_offline', {
-          id: userId, username: user.username
-        });
-      }
+      io.to(`user_${friend.id}`).emit(isOnline ? 'friend_online' : 'friend_offline', {
+        id: userId, username: user.username
+      });
     }
   }
 
@@ -634,8 +646,11 @@ io.on('connection', (socket) => {
   socket.on('get_friends', (callback) => {
     if (!currentUser) return typeof callback === 'function' && callback({ success: false });
     const data = Database.getFriends(currentUser.id);
-    // Enrich with online status
-    data.friends = data.friends.map(f => ({ ...f, online: onlineUsers.has(f.id) }));
+    // Enrich with online status (user is online if they have at least 1 active socket)
+    data.friends = data.friends.map(f => {
+      const sockSet = onlineUsers.get(f.id);
+      return { ...f, online: !!(sockSet && sockSet.size > 0) };
+    });
     if (typeof callback === 'function') callback({ success: true, ...data });
   });
 
@@ -646,16 +661,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('friend_request', ({ toId }, callback) => {
-    if (!currentUser) return typeof callback === 'function' && callback({ success: false });
+    if (!currentUser) return typeof callback === 'function' && callback({ success: false, message: 'กรุณาเข้าสู่ระบบ' });
     const result = Database.sendFriendRequest(currentUser.id, toId);
     if (result.success) {
-      // Notify the recipient if they're online
-      const toSocketId = onlineUsers.get(toId);
-      if (toSocketId) {
-        io.to(toSocketId).emit('friend_request_received', {
-          fromId: currentUser.id, fromUsername: currentUser.username
-        });
-      }
+      // Notify the recipient room in real-time
+      io.to(`user_${toId}`).emit('friend_request_received', {
+        fromId: currentUser.id, fromUsername: currentUser.username
+      });
     }
     if (typeof callback === 'function') callback(result);
   });
@@ -664,17 +676,16 @@ io.on('connection', (socket) => {
     if (!currentUser) return typeof callback === 'function' && callback({ success: false });
     const result = Database.acceptFriendRequest(currentUser.id, fromId);
     if (result.success) {
-      // Notify the requester
-      const fromSocketId = onlineUsers.get(fromId);
-      if (fromSocketId) {
-        io.to(fromSocketId).emit('friend_accepted', {
-          byId: currentUser.id, byUsername: currentUser.username
-        });
-        // Also notify them you're online
-        io.to(fromSocketId).emit('friend_online', { id: currentUser.id, username: currentUser.username });
-      }
-      // Notify self that friend is online (if they are)
-      if (onlineUsers.has(fromId)) {
+      // 1. Notify requester in real-time
+      io.to(`user_${fromId}`).emit('friend_accepted', {
+        byId: currentUser.id, byUsername: currentUser.username
+      });
+      // 2. Notify requester that self is online
+      io.to(`user_${fromId}`).emit('friend_online', { id: currentUser.id, username: currentUser.username });
+      
+      // 3. Notify self if requester is online
+      const fromSocks = onlineUsers.get(fromId);
+      if (fromSocks && fromSocks.size > 0) {
         socket.emit('friend_online', { id: fromId, username: result.fromUsername });
       }
     }
@@ -684,12 +695,18 @@ io.on('connection', (socket) => {
   socket.on('friend_reject', ({ fromId }, callback) => {
     if (!currentUser) return typeof callback === 'function' && callback({ success: false });
     const result = Database.rejectFriendRequest(currentUser.id, fromId);
+    // Notify requester that their pending request was updated
+    io.to(`user_${fromId}`).emit('friend_request_updated');
     if (typeof callback === 'function') callback(result);
   });
 
   socket.on('friend_remove', ({ friendId }, callback) => {
     if (!currentUser) return typeof callback === 'function' && callback({ success: false });
     const result = Database.removeFriend(currentUser.id, friendId);
+    if (result.success) {
+      // Notify the removed friend to update their friends list instantly
+      io.to(`user_${friendId}`).emit('friend_removed', { byId: currentUser.id });
+    }
     if (typeof callback === 'function') callback(result);
   });
 
@@ -699,9 +716,10 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (!room) return typeof callback === 'function' && callback({ success: false, message: 'ไม่พบห้องนี้' });
     if (room.white && room.black) return typeof callback === 'function' && callback({ success: false, message: 'ห้องเต็มแล้ว' });
-    const friendSocketId = onlineUsers.get(friendId);
-    if (!friendSocketId) return typeof callback === 'function' && callback({ success: false, message: 'เพื่อนออฟไลน์อยู่' });
-    io.to(friendSocketId).emit('room_invite_received', {
+    const friendSocks = onlineUsers.get(friendId);
+    if (!friendSocks || friendSocks.size === 0) return typeof callback === 'function' && callback({ success: false, message: 'เพื่อนออฟไลน์อยู่' });
+
+    io.to(`user_${friendId}`).emit('room_invite_received', {
       fromId: currentUser.id,
       fromUsername: currentUser.username,
       roomId,
@@ -1395,8 +1413,14 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     // Clean up online presence and notify friends
     if (currentUser) {
-      onlineUsers.delete(currentUser.id);
-      notifyFriendsOnlineStatus(currentUser.id, false);
+      const userSockets = onlineUsers.get(currentUser.id);
+      if (userSockets) {
+        userSockets.delete(socket.id);
+        if (userSockets.size === 0) {
+          onlineUsers.delete(currentUser.id);
+          notifyFriendsOnlineStatus(currentUser.id, false);
+        }
+      }
     }
 
     if (!currentRoomId) return;

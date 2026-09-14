@@ -2703,12 +2703,20 @@ if (btnAcceptInvite && btnRejectInvite && roomInvitePopup) {
 
 // Socket events for Friends & Invites
 socket.on('friend_request_received', (data) => {
-  showToast(`📩 ${data.fromUsername} ส่งคำขอเป็นเพื่อนถึงคุณ!`);
+  showToast(`📩 ${data.fromUsername} ส่งคำขอเป็นเพื่อนถึงคุณ! (เปิดในกล่องคำขอแล้ว)`);
+  window.goAudio?.playClick?.();
   loadFriendsData();
+  // Open and expand friends panel directly to Inbox tab so user sees it immediately
+  if (friendsPanel) {
+    friendsPanel.style.display = 'block';
+    friendsPanel.classList.remove('collapsed');
+    switchFriendsTab('inbox');
+  }
 });
 
 socket.on('friend_accepted', (data) => {
   showToast(`🎉 ${data.byUsername} ยอมรับคำขอเป็นเพื่อนของคุณแล้ว!`);
+  window.goAudio?.playWin?.();
   loadFriendsData();
 });
 
@@ -2718,7 +2726,11 @@ socket.on('friend_online', (data) => {
     friend.online = true;
     renderFriendsUI();
     renderModalFriendInviteList();
+    renderSelectInviteFriend();
     showToast(`🟢 ${data.username} เข้าสู่ระบบแล้ว`);
+  } else {
+    // If newly accepted or synced, refresh full list
+    loadFriendsData();
   }
 });
 
@@ -2728,7 +2740,16 @@ socket.on('friend_offline', (data) => {
     friend.online = false;
     renderFriendsUI();
     renderModalFriendInviteList();
+    renderSelectInviteFriend();
   }
+});
+
+socket.on('friend_removed', () => {
+  loadFriendsData();
+});
+
+socket.on('friend_request_updated', () => {
+  loadFriendsData();
 });
 
 socket.on('room_invite_received', (data) => {
