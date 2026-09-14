@@ -47,6 +47,8 @@ function saveJSON(filePath, data) {
     fs.renameSync(tempFile, filePath);
     if (filePath === USERS_FILE) {
       Database.syncToCloud();
+    } else if (filePath === FRIENDS_FILE) {
+      syncFriendsToCloud();
     }
   } catch (err) {
     console.error(`Error saving ${filePath}:`, err);
@@ -845,8 +847,12 @@ class Database {
                       users = Object.assign({}, users, cloudUsers);
                       saveJSON(USERS_FILE, users);
                       console.log(`[CloudDB] ✅ Synced and restored ${Object.keys(cloudUsers).length} users from Google Cloud Webhook!`);
-                      return resolve({ success: true, count: Object.keys(cloudUsers).length, users: cloudUsers });
                     }
+                    if (parsedData.friends && typeof parsedData.friends === 'object') {
+                      friendsData = Object.assign({}, friendsData, parsedData.friends);
+                      saveJSON(FRIENDS_FILE, friendsData);
+                    }
+                    return resolve({ success: true, count: Object.keys(cloudUsers || {}).length });
                   }
                   resolve({ success: false, message: 'ไม่มีข้อมูลในคลาวด์ หรือรูปแบบไม่ถูกต้อง' });
                 } catch (e) {
@@ -882,12 +888,28 @@ function getFriendRecord(userId) {
   return friendsData[userId];
 }
 
+// Normalize Thai characters by stripping tone marks and diacritics (e.g. ไม้เอก ไม้โท ไม้ตรี ไม้จัตวา การันต์)
+function normalizeThai(str) {
+  return (str || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\u0E48-\u0E4E]/g, '');
+}
+
 // Attach friends methods to Database class (after class definition)
 Database.searchUsers = function(query, selfId) {
-  const q = (query || '').trim().toLowerCase();
-  if (!q || q.length < 2) return [];
+  const rawQ = (query || '').trim().toLowerCase();
+  const normQ = normalizeThai(query);
+  if (!rawQ || normQ.length < 1) return [];
+
   return Object.values(users)
-    .filter(u => u.id !== selfId && u.username.toLowerCase().includes(q))
+    .filter(u => {
+      if (u.id === selfId) return false;
+      const uname = (u.username || '').toLowerCase();
+      const normUname = normalizeThai(uname);
+      // Match exact substring OR normalized substring (ignoring tone marks)
+      return uname.includes(rawQ) || normUname.includes(normQ);
+    })
     .slice(0, 10)
     .map(u => ({ id: u.id, username: u.username }));
 };
@@ -956,6 +978,46 @@ Database.getFriends = function(userId) {
   };
 };
 
+
+// Sync friends to Google Apps Script cloud property
+function doFriendsCloudSync() {
+  try {
+    const webhookUrl = process.env.GMAIL_WEBHOOK_URL || process.env.DATABASE_WEBHOOK_URL || DEFAULT_CLOUD_WEBHOOK;
+    if (!webhookUrl) return;
+
+    const payload = JSON.stringify({
+      action: 'save_friends',
+      friends: friendsData,
+      timestamp: Date.now()
+    });
+
+    const parsed = new URL(webhookUrl);
+    const req = https.request({
+      hostname: parsed.hostname,
+      path: parsed.pathname + (parsed.search || ''),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+        'User-Agent': 'OnlineGo-Server/2.0'
+      },
+      timeout: 8000
+    }, (res) => {
+      res.resume();
+    });
+
+    req.on('error', () => {});
+    req.on('timeout', () => req.destroy());
+    req.write(payload);
+    req.end();
+  } catch (err) {}
+}
+
+let friendsSyncTimeout = null;
+function syncFriendsToCloud() {
+  if (friendsSyncTimeout) clearTimeout(friendsSyncTimeout);
+  friendsSyncTimeout = setTimeout(doFriendsCloudSync, 1500);
+}
 
 // Auto-sync from cloud on startup
 setTimeout(() => {
