@@ -1,9 +1,24 @@
 /**
  * Go Game Client - Frontend Controller & Canvas Renderer
  */
+const socket = io({
+  auth: {
+    token: localStorage.getItem('online_go_token') || ''
+  }
+});
 
-const socket = io();
-
+// Auto authenticate and refresh friends presence on connect / reconnect
+socket.on('connect', () => {
+  const token = localStorage.getItem('online_go_token');
+  if (token) {
+    if (socket.auth) socket.auth.token = token;
+    socket.emit('auth_session', { token }, (res) => {
+      if (res && res.success && typeof loadFriendsData === 'function') {
+        loadFriendsData();
+      }
+    });
+  }
+});
 // State
 let myRole = null; // 1 = Black, 2 = White, 'spectator'
 let currentRoomId = null;
