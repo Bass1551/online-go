@@ -30,7 +30,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_001_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_001_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_001_quote.mp3"
   },
   {
     "id": "q_002",
@@ -61,9 +64,12 @@
     ],
     "explanation": "คำถามเด็ดจากปากคุณพี่เดช (โป๊ป ธนวรรธน์) ที่สงสัยในพฤติกรรมสุดแปลกของเกศสุรางค์ในร่างการะเกด",
     "stats": {
-      "playedCount": 1,
-      "correctCount": 0
-    }
+      "playedCount": 2,
+      "correctCount": 1
+    },
+    "audioUrl": "/audio/quotes/q_002_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_002_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_002_quote.mp3"
   },
   {
     "id": "q_003",
@@ -96,7 +102,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_003_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_003_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_003_quote.mp3"
   },
   {
     "id": "q_004",
@@ -129,7 +138,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_004_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_004_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_004_quote.mp3"
   },
   {
     "id": "q_005",
@@ -162,7 +174,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_005_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_005_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_005_quote.mp3"
   },
   {
     "id": "q_006",
@@ -195,7 +210,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_006_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_006_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_006_quote.mp3"
   },
   {
     "id": "q_007",
@@ -228,7 +246,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_007_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_007_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_007_quote.mp3"
   },
   {
     "id": "q_008",
@@ -261,7 +282,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_008_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_008_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_008_quote.mp3"
   },
   {
     "id": "q_009",
@@ -294,7 +318,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_009_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_009_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_009_quote.mp3"
   },
   {
     "id": "q_010",
@@ -326,7 +353,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_010_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_010_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_010_quote.mp3"
   },
   {
     "id": "q_011",
@@ -357,7 +387,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_011_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_011_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_011_quote.mp3"
   },
   {
     "id": "q_012",
@@ -389,7 +422,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_012_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_012_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_012_quote.mp3"
   },
   {
     "id": "q_013",
@@ -421,7 +457,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_013_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_013_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_013_quote.mp3"
   },
   {
     "id": "q_014",
@@ -454,7 +493,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_014_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_014_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_014_quote.mp3"
   },
   {
     "id": "q_015",
@@ -487,7 +529,10 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_015_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_015_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_015_quote.mp3"
   },
   {
     "id": "q_016",
@@ -520,6 +565,9 @@
     "stats": {
       "playedCount": 0,
       "correctCount": 0
-    }
+    },
+    "audioUrl": "/audio/quotes/q_016_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_016_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_016_quote.mp3"
   }
 ]

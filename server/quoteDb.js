@@ -123,7 +123,9 @@ class QuoteDatabase {
       quoteStart: q.quoteStart || q.muteStart,
       quoteEnd: q.quoteEnd || q.muteEnd,
       contextDialogue: q.contextDialogue,
-      audioUrl: q.audioUrl || '',
+      audioUrl: q.audioUrl || (q.introAudioUrl || ''),
+      introAudioUrl: q.introAudioUrl || q.audioUrl || '',
+      quoteAudioUrl: q.quoteAudioUrl || '',
       videoUrl: q.videoUrl || '',
       options: opts
     };
@@ -150,7 +152,9 @@ class QuoteDatabase {
       explanation: q.explanation,
       quoteStart: q.quoteStart || q.muteStart,
       quoteEnd: q.quoteEnd || q.muteEnd,
-      audioUrl: q.audioUrl || '',
+      audioUrl: q.audioUrl || (q.quoteAudioUrl || ''),
+      introAudioUrl: q.introAudioUrl || '',
+      quoteAudioUrl: q.quoteAudioUrl || q.audioUrl || '',
       videoUrl: q.videoUrl || ''
     };
   }

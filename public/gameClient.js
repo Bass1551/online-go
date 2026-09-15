@@ -2926,6 +2926,9 @@ function switchGameHub(gameId) {
     btnHubGo?.classList.add('active');
     if (quoteGameContainer) quoteGameContainer.style.display = 'none';
     if (goLobbyContent) goLobbyContent.style.display = 'block';
+    if (typeof window.stopQuoteGameSession === 'function') {
+      window.stopQuoteGameSession();
+    }
   }
 }
 

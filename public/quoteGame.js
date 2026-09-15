@@ -179,6 +179,18 @@
     document.getElementById('btnQReport')?.addEventListener('click', () => openQuoteModal('modalQReport'));
     document.getElementById('formQReport')?.addEventListener('submit', handleQReportSubmit);
 
+    // Quit / Exit Game button from active game stage
+    document.getElementById('btnQQuitGame')?.addEventListener('click', () => {
+      if (confirm('คุณต้องการออกจากเกมและกลับสู่หน้าหลักใช่หรือไม่?')) {
+        videoStage?.stop?.();
+        stopQTimer();
+        if (quoteMode === 'multi' && quoteRoom) {
+          socket.emit('quote_leave_room', { roomCode: quoteRoom.code });
+          quoteRoom = null;
+        }
+        switchQScreen('home');
+      }
+    });
 
     // Results buttons
     document.getElementById('btnQPlayAgain')?.addEventListener('click', () => {
@@ -363,6 +375,8 @@
         ...q,
         correctAnswer: result.correctAnswer,
         audioUrl: result.audioUrl || q.audioUrl || '',
+        introAudioUrl: result.introAudioUrl || q.introAudioUrl || '',
+        quoteAudioUrl: result.quoteAudioUrl || q.quoteAudioUrl || '',
         videoUrl: result.videoUrl || q.videoUrl || ''
       }, 'reveal', () => {
         setTimeout(() => runSingleQ(quoteSingleIndex + 1), 2000);
@@ -751,4 +765,8 @@
   // Export
   window.initQuoteGame = initQuoteGame;
   window.switchQScreen = switchQScreen;
+  window.stopQuoteGameSession = function() {
+    videoStage?.stop?.();
+    stopQTimer();
+  };
 })();

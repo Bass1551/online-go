@@ -28,8 +28,6 @@ class VideoStageController {
     this.currentQuestion = question;
     this.mode = mode;
     this.onEndedCallback = onEnded;
-    this.currentTime = mode === 'reveal' ? (question.quoteStart || question.muteStart || 4.5) : 0;
-    this.duration = mode === 'reveal' ? (question.quoteEnd || 8.0) : (question.muteEnd || 8.0);
     this.isMutedInterval = false;
 
     // 1. If custom MP4 video URL provided
@@ -44,19 +42,47 @@ class VideoStageController {
     if (this.videoEl) this.videoEl.style.display = 'none';
     if (this.canvas) this.canvas.style.display = 'block';
 
+    const audioSrc = mode === 'reveal'
+      ? (question.quoteAudioUrl || question.audioUrl)
+      : (question.introAudioUrl || question.audioUrl);
+
+    // Default stage timings
+    this.currentTime = 0;
+    if (mode === 'reveal') {
+      this.duration = 2.8;
+    } else {
+      this.duration = 4.2;
+      this.currentQuestion.muteStart = 2.7;
+      this.currentQuestion.muteEnd = 4.2;
+    }
+
     // 2. If real movie audio clip provided
-    if (question.audioUrl && this.audioEl) {
+    if (audioSrc && this.audioEl) {
       try {
-        this.audioEl.src = question.audioUrl;
-        if (mode === 'reveal') {
-          this.audioEl.currentTime = question.quoteStart || question.muteStart || 0;
-          this.audioEl.muted = false;
-          this.audioEl.volume = 1.0;
+        this.audioEl.src = audioSrc;
+        this.audioEl.currentTime = 0;
+        this.audioEl.muted = false;
+        this.audioEl.volume = 1.0;
+
+        const onMeta = () => {
+          const d = this.audioEl.duration;
+          if (d && !isNaN(d) && isFinite(d) && d > 0.5) {
+            if (this.mode === 'question') {
+              this.currentQuestion.muteStart = Math.max(1.5, d - 0.2);
+              this.currentQuestion.muteEnd = this.currentQuestion.muteStart + 1.5;
+              this.duration = this.currentQuestion.muteEnd;
+            } else if (this.mode === 'reveal') {
+              this.duration = d + 0.4;
+            }
+          }
+        };
+
+        if (this.audioEl.readyState >= 1) {
+          onMeta();
         } else {
-          this.audioEl.currentTime = 0;
-          this.audioEl.muted = false;
-          this.audioEl.volume = 1.0;
+          this.audioEl.addEventListener('loadedmetadata', onMeta, { once: true });
         }
+
         const playPromise = this.audioEl.play();
         if (playPromise) {
           playPromise.catch(() => {
@@ -141,7 +167,7 @@ class VideoStageController {
         const inMute = this.currentTime >= muteStart && this.currentTime <= muteEnd;
         if (inMute !== this.isMutedInterval) {
           this.isMutedInterval = inMute;
-          if (this.audioEl && this.currentQuestion?.audioUrl) {
+          if (this.audioEl) {
             this.audioEl.muted = inMute;
             this.audioEl.volume = inMute ? 0 : 1.0;
           }
@@ -166,8 +192,8 @@ class VideoStageController {
           return;
         }
       } else if (this.mode === 'reveal') {
-        // Reveal mode: plays until quoteEnd
-        if (this.currentTime >= (this.currentQuestion?.quoteEnd || 8.0)) {
+        // Reveal mode: plays until duration ends
+        if (this.currentTime >= this.duration) {
           this.isPlaying = false;
           if (this.audioEl) {
             this.audioEl.pause();
@@ -246,7 +272,7 @@ class VideoStageController {
     this.ctx.fillText(mediaBadgeText, 32, 43);
 
     // Audio source badge (top right)
-    if (q.audioUrl) {
+    if (q.audioUrl || q.introAudioUrl || q.quoteAudioUrl) {
       this.ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
       this.ctx.beginPath();
       this.ctx.roundRect(w - 180, 20, 160, 36, 18);

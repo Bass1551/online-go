@@ -371,7 +371,6 @@
         <p class="brand-sub">เกมโชว์ทายประโยคเด็ด หนัง ละคร ซีรีส์ ซิตคอมไทยในตำนาน</p>
         <div style="display: flex; justify-content: center; gap: 0.6rem; margin-top: 0.8rem;">
           <button type="button" class="btn btn-history-sm" id="btnQOpenRules">❓ กติกาการเล่น</button>
-          <button type="button" class="btn btn-history-sm" id="btnOpenQAdmin">⚙️ ระบบคำถาม (Admin)</button>
         </div>
       </div>
 
@@ -475,9 +474,12 @@
       <!-- 4. IN-GAME STAGE & QUESTION SCREEN -->
       <div id="qScreenGame" class="game-screen" style="display:none;">
         <!-- Round Info Bar -->
-        <div class="game-header-bar">
-          <span class="q-counter-badge" id="qCounterText">ข้อที่ 1/10</span>
-          <span class="round-score-badge" id="qScoreText">คะแนน: 0</span>
+        <div class="game-header-bar" style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:720px; margin-bottom:0.75rem;">
+          <div style="display:flex; gap:0.6rem; align-items:center;">
+            <span class="q-counter-badge" id="qCounterText">ข้อที่ 1/10</span>
+            <span class="round-score-badge" id="qScoreText">คะแนน: 0</span>
+          </div>
+          <button type="button" id="btnQQuitGame" class="btn btn-secondary" style="padding:0.35rem 0.85rem; font-size:0.85rem; color:#fca5a5; border-color:rgba(239,68,68,0.4); cursor:pointer;">🚪 ออกจากเกม</button>
         </div>
 
         <!-- Timer Bar -->
@@ -598,8 +600,9 @@
       </div>
 
       <!-- Quote Game Footer -->
-      <footer style="margin-top: 3rem; padding: 1.5rem 0; text-align: center; border-top: 1px solid var(--panel-border); font-size: 0.85rem; color: var(--text-secondary);">
+      <footer style="margin-top: 3rem; padding: 1.5rem 0; text-align: center; border-top: 1px solid var(--panel-border); font-size: 0.85rem; color: var(--text-secondary); display:flex; justify-content:center; align-items:center; gap:1rem;">
         <span>🎬 ประโยคนี้...พูดว่าอะไร? &copy; 2026</span>
+        <button id="btnOpenQAdmin" style="background:none; border:none; color:var(--text-secondary); opacity:0.35; font-size:0.75rem; cursor:pointer;" title="ระบบหลังบ้านสำหรับจัดการคำถาม">⚙️ จัดการคำถาม</button>
       </footer>
     </div>
   </div>
