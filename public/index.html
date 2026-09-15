@@ -512,6 +512,17 @@
 
           <canvas id="stageCanvas" width="720" height="405"></canvas>
           <video id="stageVideo" playsinline></video>
+
+          <!-- Video Suspense / Freeze Overlay Badge -->
+          <div id="qVideoSuspenseBadge" class="video-suspense-badge" style="display:none;">
+            <span class="pulse-icon" id="qVideoSuspenseIcon">⏸️</span>
+            <span id="qVideoSuspenseText">หยุดคลิป... ประโยคนี้พูดว่าอะไร?</span>
+          </div>
+
+          <!-- Video Tap-to-Unmute Prompt -->
+          <button id="qVideoUnmutePrompt" class="video-unmute-prompt" style="display:none;" type="button">
+            🔊 แตะเพื่อเปิดเสียง
+          </button>
         </div>
 
         <!-- Question & 4 Options -->

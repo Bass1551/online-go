@@ -111,6 +111,10 @@
     setupQuoteEvents();
     setupQuoteSocketListeners();
     loadQuoteCategories();
+
+    document.addEventListener('pointerdown', () => {
+      videoStage?.unlockAudio?.();
+    }, { passive: true });
   }
 
   function switchQScreen(screenKey) {
@@ -607,6 +611,13 @@
     document.getElementById('qInterstitialTitle').innerText = `เรื่อง: ${q.title}`;
     overlay.style.display = 'flex';
     window.gameAudio?.playWhoosh?.();
+
+    // Pre-warm video buffer so playback starts immediately when interstitial disappears
+    if (q.introVideoUrl && videoStage?.videoEl) {
+      videoStage.videoEl.src = q.introVideoUrl;
+      videoStage.videoEl.preload = 'auto';
+      try { videoStage.videoEl.load(); } catch (e) {}
+    }
 
     singleInterstitialTimer = setTimeout(() => {
       singleInterstitialTimer = null;

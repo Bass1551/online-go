@@ -69,6 +69,65 @@ class VideoStageController {
         }
       } catch (e) {}
     }
+    if (this.videoEl) {
+      try {
+        this.videoEl.muted = false;
+        const p = this.videoEl.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            this.videoEl.pause();
+          }).catch(() => {});
+        }
+      } catch (e) {}
+    }
+  }
+
+  unmuteVideo() {
+    if (this.videoEl) {
+      this.videoEl.muted = false;
+      this.videoEl.volume = this.volume;
+    }
+    this.hideUnmuteBadge();
+  }
+
+  showSuspenseBadge(text, isReveal = false) {
+    if (!this.suspenseBadge) this.suspenseBadge = document.getElementById('qVideoSuspenseBadge');
+    if (!this.suspenseText) this.suspenseText = document.getElementById('qVideoSuspenseText');
+    if (!this.suspenseIcon) this.suspenseIcon = document.getElementById('qVideoSuspenseIcon');
+    if (this.suspenseText && text) this.suspenseText.innerText = text;
+    if (this.suspenseIcon) this.suspenseIcon.innerText = isReveal ? '🗣️' : '⏸️';
+    if (this.suspenseBadge) {
+      if (isReveal) this.suspenseBadge.classList.add('reveal');
+      else this.suspenseBadge.classList.remove('reveal');
+      this.suspenseBadge.style.display = 'flex';
+    }
+  }
+
+  hideSuspenseBadge() {
+    if (!this.suspenseBadge) this.suspenseBadge = document.getElementById('qVideoSuspenseBadge');
+    if (this.suspenseBadge) this.suspenseBadge.style.display = 'none';
+  }
+
+  showUnmuteBadge() {
+    if (!this.unmutePrompt) this.unmutePrompt = document.getElementById('qVideoUnmutePrompt');
+    if (this.unmutePrompt) {
+      this.unmutePrompt.style.display = 'block';
+      this.unmutePrompt.onclick = (e) => {
+        e.stopPropagation();
+        this.unmuteVideo();
+      };
+    }
+
+    const onPointer = () => {
+      this.unmuteVideo();
+      document.removeEventListener('pointerdown', onPointer);
+    };
+    document.addEventListener('pointerdown', onPointer, { once: true });
+  }
+
+  hideUnmuteBadge() {
+    if (!this.unmutePrompt) this.unmutePrompt = document.getElementById('qVideoUnmutePrompt');
+    if (this.unmutePrompt) this.unmutePrompt.style.display = 'none';
   }
 
   loadQuestion(question, mode = 'question', onEnded) {
@@ -80,6 +139,7 @@ class VideoStageController {
     this.onEndedCallback = onEnded;
     this.isMutedInterval = false;
     this.suspenseStartTime = 0;
+    this.hideSuspenseBadge();
 
     // Check if video clip URL is provided for current mode
     const videoSrc = this.mode === 'reveal'
@@ -101,6 +161,7 @@ class VideoStageController {
   playRealVideo(videoSrc, fallbackAudioSrc, session) {
     if (session !== this.sessionId || !this.videoEl) return;
     this.isPlaying = true;
+    this.hideSuspenseBadge();
 
     // Strict Mutual Exclusivity: completely silence and clear audioEl
     if (this.audioEl) {
@@ -121,14 +182,15 @@ class VideoStageController {
     this.videoEl.pause();
     if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
 
+    // Make sure video is visible and canvas is hidden!
+    this.videoEl.style.display = 'block';
+    if (this.canvas) this.canvas.style.display = 'none';
+
     // Set src & preload
     this.videoEl.src = videoSrc;
     this.videoEl.preload = 'auto';
-    this.videoEl.style.display = 'block';
-    if (this.canvas) this.canvas.style.display = 'none';
     this.videoEl.volume = this.volume;
     this.videoEl.currentTime = 0;
-    this.videoEl.muted = false;
 
     let hasHandledEnded = false;
     const triggerEnded = () => {
@@ -151,6 +213,7 @@ class VideoStageController {
         this.isMutedInterval = true;
         this.suspenseStartTime = performance.now();
         window.gameAudio?.playMuteIndicator?.();
+        this.showSuspenseBadge('หยุดคลิป... ประโยคนี้พูดว่าอะไร?');
         if (typeof this.onMuteStateChangeCallback === 'function') {
           this.onMuteStateChangeCallback(true);
         }
@@ -159,10 +222,11 @@ class VideoStageController {
           triggerEnded();
         }, 1200);
       } else {
+        this.showSuspenseBadge(`เฉลย: "${this.currentQuestion?.correctAnswer || ''}"`, true);
         this.muteTimeout = setTimeout(() => {
           if (session !== this.sessionId) return;
           triggerEnded();
-        }, 800);
+        }, 1200);
       }
     };
 
@@ -175,6 +239,8 @@ class VideoStageController {
       if (session !== this.sessionId) return;
       console.warn(`Video ${reason}, falling back to audio/canvas:`, videoSrc);
       if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
+      this.hideSuspenseBadge();
+      this.hideUnmuteBadge();
       // Mutual Exclusivity: pause, mute, remove src, load videoEl before starting audio
       if (this.videoEl) {
         this.videoEl.pause();
@@ -192,15 +258,15 @@ class VideoStageController {
     };
 
     this.videoEl.onerror = () => {
-      triggerAudioFallback('error');
+      triggerAudioFallback('network/decode error');
     };
 
-    // Stall detection: if video doesn't make progress within 8 seconds, fall back to audio
+    // Stall detection: if video doesn't make progress within 12 seconds, fall back to audio
     const resetStallTimer = () => {
       if (this.stallFallbackTimer) clearTimeout(this.stallFallbackTimer);
       this.stallFallbackTimer = setTimeout(() => {
         triggerAudioFallback('stall timeout');
-      }, 8000);
+      }, 12000);
     };
 
     this.videoEl.onstalled = () => {
@@ -212,22 +278,32 @@ class VideoStageController {
       resetStallTimer();
     };
 
-    // Load & play; start stall timer from load attempt
+    // Load & play
     resetStallTimer();
     this.videoEl.load();
 
-    const p = this.videoEl.play();
-    if (p && typeof p.catch === 'function') {
-      p.then(() => {
-        // Playing OK — stall timer monitors ongoing
+    this.videoEl.muted = false;
+    const playPromise = this.videoEl.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.then(() => {
+        // Playing OK with audio
+        this.hideUnmuteBadge();
       }).catch(err => {
         if (session !== this.sessionId) return;
-        // CRITICAL FIX: If play was aborted due to pause() or changing question/mode, DO NOT fall back to audio!
-        if (err.name === 'AbortError') {
-          return;
+        if (err.name === 'AbortError') return;
+
+        console.warn('Unmuted video play prevented by browser policy, playing muted video:', err);
+        // CRITICAL: NEVER hide the video! Play video muted so user sees the clip on screen!
+        this.videoEl.muted = true;
+        this.showUnmuteBadge();
+        const retryMuted = this.videoEl.play();
+        if (retryMuted && typeof retryMuted.catch === 'function') {
+          retryMuted.catch(err2 => {
+            if (session !== this.sessionId || err2.name === 'AbortError') return;
+            console.error('Muted video playback also failed:', err2);
+            triggerAudioFallback('autoplay prevented completely');
+          });
         }
-        console.warn('Video autoplay prevented:', err);
-        triggerAudioFallback('autoplay prevented');
       });
     }
   }
@@ -597,6 +673,8 @@ class VideoStageController {
     this.isMutedInterval = false;
     this.onEndedCallback = null;
     this.onMuteStateChangeCallback = null;
+    this.hideSuspenseBadge();
+    this.hideUnmuteBadge();
     if (this.muteTimeout) {
       clearTimeout(this.muteTimeout);
       this.muteTimeout = null;

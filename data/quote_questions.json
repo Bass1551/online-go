@@ -28,7 +28,7 @@
     ],
     "explanation": "ฉากตัดยางในตำนานของแฟนฉัน เสียงจริงของน้อยหน่า (โฟกัส จีระกุล) ในภาพยนตร์",
     "stats": {
-      "playedCount": 1,
+      "playedCount": 2,
       "correctCount": 0
     },
     "audioUrl": "/audio/quotes/q_001_intro.mp3",
@@ -301,8 +301,8 @@
     ],
     "explanation": "ประโยคเต๊าะสายรุกในตำนานของ สารวัตร (ไบรท์ วชิรวิชญ์) ถึง ไทน์ (วิน เมธวิน)",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 1,
+      "correctCount": 1
     },
     "audioUrl": "/audio/quotes/q_008_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_008_intro.mp3",
@@ -378,8 +378,8 @@
     ],
     "explanation": "ฉายาในตำนานของ ศักรินทร์ ดาวร้าย ตัวตึงแห่งซิทคอมเป็นต่อ",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 2,
+      "correctCount": 2
     },
     "audioUrl": "/audio/quotes/q_010_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_010_intro.mp3",
