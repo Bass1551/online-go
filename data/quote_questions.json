@@ -28,7 +28,7 @@
     ],
     "explanation": "ฉากตัดยางในตำนานของแฟนฉัน เสียงจริงของน้อยหน่า (โฟกัส จีระกุล) ในภาพยนตร์",
     "stats": {
-      "playedCount": 0,
+      "playedCount": 1,
       "correctCount": 0
     },
     "audioUrl": "/audio/quotes/q_001_intro.mp3",
@@ -67,8 +67,8 @@
     ],
     "explanation": "ฉากคาดคั้นความจริงของคุณพี่เดช (โป๊ป ธนวรรธน์) ในละครบุพเพสันนิวาส",
     "stats": {
-      "playedCount": 3,
-      "correctCount": 2
+      "playedCount": 5,
+      "correctCount": 4
     },
     "audioUrl": "/audio/quotes/q_002_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_002_intro.mp3",
@@ -145,8 +145,8 @@
     ],
     "explanation": "ฉากสารภาพรักริมสระน้ำสุดซึ้งของน้องน้ำ (ใบเฟิร์น พิมพ์ชนก) ต่อพี่โชน (มาริโอ้ เมาเร่อ)",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 1,
+      "correctCount": 1
     },
     "audioUrl": "/audio/quotes/q_004_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_004_intro.mp3",

@@ -32,6 +32,8 @@
 
   let quoteTimer = null;
   let quoteTimerSec = 15;
+  let singleInterstitialTimer = null;
+  let singleRevealTimer = null;
 
   const qScreens = {};
 
@@ -473,6 +475,19 @@
   }
 
   function abandonSingleGame() {
+    if (singleInterstitialTimer) {
+      clearTimeout(singleInterstitialTimer);
+      singleInterstitialTimer = null;
+    }
+    if (singleRevealTimer) {
+      clearInterval(singleRevealTimer);
+      singleRevealTimer = null;
+    }
+    const overlay = document.getElementById('qInterstitialOverlay');
+    if (overlay) overlay.style.display = 'none';
+    videoStage?.stop?.();
+    stopQTimer();
+
     if (currentRoundId && currentUserId) {
       fetch('/api/quote/single/abandon', {
         method: 'POST',
@@ -578,13 +593,23 @@
       }
     });
 
+    if (singleInterstitialTimer) {
+      clearTimeout(singleInterstitialTimer);
+      singleInterstitialTimer = null;
+    }
+    if (singleRevealTimer) {
+      clearInterval(singleRevealTimer);
+      singleRevealTimer = null;
+    }
+
     const overlay = document.getElementById('qInterstitialOverlay');
     document.getElementById('qInterstitialNum').innerText = `ข้อที่ ${index + 1}/10`;
     document.getElementById('qInterstitialTitle').innerText = `เรื่อง: ${q.title}`;
     overlay.style.display = 'flex';
     window.gameAudio?.playWhoosh?.();
 
-    setTimeout(() => {
+    singleInterstitialTimer = setTimeout(() => {
+      singleInterstitialTimer = null;
       overlay.style.display = 'none';
       videoStage.loadQuestion(q, 'question', () => {
         btns.forEach(b => b.disabled = false);
@@ -705,6 +730,10 @@
         if (nextRoundTriggered) return;
         nextRoundTriggered = true;
         if (revealTimer) clearInterval(revealTimer);
+        if (singleRevealTimer) {
+          clearInterval(singleRevealTimer);
+          singleRevealTimer = null;
+        }
         videoStage.stop();
         runSingleQ(quoteSingleIndex + 1);
       };
@@ -727,6 +756,7 @@
           goToNext();
         }
       }, 1000);
+      singleRevealTimer = revealTimer;
 
       videoStage.loadQuestion({
         ...q,
@@ -1040,6 +1070,7 @@
     });
 
     socket.on('game_scoreboard', (data) => {
+      videoStage?.stop?.();
       renderQRoundLeaderboard(data.rankings, data.commentary);
       switchQScreen('leaderboard');
     });
