@@ -216,6 +216,65 @@
     document.getElementById('btnQBackHome')?.addEventListener('click', () => switchQScreen('home'));
     document.getElementById('btnQShare')?.addEventListener('click', shareQuoteResult);
 
+    // Volume Controls
+    const qVolSlider = document.getElementById('qVolSlider');
+    const qVolLabel = document.getElementById('qVolLabel');
+    const btnQMute = document.getElementById('btnQMute');
+    const btnQVolDown = document.getElementById('btnQVolDown');
+    const btnQVolUp = document.getElementById('btnQVolUp');
+
+    const updateVolUI = (vol) => {
+      const pct = Math.round(vol * 100);
+      if (qVolSlider) qVolSlider.value = vol;
+      if (qVolLabel) qVolLabel.innerText = `${pct}%`;
+      if (btnQMute) {
+        if (vol === 0) btnQMute.innerText = '🔇';
+        else if (vol < 0.5) btnQMute.innerText = '🔉';
+        else btnQMute.innerText = '🔊';
+      }
+    };
+
+    let prevVol = 1.0;
+    if (videoStage) {
+      updateVolUI(videoStage.getVolume());
+    }
+
+    qVolSlider?.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      if (videoStage) videoStage.setVolume(v);
+      updateVolUI(v);
+    });
+
+    btnQMute?.addEventListener('click', () => {
+      if (!videoStage) return;
+      const cur = videoStage.getVolume();
+      if (cur > 0) {
+        prevVol = cur;
+        videoStage.setVolume(0);
+        updateVolUI(0);
+      } else {
+        const restore = prevVol > 0 ? prevVol : 1.0;
+        videoStage.setVolume(restore);
+        updateVolUI(restore);
+      }
+    });
+
+    btnQVolDown?.addEventListener('click', () => {
+      if (!videoStage) return;
+      const cur = videoStage.getVolume();
+      const next = Math.max(0, Math.round((cur - 0.1) * 100) / 100);
+      videoStage.setVolume(next);
+      updateVolUI(next);
+    });
+
+    btnQVolUp?.addEventListener('click', () => {
+      if (!videoStage) return;
+      const cur = videoStage.getVolume();
+      const next = Math.min(1, Math.round((cur + 0.1) * 100) / 100);
+      videoStage.setVolume(next);
+      updateVolUI(next);
+    });
+
     // Admin
     document.getElementById('btnOpenQAdmin')?.addEventListener('click', () => {
       loadQAdminQuestions();
@@ -386,6 +445,39 @@
       document.getElementById('qRevealExp').innerText = `${result.character} (${q.title}) - ${result.explanation || ''}`;
       banner.style.display = 'block';
 
+      let nextRoundTriggered = false;
+      let countdownSec = 9;
+      let revealTimer = null;
+      const countdownEl = document.getElementById('qRevealCountdown');
+      const btnNext = document.getElementById('btnQNextQuestion');
+
+      const goToNext = () => {
+        if (nextRoundTriggered) return;
+        nextRoundTriggered = true;
+        if (revealTimer) clearInterval(revealTimer);
+        videoStage.stop();
+        runSingleQ(quoteSingleIndex + 1);
+      };
+
+      if (btnNext) {
+        btnNext.onclick = () => goToNext();
+      }
+
+      const updateCountdown = () => {
+        if (countdownEl) {
+          countdownEl.innerText = `เปลี่ยนข้ออัตโนมัติใน ${countdownSec} วิ`;
+        }
+      };
+      updateCountdown();
+
+      revealTimer = setInterval(() => {
+        countdownSec--;
+        updateCountdown();
+        if (countdownSec <= 0) {
+          goToNext();
+        }
+      }, 1000);
+
       videoStage.loadQuestion({
         ...q,
         correctAnswer: result.correctAnswer,
@@ -394,13 +486,18 @@
         quoteAudioUrl: result.quoteAudioUrl || q.quoteAudioUrl || '',
         videoUrl: result.videoUrl || q.videoUrl || ''
       }, 'reveal', () => {
-        setTimeout(() => runSingleQ(quoteSingleIndex + 1), 2000);
+        // Audio finished playing to the end! Give at least 4 more seconds to read
+        if (countdownSec > 4) {
+          countdownSec = 4;
+          updateCountdown();
+        }
       });
 
     } catch (err) {
       runSingleQ(quoteSingleIndex + 1);
     }
   }
+
 
   function finishSingleQuoteGame() {
     videoStage.stop();

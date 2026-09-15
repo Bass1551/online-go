@@ -474,11 +474,21 @@
       <!-- 4. IN-GAME STAGE & QUESTION SCREEN -->
       <div id="qScreenGame" class="game-screen" style="display:none;">
         <!-- Round Info Bar -->
-        <div class="game-header-bar" style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:720px; margin-bottom:0.75rem;">
+        <div class="game-header-bar" style="display:flex; justify-content:space-between; align-items:center; width:100%; max-width:720px; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
           <div style="display:flex; gap:0.6rem; align-items:center;">
             <span class="q-counter-badge" id="qCounterText">ข้อที่ 1/10</span>
             <span class="round-score-badge" id="qScoreText">คะแนน: 0</span>
           </div>
+
+          <!-- Volume Controls -->
+          <div class="q-volume-control" style="display:flex; align-items:center; gap:0.35rem; background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.15); border-radius:20px; padding:0.25rem 0.65rem;">
+            <button type="button" id="btnQMute" class="btn-icon-subtle" title="เปิด/ปิดเสียง (Mute)" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:1rem; padding:0 0.15rem;">🔊</button>
+            <button type="button" id="btnQVolDown" class="btn-icon-subtle" title="ลดเสียง (-)" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.8rem; font-weight:700; padding:0 0.15rem;">🔉-</button>
+            <input type="range" id="qVolSlider" min="0" max="1" step="0.05" value="1" style="width:70px; height:5px; accent-color:#38bdf8; cursor:pointer;" title="ปรับระดับเสียง">
+            <button type="button" id="btnQVolUp" class="btn-icon-subtle" title="เพิ่มเสียง (+)" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.8rem; font-weight:700; padding:0 0.15rem;">+🔊</button>
+            <span id="qVolLabel" style="font-size:0.75rem; font-weight:700; color:#38bdf8; min-width:32px; text-align:right;">100%</span>
+          </div>
+
           <button type="button" id="btnQQuitGame" class="btn btn-secondary" style="padding:0.35rem 0.85rem; font-size:0.85rem; color:#fca5a5; border-color:rgba(239,68,68,0.4); cursor:pointer;">🚪 ออกจากเกม</button>
         </div>
 
@@ -535,11 +545,21 @@
             <div class="reveal-heading" id="qRevealHeading">ถูกต้อง! 🎉</div>
             <div class="reveal-quote" id="qRevealQuote">"..."</div>
             <div class="reveal-exp" id="qRevealExp">คำอธิบายที่มาของประโยคนี้</div>
-            <div style="margin-top:0.75rem; display:flex; justify-content:center; gap:0.6rem;">
-              <button class="btn btn-secondary" id="btnQReport" style="padding:0.35rem 0.8rem; font-size:0.75rem;">⚠️ รายงานปัญหานี้</button>
+            
+            <!-- Controls during reveal: Next Question button & auto countdown -->
+            <div style="margin-top:0.85rem; display:flex; justify-content:center; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary" id="btnQNextQuestion" style="padding:0.55rem 1.8rem; font-size:1rem; font-weight:700; box-shadow:0 0 14px rgba(56,189,248,0.5); cursor:pointer;">
+                ข้อถัดไป ⏭️
+              </button>
+              <span id="qRevealCountdown" style="font-size:0.85rem; color:var(--text-secondary); font-weight:600;">เปลี่ยนข้ออัตโนมัติใน 8 วิ</span>
+            </div>
+
+            <div style="margin-top:0.6rem; display:flex; justify-content:center; gap:0.6rem;">
+              <button class="btn btn-secondary" id="btnQReport" style="padding:0.3rem 0.75rem; font-size:0.75rem; opacity:0.8;">⚠️ รายงานปัญหานี้</button>
             </div>
           </div>
         </div>
+
       </div>
 
       <!-- 5. MULTIPLAYER INTER-ROUND LEADERBOARD -->

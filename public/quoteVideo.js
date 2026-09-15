@@ -25,6 +25,35 @@ class VideoStageController {
     this.muteTimeout = null;
     this.fallbackTimeout = null;
     this.suspenseStartTime = 0;
+    this.volume = 1.0;
+    try {
+      const savedVol = localStorage.getItem('quote_game_volume');
+      if (savedVol !== null) {
+        const v = parseFloat(savedVol);
+        if (!isNaN(v) && v >= 0 && v <= 1) this.volume = v;
+      }
+    } catch (e) {}
+  }
+
+  setVolume(vol) {
+    this.volume = Math.max(0, Math.min(1, parseFloat(vol)));
+    if (this.audioEl) {
+      this.audioEl.volume = this.volume;
+    }
+    if (this.videoEl) {
+      this.videoEl.volume = this.volume;
+    }
+    try {
+      localStorage.setItem('quote_game_volume', String(this.volume));
+    } catch (e) {}
+    if (window.gameAudio && typeof window.gameAudio.setMasterVolume === 'function') {
+      window.gameAudio.setMasterVolume(this.volume);
+    }
+    return this.volume;
+  }
+
+  getVolume() {
+    return this.volume;
   }
 
   unlockAudio() {
@@ -87,7 +116,7 @@ class VideoStageController {
       try {
         this.audioEl.src = audioSrc;
         this.audioEl.muted = false;
-        this.audioEl.volume = 1.0;
+        this.audioEl.volume = this.volume;
 
         const onMeta = () => {
           const d = this.audioEl.duration;
