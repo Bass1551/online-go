@@ -89,11 +89,15 @@
   function setupQuoteEvents() {
     // Mode selection
     document.getElementById('btnQModeSingle')?.addEventListener('click', () => {
+      videoStage?.unlockAudio?.();
+      window.gameAudio?.initAudio?.();
       quoteMode = 'single';
       switchQScreen('category');
     });
 
     document.getElementById('btnQModeMulti')?.addEventListener('click', () => {
+      videoStage?.unlockAudio?.();
+      window.gameAudio?.initAudio?.();
       quoteMode = 'multi';
       const name = window.currentUser?.username || 'ผู้เล่น 1';
       socket.emit('quote_create_room', { hostName: name }, (res) => {
@@ -109,6 +113,8 @@
     });
 
     document.getElementById('btnQQuickJoin')?.addEventListener('click', () => {
+      videoStage?.unlockAudio?.();
+      window.gameAudio?.initAudio?.();
       const code = document.getElementById('inputQQuickCode')?.value.trim().toUpperCase();
       if (!code) return alert('กรุณากรอกรหัสห้อง');
       const name = window.currentUser?.username || 'ผู้เล่น 1';
@@ -134,7 +140,11 @@
     });
 
     document.getElementById('btnQBackFromCategory')?.addEventListener('click', () => switchQScreen('home'));
-    document.getElementById('btnQStartSingle')?.addEventListener('click', startSingleQuoteGame);
+    document.getElementById('btnQStartSingle')?.addEventListener('click', () => {
+      videoStage?.unlockAudio?.();
+      window.gameAudio?.initAudio?.();
+      startSingleQuoteGame();
+    });
 
     // Lobby events
     document.getElementById('btnQCopyInvite')?.addEventListener('click', () => {
@@ -154,11 +164,14 @@
     });
 
     document.getElementById('btnQHostStart')?.addEventListener('click', () => {
+      videoStage?.unlockAudio?.();
+      window.gameAudio?.initAudio?.();
       if (!quoteRoom || !isQuoteHost) return;
       socket.emit('quote_start_game', { roomCode: quoteRoom.code }, (res) => {
         if (res && !res.success) alert(res.message || 'ไม่สามารถเริ่มเกมได้');
       });
     });
+
 
     // Chat
     document.getElementById('btnQSendChat')?.addEventListener('click', sendQChat);
@@ -194,6 +207,8 @@
 
     // Results buttons
     document.getElementById('btnQPlayAgain')?.addEventListener('click', () => {
+      videoStage?.unlockAudio?.();
+      window.gameAudio?.initAudio?.();
       if (quoteMode === 'single') startSingleQuoteGame();
       else switchQScreen('lobby');
     });

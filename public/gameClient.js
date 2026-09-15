@@ -2935,7 +2935,10 @@ function switchGameHub(gameId) {
 window.switchGameHub = switchGameHub;
 
 document.getElementById('btnHubGo')?.addEventListener('click', () => switchGameHub('go'));
-document.getElementById('btnHubQuote')?.addEventListener('click', () => switchGameHub('quote'));
+document.getElementById('btnHubQuote')?.addEventListener('click', () => {
+  window.gameAudio?.initAudio?.();
+  switchGameHub('quote');
+});
 
 // Handle query params on page load (e.g. ?game=quote or ?quote_room=AB12)
 (function checkGameHubUrlParams() {

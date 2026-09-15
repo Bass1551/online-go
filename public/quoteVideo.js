@@ -15,12 +15,29 @@ class VideoStageController {
     this.isPlaying = false;
     this.isMutedInterval = false;
     this.currentTime = 0;
-    this.duration = 12;
+    this.duration = 4.5;
+    this.introDuration = 3.5;
     this.animFrame = null;
     this.onEndedCallback = null;
     this.onMuteStateChangeCallback = null;
     this.mode = 'question'; // 'question' or 'reveal'
     this.waveformOffset = 0;
+    this.muteTimeout = null;
+    this.fallbackTimeout = null;
+    this.suspenseStartTime = 0;
+  }
+
+  unlockAudio() {
+    if (this.audioEl) {
+      try {
+        const p = this.audioEl.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            this.audioEl.pause();
+          }).catch(() => {});
+        }
+      } catch (e) {}
+    }
   }
 
   loadQuestion(question, mode = 'question', onEnded) {
@@ -29,6 +46,7 @@ class VideoStageController {
     this.mode = mode;
     this.onEndedCallback = onEnded;
     this.isMutedInterval = false;
+    this.suspenseStartTime = 0;
 
     // 1. If custom MP4 video URL provided
     if (question.videoUrl && this.videoEl) {
@@ -46,34 +64,36 @@ class VideoStageController {
       ? (question.quoteAudioUrl || question.audioUrl)
       : (question.introAudioUrl || question.audioUrl);
 
-    // Default stage timings
+    // Initial timings
     this.currentTime = 0;
-    if (mode === 'reveal') {
-      this.duration = 2.8;
-    } else {
-      this.duration = 4.2;
-      this.currentQuestion.muteStart = 2.7;
-      this.currentQuestion.muteEnd = 4.2;
-    }
+    this.introDuration = mode === 'reveal' ? 3.0 : 3.5;
+    this.duration = mode === 'reveal' ? 3.0 : (this.introDuration + 1.2);
 
-    // 2. If real movie audio clip provided
+    let hasHandledEnded = false;
+    const triggerEnded = () => {
+      if (hasHandledEnded) return;
+      hasHandledEnded = true;
+      this.isPlaying = false;
+      if (this.animFrame) cancelAnimationFrame(this.animFrame);
+      this.renderStage();
+      if (typeof this.onEndedCallback === 'function') {
+        const cb = this.onEndedCallback;
+        this.onEndedCallback = null;
+        cb();
+      }
+    };
+
     if (audioSrc && this.audioEl) {
       try {
         this.audioEl.src = audioSrc;
-        this.audioEl.currentTime = 0;
         this.audioEl.muted = false;
         this.audioEl.volume = 1.0;
 
         const onMeta = () => {
           const d = this.audioEl.duration;
           if (d && !isNaN(d) && isFinite(d) && d > 0.5) {
-            if (this.mode === 'question') {
-              this.currentQuestion.muteStart = Math.max(1.5, d - 0.2);
-              this.currentQuestion.muteEnd = this.currentQuestion.muteStart + 1.5;
-              this.duration = this.currentQuestion.muteEnd;
-            } else if (this.mode === 'reveal') {
-              this.duration = d + 0.4;
-            }
+            this.introDuration = d;
+            this.duration = this.mode === 'question' ? (d + 1.2) : d;
           }
         };
 
@@ -83,15 +103,69 @@ class VideoStageController {
           this.audioEl.addEventListener('loadedmetadata', onMeta, { once: true });
         }
 
+        // When audio finishes playing naturally
+        this.audioEl.onended = () => {
+          if (this.mode === 'question') {
+            // Intro audio ended -> enter Mute Suspense Phase
+            this.isMutedInterval = true;
+            this.suspenseStartTime = performance.now();
+            window.gameAudio?.playMuteIndicator?.();
+            if (typeof this.onMuteStateChangeCallback === 'function') {
+              this.onMuteStateChangeCallback(true);
+            }
+            this.muteTimeout = setTimeout(() => {
+              triggerEnded();
+            }, 1200);
+          } else {
+            // Reveal audio ended -> wait 0.8s then proceed
+            this.muteTimeout = setTimeout(() => {
+              triggerEnded();
+            }, 800);
+          }
+        };
+
+        this.audioEl.onerror = () => {
+          console.warn('Audio playback error, falling back');
+          this.fallbackTimeout = setTimeout(() => {
+            if (this.mode === 'question') {
+              this.isMutedInterval = true;
+              this.suspenseStartTime = performance.now();
+              setTimeout(triggerEnded, 1200);
+            } else {
+              triggerEnded();
+            }
+          }, 3500);
+        };
+
         const playPromise = this.audioEl.play();
-        if (playPromise) {
-          playPromise.catch(() => {
-            // Audio autoplay policy handled silently
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch((err) => {
+            console.warn('Autoplay prevented or audio play failed:', err);
+            this.fallbackTimeout = setTimeout(() => {
+              if (this.mode === 'question') {
+                this.isMutedInterval = true;
+                this.suspenseStartTime = performance.now();
+                setTimeout(triggerEnded, 1200);
+              } else {
+                triggerEnded();
+              }
+            }, 3500);
           });
         }
       } catch (err) {
-        console.warn('Audio play error:', err);
+        console.warn('Audio setup error:', err);
       }
+    } else {
+      // Fallback if no audioSrc
+      this.fallbackTimeout = setTimeout(() => {
+        if (this.mode === 'question') {
+          this.isMutedInterval = true;
+          this.suspenseStartTime = performance.now();
+          setTimeout(triggerEnded, 1200);
+        } else {
+          triggerEnded();
+        }
+      }, 3500);
     }
 
     this.playCanvasStage();
@@ -151,58 +225,18 @@ class VideoStageController {
 
   playCanvasStage() {
     this.isPlaying = true;
-    const startTime = performance.now();
-    const initialStageTime = this.currentTime;
 
     const loop = (now) => {
       if (!this.isPlaying) return;
-      const elapsed = (now - startTime) / 1000;
-      this.currentTime = initialStageTime + elapsed;
 
-      // Check Mute Interval
-      const muteStart = this.currentQuestion?.muteStart || 4.5;
-      const muteEnd = this.currentQuestion?.muteEnd || 8.0;
-
-      if (this.mode === 'question') {
-        const inMute = this.currentTime >= muteStart && this.currentTime <= muteEnd;
-        if (inMute !== this.isMutedInterval) {
-          this.isMutedInterval = inMute;
-          if (this.audioEl) {
-            this.audioEl.muted = inMute;
-            this.audioEl.volume = inMute ? 0 : 1.0;
-          }
-          if (inMute) {
-            window.gameAudio?.playMuteIndicator?.();
-          }
-          if (typeof this.onMuteStateChangeCallback === 'function') {
-            this.onMuteStateChangeCallback(inMute);
-          }
+      if (!this.isMutedInterval) {
+        if (this.audioEl && !isNaN(this.audioEl.currentTime)) {
+          this.currentTime = this.audioEl.currentTime;
         }
-
-        // Auto stop when mute interval ends -> proceeds to answer phase
-        if (this.currentTime >= this.duration) {
-          this.isPlaying = false;
-          if (this.audioEl) {
-            this.audioEl.pause();
-          }
-          this.renderStage();
-          if (typeof this.onEndedCallback === 'function') {
-            this.onEndedCallback();
-          }
-          return;
-        }
-      } else if (this.mode === 'reveal') {
-        // Reveal mode: plays until duration ends
-        if (this.currentTime >= this.duration) {
-          this.isPlaying = false;
-          if (this.audioEl) {
-            this.audioEl.pause();
-          }
-          this.renderStage();
-          if (typeof this.onEndedCallback === 'function') {
-            this.onEndedCallback();
-          }
-          return;
+      } else {
+        if (this.suspenseStartTime > 0) {
+          const muteElapsed = (now - this.suspenseStartTime) / 1000;
+          this.currentTime = this.introDuration + Math.min(1.2, muteElapsed);
         }
       }
 
@@ -213,6 +247,7 @@ class VideoStageController {
 
     this.animFrame = requestAnimationFrame(loop);
   }
+
 
   renderStage() {
     if (!this.ctx || !this.canvas) return;
@@ -408,14 +443,35 @@ class VideoStageController {
   stop() {
     this.isPlaying = false;
     this.isMutedInterval = false;
+    if (this.muteTimeout) {
+      clearTimeout(this.muteTimeout);
+      this.muteTimeout = null;
+    }
+    if (this.fallbackTimeout) {
+      clearTimeout(this.fallbackTimeout);
+      this.fallbackTimeout = null;
+    }
+    if (this.animFrame) {
+      cancelAnimationFrame(this.animFrame);
+      this.animFrame = null;
+    }
     if (this.audioEl) {
       this.audioEl.pause();
-      this.audioEl.currentTime = 0;
+      this.audioEl.onended = null;
+      this.audioEl.onerror = null;
+      try {
+        if (this.audioEl.readyState > 0) {
+          this.audioEl.currentTime = 0;
+        }
+      } catch (e) {}
     }
-    if (this.animFrame) cancelAnimationFrame(this.animFrame);
     if (this.videoEl) {
       this.videoEl.pause();
-      this.videoEl.currentTime = 0;
+      try {
+        if (this.videoEl.readyState > 0) {
+          this.videoEl.currentTime = 0;
+        }
+      } catch (e) {}
     }
   }
 }
