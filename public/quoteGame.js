@@ -50,6 +50,25 @@
     }
   }
 
+  function resetCategoryScreen() {
+    // Sync difficulty pills to match current quoteDifficulty variable
+    document.querySelectorAll('.q-diff-pill').forEach(pill => {
+      if (pill.getAttribute('data-diff') === quoteDifficulty) {
+        pill.classList.add('active');
+      } else {
+        pill.classList.remove('active');
+      }
+    });
+    // Sync category grid to match current quoteCategory variable
+    document.querySelectorAll('.cat-card').forEach(card => {
+      if (card.getAttribute('data-cat') === quoteCategory) {
+        card.classList.add('active');
+      } else {
+        card.classList.remove('active');
+      }
+    });
+  }
+
   window.openQuoteModal = function(id) {
     const m = document.getElementById(id);
     if (m) m.classList.add('active');
@@ -92,6 +111,7 @@
       videoStage?.unlockAudio?.();
       window.gameAudio?.initAudio?.();
       quoteMode = 'single';
+      resetCategoryScreen();
       switchQScreen('category');
     });
 
@@ -159,7 +179,12 @@
     });
 
     document.getElementById('btnQLeaveRoom')?.addEventListener('click', () => {
-      quoteRoom = null;
+      videoStage?.stop?.();
+      stopQTimer();
+      if (quoteRoom) {
+        socket.emit('quote_leave_room', { roomCode: quoteRoom.code });
+        quoteRoom = null;
+      }
       switchQScreen('home');
     });
 
@@ -212,7 +237,7 @@
       if (quoteMode === 'single') startSingleQuoteGame();
       else switchQScreen('lobby');
     });
-    document.getElementById('btnQChangeCat')?.addEventListener('click', () => switchQScreen('category'));
+    document.getElementById('btnQChangeCat')?.addEventListener('click', () => { resetCategoryScreen(); switchQScreen('category'); });
     document.getElementById('btnQBackHome')?.addEventListener('click', () => switchQScreen('home'));
     document.getElementById('btnQShare')?.addEventListener('click', shareQuoteResult);
 

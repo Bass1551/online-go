@@ -24,6 +24,7 @@ class VideoStageController {
     this.waveformOffset = 0;
     this.muteTimeout = null;
     this.fallbackTimeout = null;
+    this.stallFallbackTimer = null;
     this.suspenseStartTime = 0;
     this.volume = 1.0;
     try {
@@ -97,7 +98,19 @@ class VideoStageController {
   playRealVideo(videoSrc, fallbackAudioSrc) {
     if (!this.videoEl) return;
     this.isPlaying = true;
+
+    // Clear old handlers and timers to avoid residual callbacks from previous question
+    this.videoEl.onended = null;
+    this.videoEl.onerror = null;
+    this.videoEl.oncanplay = null;
+    this.videoEl.onstalled = null;
+    this.videoEl.onwaiting = null;
+    this.videoEl.pause();
+    if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
+
+    // Set src & preload
     this.videoEl.src = videoSrc;
+    this.videoEl.preload = 'auto';
     this.videoEl.style.display = 'block';
     if (this.canvas) this.canvas.style.display = 'none';
     this.videoEl.volume = this.volume;
@@ -109,6 +122,7 @@ class VideoStageController {
       if (hasHandledEnded) return;
       hasHandledEnded = true;
       this.isPlaying = false;
+      if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
       if (typeof this.onEndedCallback === 'function') {
         const cb = this.onEndedCallback;
         this.onEndedCallback = null;
@@ -116,9 +130,8 @@ class VideoStageController {
       }
     };
 
-    this.videoEl.onended = () => {
+    const doFreezeOrEnd = () => {
       if (this.mode === 'question') {
-        // Freeze on last frame
         this.videoEl.pause();
         this.isMutedInterval = true;
         this.suspenseStartTime = performance.now();
@@ -126,36 +139,51 @@ class VideoStageController {
         if (typeof this.onMuteStateChangeCallback === 'function') {
           this.onMuteStateChangeCallback(true);
         }
-        this.muteTimeout = setTimeout(() => {
-          triggerEnded();
-        }, 1200);
+        this.muteTimeout = setTimeout(() => { triggerEnded(); }, 1200);
       } else {
-        this.muteTimeout = setTimeout(() => {
-          triggerEnded();
-        }, 800);
+        this.muteTimeout = setTimeout(() => { triggerEnded(); }, 800);
       }
     };
 
+    this.videoEl.onended = () => { doFreezeOrEnd(); };
+
     this.videoEl.onerror = () => {
       console.warn('Video playback error, falling back to audio/canvas:', videoSrc);
+      if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
       if (this.videoEl) this.videoEl.style.display = 'none';
       if (this.canvas) this.canvas.style.display = 'block';
       this.playAudioAndCanvas(fallbackAudioSrc);
     };
 
+    // Stall detection: if video doesn't make progress within 8 seconds, fall back to audio
+    const resetStallTimer = () => {
+      if (this.stallFallbackTimer) clearTimeout(this.stallFallbackTimer);
+      this.stallFallbackTimer = setTimeout(() => {
+        console.warn('Video stall timeout, falling back to audio:', videoSrc);
+        this.stallFallbackTimer = null;
+        if (this.videoEl) this.videoEl.style.display = 'none';
+        if (this.canvas) this.canvas.style.display = 'block';
+        this.playAudioAndCanvas(fallbackAudioSrc);
+      }, 8000);
+    };
+
+    this.videoEl.onstalled = () => { resetStallTimer(); };
+    this.videoEl.onwaiting = () => { resetStallTimer(); };
+
+    // Load & play; start stall timer from load attempt
+    resetStallTimer();
+    this.videoEl.load();
+
     const p = this.videoEl.play();
     if (p && typeof p.catch === 'function') {
-      p.catch(err => {
+      p.then(() => {
+        // Playing OK — stall timer monitors ongoing
+      }).catch(err => {
         console.warn('Video autoplay prevented:', err);
-        this.fallbackTimeout = setTimeout(() => {
-          if (this.mode === 'question') {
-            this.isMutedInterval = true;
-            this.suspenseStartTime = performance.now();
-            setTimeout(triggerEnded, 1200);
-          } else {
-            triggerEnded();
-          }
-        }, 2000);
+        if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
+        if (this.videoEl) this.videoEl.style.display = 'none';
+        if (this.canvas) this.canvas.style.display = 'block';
+        this.playAudioAndCanvas(fallbackAudioSrc);
       });
     }
   }
@@ -486,6 +514,7 @@ class VideoStageController {
   stop() {
     this.isPlaying = false;
     this.isMutedInterval = false;
+    this.onEndedCallback = null;
     if (this.muteTimeout) {
       clearTimeout(this.muteTimeout);
       this.muteTimeout = null;
@@ -493,6 +522,10 @@ class VideoStageController {
     if (this.fallbackTimeout) {
       clearTimeout(this.fallbackTimeout);
       this.fallbackTimeout = null;
+    }
+    if (this.stallFallbackTimer) {
+      clearTimeout(this.stallFallbackTimer);
+      this.stallFallbackTimer = null;
     }
     if (this.animFrame) {
       cancelAnimationFrame(this.animFrame);
@@ -509,12 +542,20 @@ class VideoStageController {
       } catch (e) {}
     }
     if (this.videoEl) {
+      this.videoEl.onended = null;
+      this.videoEl.onerror = null;
+      this.videoEl.onstalled = null;
+      this.videoEl.onwaiting = null;
       this.videoEl.pause();
       try {
         if (this.videoEl.readyState > 0) {
           this.videoEl.currentTime = 0;
         }
       } catch (e) {}
+      this.videoEl.style.display = 'none';
+    }
+    if (this.canvas) {
+      this.canvas.style.display = 'none';
     }
   }
 }
