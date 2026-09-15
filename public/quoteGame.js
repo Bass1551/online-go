@@ -484,7 +484,9 @@
         audioUrl: result.audioUrl || q.audioUrl || '',
         introAudioUrl: result.introAudioUrl || q.introAudioUrl || '',
         quoteAudioUrl: result.quoteAudioUrl || q.quoteAudioUrl || '',
-        videoUrl: result.videoUrl || q.videoUrl || ''
+        videoUrl: result.videoUrl || q.videoUrl || '',
+        introVideoUrl: result.introVideoUrl || q.introVideoUrl || '',
+        quoteVideoUrl: result.quoteVideoUrl || q.quoteVideoUrl || ''
       }, 'reveal', () => {
         // Audio finished playing to the end! Give at least 4 more seconds to read
         if (countdownSec > 4) {

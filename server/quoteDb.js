@@ -127,6 +127,8 @@ class QuoteDatabase {
       introAudioUrl: q.introAudioUrl || q.audioUrl || '',
       quoteAudioUrl: q.quoteAudioUrl || '',
       videoUrl: q.videoUrl || '',
+      introVideoUrl: q.introVideoUrl || '',
+      quoteVideoUrl: q.quoteVideoUrl || '',
       options: opts
     };
   }
@@ -155,7 +157,9 @@ class QuoteDatabase {
       audioUrl: q.audioUrl || (q.quoteAudioUrl || ''),
       introAudioUrl: q.introAudioUrl || '',
       quoteAudioUrl: q.quoteAudioUrl || q.audioUrl || '',
-      videoUrl: q.videoUrl || ''
+      videoUrl: q.videoUrl || '',
+      introVideoUrl: q.introVideoUrl || '',
+      quoteVideoUrl: q.quoteVideoUrl || ''
     };
   }
 

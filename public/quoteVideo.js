@@ -77,26 +77,96 @@ class VideoStageController {
     this.isMutedInterval = false;
     this.suspenseStartTime = 0;
 
-    // 1. If custom MP4 video URL provided
-    if (question.videoUrl && this.videoEl) {
-      this.videoEl.src = question.videoUrl;
-      this.videoEl.style.display = 'block';
-      if (this.canvas) this.canvas.style.display = 'none';
-      this.playRealVideo();
-      return;
-    }
+    // Check if video clip URL is provided for current mode
+    const videoSrc = this.mode === 'reveal'
+      ? (question.quoteVideoUrl || '')
+      : (question.introVideoUrl || '');
 
-    if (this.videoEl) this.videoEl.style.display = 'none';
-    if (this.canvas) this.canvas.style.display = 'block';
-
-    const audioSrc = mode === 'reveal'
+    const audioSrc = this.mode === 'reveal'
       ? (question.quoteAudioUrl || question.audioUrl)
       : (question.introAudioUrl || question.audioUrl);
 
-    // Initial timings
+    if (videoSrc && this.videoEl) {
+      this.playRealVideo(videoSrc, audioSrc);
+      return;
+    }
+
+    this.playAudioAndCanvas(audioSrc);
+  }
+
+  playRealVideo(videoSrc, fallbackAudioSrc) {
+    if (!this.videoEl) return;
+    this.isPlaying = true;
+    this.videoEl.src = videoSrc;
+    this.videoEl.style.display = 'block';
+    if (this.canvas) this.canvas.style.display = 'none';
+    this.videoEl.volume = this.volume;
+    this.videoEl.currentTime = 0;
+    this.videoEl.muted = false;
+
+    let hasHandledEnded = false;
+    const triggerEnded = () => {
+      if (hasHandledEnded) return;
+      hasHandledEnded = true;
+      this.isPlaying = false;
+      if (typeof this.onEndedCallback === 'function') {
+        const cb = this.onEndedCallback;
+        this.onEndedCallback = null;
+        cb();
+      }
+    };
+
+    this.videoEl.onended = () => {
+      if (this.mode === 'question') {
+        // Freeze on last frame
+        this.videoEl.pause();
+        this.isMutedInterval = true;
+        this.suspenseStartTime = performance.now();
+        window.gameAudio?.playMuteIndicator?.();
+        if (typeof this.onMuteStateChangeCallback === 'function') {
+          this.onMuteStateChangeCallback(true);
+        }
+        this.muteTimeout = setTimeout(() => {
+          triggerEnded();
+        }, 1200);
+      } else {
+        this.muteTimeout = setTimeout(() => {
+          triggerEnded();
+        }, 800);
+      }
+    };
+
+    this.videoEl.onerror = () => {
+      console.warn('Video playback error, falling back to audio/canvas:', videoSrc);
+      if (this.videoEl) this.videoEl.style.display = 'none';
+      if (this.canvas) this.canvas.style.display = 'block';
+      this.playAudioAndCanvas(fallbackAudioSrc);
+    };
+
+    const p = this.videoEl.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(err => {
+        console.warn('Video autoplay prevented:', err);
+        this.fallbackTimeout = setTimeout(() => {
+          if (this.mode === 'question') {
+            this.isMutedInterval = true;
+            this.suspenseStartTime = performance.now();
+            setTimeout(triggerEnded, 1200);
+          } else {
+            triggerEnded();
+          }
+        }, 2000);
+      });
+    }
+  }
+
+  playAudioAndCanvas(audioSrc) {
+    if (this.videoEl) this.videoEl.style.display = 'none';
+    if (this.canvas) this.canvas.style.display = 'block';
+
     this.currentTime = 0;
-    this.introDuration = mode === 'reveal' ? 3.0 : 3.5;
-    this.duration = mode === 'reveal' ? 3.0 : (this.introDuration + 1.2);
+    this.introDuration = this.mode === 'reveal' ? 3.0 : 3.5;
+    this.duration = this.mode === 'reveal' ? 3.0 : (this.introDuration + 1.2);
 
     let hasHandledEnded = false;
     const triggerEnded = () => {
@@ -132,10 +202,8 @@ class VideoStageController {
           this.audioEl.addEventListener('loadedmetadata', onMeta, { once: true });
         }
 
-        // When audio finishes playing naturally
         this.audioEl.onended = () => {
           if (this.mode === 'question') {
-            // Intro audio ended -> enter Mute Suspense Phase
             this.isMutedInterval = true;
             this.suspenseStartTime = performance.now();
             window.gameAudio?.playMuteIndicator?.();
@@ -146,7 +214,6 @@ class VideoStageController {
               triggerEnded();
             }, 1200);
           } else {
-            // Reveal audio ended -> wait 0.8s then proceed
             this.muteTimeout = setTimeout(() => {
               triggerEnded();
             }, 800);
@@ -185,7 +252,6 @@ class VideoStageController {
         console.warn('Audio setup error:', err);
       }
     } else {
-      // Fallback if no audioSrc
       this.fallbackTimeout = setTimeout(() => {
         if (this.mode === 'question') {
           this.isMutedInterval = true;
@@ -198,58 +264,6 @@ class VideoStageController {
     }
 
     this.playCanvasStage();
-  }
-
-  playRealVideo() {
-    if (!this.videoEl) return;
-    this.isPlaying = true;
-    const q = this.currentQuestion;
-    const muteStart = q.muteStart || 4.5;
-    const muteEnd = q.muteEnd || 8.0;
-
-    if (this.mode === 'reveal') {
-      this.videoEl.currentTime = q.quoteStart || q.muteStart || 0;
-      this.videoEl.muted = false;
-      this.videoEl.volume = 1.0;
-    } else {
-      this.videoEl.currentTime = 0;
-      this.videoEl.muted = false;
-      this.videoEl.volume = 1.0;
-    }
-
-    this.videoEl.play().catch(() => {});
-
-    const onTimeUpdate = () => {
-      if (!this.isPlaying) return;
-      const t = this.videoEl.currentTime;
-
-      if (this.mode === 'question') {
-        const inMute = t >= muteStart && t <= muteEnd;
-        if (inMute !== this.isMutedInterval) {
-          this.isMutedInterval = inMute;
-          this.videoEl.muted = inMute;
-          if (inMute) window.gameAudio?.playMuteIndicator?.();
-          if (typeof this.onMuteStateChangeCallback === 'function') {
-            this.onMuteStateChangeCallback(inMute);
-          }
-        }
-        if (t >= muteEnd) {
-          this.isPlaying = false;
-          this.videoEl.pause();
-          this.videoEl.removeEventListener('timeupdate', onTimeUpdate);
-          if (typeof this.onEndedCallback === 'function') this.onEndedCallback();
-        }
-      } else if (this.mode === 'reveal') {
-        if (t >= (q.quoteEnd || 8.0)) {
-          this.isPlaying = false;
-          this.videoEl.pause();
-          this.videoEl.removeEventListener('timeupdate', onTimeUpdate);
-          if (typeof this.onEndedCallback === 'function') this.onEndedCallback();
-        }
-      }
-    };
-
-    this.videoEl.addEventListener('timeupdate', onTimeUpdate);
   }
 
   playCanvasStage() {

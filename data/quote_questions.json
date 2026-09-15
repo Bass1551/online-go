@@ -33,7 +33,9 @@
     },
     "audioUrl": "/audio/quotes/q_001_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_001_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_001_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_001_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_001_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_001_quote.mp4"
   },
   {
     "id": "q_002",
@@ -64,12 +66,14 @@
     ],
     "explanation": "ฉากคาดคั้นความจริงของคุณพี่เดช (โป๊ป ธนวรรธน์) ในละครบุพเพสันนิวาส",
     "stats": {
-      "playedCount": 2,
-      "correctCount": 1
+      "playedCount": 3,
+      "correctCount": 2
     },
     "audioUrl": "/audio/quotes/q_002_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_002_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_002_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_002_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_002_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_002_quote.mp4"
   },
   {
     "id": "q_003",
@@ -105,7 +109,9 @@
     },
     "audioUrl": "/audio/quotes/q_003_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_003_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_003_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_003_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_003_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_003_quote.mp4"
   },
   {
     "id": "q_004",
@@ -141,7 +147,9 @@
     },
     "audioUrl": "/audio/quotes/q_004_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_004_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_004_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_004_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_004_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_004_quote.mp4"
   },
   {
     "id": "q_005",
@@ -177,7 +185,9 @@
     },
     "audioUrl": "/audio/quotes/q_005_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_005_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_005_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_005_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_005_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_005_quote.mp4"
   },
   {
     "id": "q_006",
@@ -213,7 +223,9 @@
     },
     "audioUrl": "/audio/quotes/q_006_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_006_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_006_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_006_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_006_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_006_quote.mp4"
   },
   {
     "id": "q_007",
@@ -249,7 +261,9 @@
     },
     "audioUrl": "/audio/quotes/q_007_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_007_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_007_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_007_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_007_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_007_quote.mp4"
   },
   {
     "id": "q_008",
@@ -285,7 +299,9 @@
     },
     "audioUrl": "/audio/quotes/q_008_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_008_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_008_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_008_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_008_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_008_quote.mp4"
   },
   {
     "id": "q_009",
@@ -321,7 +337,9 @@
     },
     "audioUrl": "/audio/quotes/q_009_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_009_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_009_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_009_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_009_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_009_quote.mp4"
   },
   {
     "id": "q_010",
@@ -356,7 +374,9 @@
     },
     "audioUrl": "/audio/quotes/q_010_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_010_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_010_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_010_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_010_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_010_quote.mp4"
   },
   {
     "id": "q_011",
@@ -390,7 +410,9 @@
     },
     "audioUrl": "/audio/quotes/q_011_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_011_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_011_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_011_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_011_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_011_quote.mp4"
   },
   {
     "id": "q_012",
@@ -425,7 +447,9 @@
     },
     "audioUrl": "/audio/quotes/q_012_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_012_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_012_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_012_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_012_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_012_quote.mp4"
   },
   {
     "id": "q_013",
@@ -460,7 +484,9 @@
     },
     "audioUrl": "/audio/quotes/q_013_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_013_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_013_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_013_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_013_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_013_quote.mp4"
   },
   {
     "id": "q_014",
@@ -496,7 +522,9 @@
     },
     "audioUrl": "/audio/quotes/q_014_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_014_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_014_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_014_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_014_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_014_quote.mp4"
   },
   {
     "id": "q_015",
@@ -532,7 +560,9 @@
     },
     "audioUrl": "/audio/quotes/q_015_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_015_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_015_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_015_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_015_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_015_quote.mp4"
   },
   {
     "id": "q_016",
@@ -568,6 +598,8 @@
     },
     "audioUrl": "/audio/quotes/q_016_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_016_intro.mp3",
-    "quoteAudioUrl": "/audio/quotes/q_016_quote.mp3"
+    "quoteAudioUrl": "/audio/quotes/q_016_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_016_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_016_quote.mp4"
   }
 ]

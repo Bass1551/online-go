@@ -352,6 +352,8 @@ class GameEngine {
       introAudioUrl: currentQ.introAudioUrl || '',
       quoteAudioUrl: currentQ.quoteAudioUrl || '',
       videoUrl: currentQ.videoUrl || '',
+      introVideoUrl: currentQ.introVideoUrl || '',
+      quoteVideoUrl: currentQ.quoteVideoUrl || '',
       character: currentQ.character,
       title: currentQ.title,
       mediaType: currentQ.mediaType,
