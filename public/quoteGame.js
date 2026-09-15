@@ -283,13 +283,15 @@
       const name = window.currentUser?.username || 'ผู้เล่น 1';
       socket.emit('quote_join_room', { roomCode: code, username: name }, (res) => {
         if (res && res.success) {
+          quoteMode = 'multi';
           quoteRoom = res.room;
           quotePlayerId = res.playerId;
           quoteReconnectToken = res.reconnectToken;
           sessionStorage.setItem('quote_room_code', res.room.code);
           sessionStorage.setItem('quote_player_id', res.playerId);
           sessionStorage.setItem('quote_reconnect_token', res.reconnectToken);
-          isQuoteHost = res.room.hostPlayerId === res.playerId || res.room.hostId === socket.id;
+          const myPlayer = res.room.players?.find(p => p.id === res.playerId || p.socketId === socket.id || p.id === socket.id);
+          isQuoteHost = (res.room.hostPlayerId === res.playerId) || (res.room.hostId === res.playerId) || (myPlayer?.isHost === true);
           renderQLobby(quoteRoom);
           switchQScreen('lobby');
         } else {
@@ -584,14 +586,14 @@
     document.getElementById('qMultiStatusBar').style.display = 'none';
 
     const btns = document.querySelectorAll('.q-option-btn');
-    const choices = q.choices || (q.options || []).map((opt, i) => ({ id: `opt_${i}`, text: opt }));
+    const choices = q.choices || (q.options || []).map((opt, i) => ({ id: `opt_${i}`, choiceId: `opt_${i}`, text: opt }));
 
     btns.forEach((btn, i) => {
       btn.classList.remove('selected', 'correct', 'wrong');
       btn.disabled = true;
       const choice = choices[i];
       if (choice) {
-        btn.setAttribute('data-choice-id', choice.id);
+        btn.setAttribute('data-choice-id', choice.choiceId || choice.id || `opt_${i}`);
         const t = btn.querySelector('.opt-text');
         if (t) t.innerText = choice.text;
       }
@@ -750,6 +752,7 @@
       };
 
       if (btnNext) {
+        btnNext.style.display = 'inline-block';
         btnNext.onclick = () => goToNext();
       }
 
@@ -858,17 +861,18 @@
 
   // ── MULTIPLAYER LOGIC ──────────────────────────────────────
   function renderQLobby(room) {
+    quoteMode = 'multi';
     document.getElementById('displayQRoomCode').innerText = room.code;
     document.getElementById('qLobbyCount').innerText = room.players.length;
 
-    const isSelfHost = (room.hostPlayerId === quotePlayerId) || (room.hostId === socket.id);
+    const myPlayer = room.players.find(p => p.id === quotePlayerId || p.socketId === socket.id || p.id === socket.id);
+    const isSelfHost = myPlayer ? Boolean(myPlayer.isHost) : ((room.hostPlayerId === quotePlayerId) || (room.hostId === quotePlayerId) || (room.hostId === socket.id));
     isQuoteHost = isSelfHost;
 
     document.getElementById('btnQHostStart').style.display = isSelfHost ? 'inline-block' : 'none';
 
-    const myPlayer = room.players.find(p => p.id === quotePlayerId || p.id === socket.id);
     const btnReady = document.getElementById('btnQToggleReady');
-    if (myPlayer?.isHost) {
+    if (isSelfHost || myPlayer?.isHost) {
       btnReady.style.display = 'none';
     } else {
       btnReady.style.display = 'inline-block';
@@ -881,7 +885,7 @@
         <div style="display:flex; align-items:center; gap:0.4rem;">
           <span>${p.isHost ? '👑' : '👤'}</span>
           <b>${escapeHtml(p.username)}</b>
-          ${(p.id === quotePlayerId || p.id === socket.id) ? '<span style="font-size:0.75rem; color:var(--accent-cyan);">(คุณ)</span>' : ''}
+          ${(p.id === quotePlayerId || p.socketId === socket.id || p.id === socket.id) ? '<span style="font-size:0.75rem; color:var(--accent-cyan);">(คุณ)</span>' : ''}
         </div>
         <span class="${p.isReady || p.isHost ? 'player-badge-ready' : 'player-badge-waiting'}">
           ${p.isHost ? 'หัวหน้าห้อง' : (p.isReady ? '✓ พร้อมแล้ว' : 'รอพร้อม')}
@@ -921,6 +925,7 @@
           reconnectToken: savedToken
         }, (res) => {
           if (res && res.success) {
+            quoteMode = 'multi';
             quoteRoom = res.room;
             quotePlayerId = savedPlayerId;
             quoteReconnectToken = savedToken;
@@ -936,12 +941,15 @@
       }
     });
 
-    socket.on('room_update', (room) => {
+    const onRoomUpdate = (room) => {
+      quoteMode = 'multi';
       if (quoteRoom && room.code === quoteRoom.code) {
         quoteRoom = room;
         renderQLobby(room);
       }
-    });
+    };
+    socket.on('room_updated', onRoomUpdate);
+    socket.on('room_update', onRoomUpdate);
 
     socket.on('new_chat_message', (chat) => {
       const box = document.getElementById('qChatMessages');
@@ -954,6 +962,7 @@
     });
 
     socket.on('game_countdown', (data) => {
+      quoteMode = 'multi';
       switchQScreen('game');
       document.body.classList.add('quote-in-game');
       document.getElementById('qRevealBanner').style.display = 'none';
@@ -966,6 +975,7 @@
 
     // Support legacy and modern event names
     socket.on('game_interstitial', (data) => {
+      quoteMode = 'multi';
       switchQScreen('game');
       document.body.classList.add('quote-in-game');
       document.getElementById('qRevealBanner').style.display = 'none';
@@ -977,18 +987,19 @@
     });
 
     socket.on('game_intro', (data) => {
+      quoteMode = 'multi';
       document.getElementById('qInterstitialOverlay').style.display = 'none';
       document.getElementById('qCounterText').innerText = `ข้อที่ ${data.questionSeq}/${data.totalQuestions}`;
       document.getElementById('qMultiStatusBar').style.display = 'none';
 
       const btns = document.querySelectorAll('.q-option-btn');
-      const choices = data.question.choices || (data.question.options || []).map((opt, i) => ({ id: `opt_${i}`, text: opt }));
+      const choices = data.question.choices || (data.question.options || []).map((opt, i) => ({ id: `opt_${i}`, choiceId: `opt_${i}`, text: opt }));
       btns.forEach((btn, i) => {
         btn.classList.remove('selected', 'correct', 'wrong');
         btn.disabled = true;
         const choice = choices[i];
         if (choice) {
-          btn.setAttribute('data-choice-id', choice.id);
+          btn.setAttribute('data-choice-id', choice.choiceId || choice.id || `opt_${i}`);
           const t = btn.querySelector('.opt-text');
           if (t) t.innerText = choice.text;
         }
@@ -998,18 +1009,19 @@
     });
 
     socket.on('game_clip_start', (data) => {
+      quoteMode = 'multi';
       document.getElementById('qInterstitialOverlay').style.display = 'none';
       document.getElementById('qCounterText').innerText = `ข้อที่ ${data.questionNumber || data.questionSeq}/${data.totalQuestions}`;
       document.getElementById('qMultiStatusBar').style.display = 'none';
 
       const btns = document.querySelectorAll('.q-option-btn');
-      const choices = data.question.choices || (data.question.options || []).map((opt, i) => ({ id: `opt_${i}`, text: opt }));
+      const choices = data.question.choices || (data.question.options || []).map((opt, i) => ({ id: `opt_${i}`, choiceId: `opt_${i}`, text: opt }));
       btns.forEach((btn, i) => {
         btn.classList.remove('selected', 'correct', 'wrong');
         btn.disabled = true;
         const choice = choices[i];
         if (choice) {
-          btn.setAttribute('data-choice-id', choice.id);
+          btn.setAttribute('data-choice-id', choice.choiceId || choice.id || `opt_${i}`);
           const t = btn.querySelector('.opt-text');
           if (t) t.innerText = choice.text;
         }
@@ -1019,6 +1031,7 @@
     });
 
     socket.on('game_answering', (data) => {
+      quoteMode = 'multi';
       const btns = document.querySelectorAll('.q-option-btn');
       btns.forEach(b => b.disabled = false);
 
@@ -1032,6 +1045,7 @@
     });
 
     socket.on('game_question_start', (data) => {
+      quoteMode = 'multi';
       const btns = document.querySelectorAll('.q-option-btn');
       btns.forEach(b => b.disabled = false);
 
@@ -1050,19 +1064,26 @@
     });
 
     socket.on('game_reveal', (data) => {
+      quoteMode = 'multi';
       stopQTimer();
       const btns = document.querySelectorAll('.q-option-btn');
       btns.forEach(b => b.disabled = true);
 
-      const myResult = data.playersResults.find(p => p.id === quotePlayerId || p.socketId === socket.id || p.id === socket.id);
+      const btnNext = document.getElementById('btnQNextQuestion');
+      if (btnNext) btnNext.style.display = 'none';
+      const countdownEl = document.getElementById('qRevealCountdown');
+      if (countdownEl) countdownEl.innerText = 'รอเข้าสู่กระดานคะแนน...';
+
+      const myResult = data.playersResults ? data.playersResults.find(p => p.id === quotePlayerId || p.socketId === socket.id || p.id === socket.id) : null;
       const isCorrect = myResult?.isCorrect || false;
 
       btns.forEach(btn => {
         const btnChoiceId = btn.getAttribute('data-choice-id');
         const txt = btn.querySelector('.opt-text')?.innerText;
-        if (btnChoiceId === data.choiceId || txt === data.correctAnswer) {
+        const targetChoiceId = data.choiceId || data.correctChoiceId;
+        if ((targetChoiceId && btnChoiceId === targetChoiceId) || txt === data.correctAnswer) {
           btn.classList.add('correct');
-        } else if ((btnChoiceId === myResult?.selectedChoiceId || txt === myResult?.selected) && !isCorrect) {
+        } else if (((btnChoiceId && btnChoiceId === myResult?.selectedChoiceId) || txt === myResult?.selected) && !isCorrect) {
           btn.classList.add('wrong');
         }
       });
@@ -1081,6 +1102,7 @@
     });
 
     socket.on('game_scoreboard', (data) => {
+      quoteMode = 'multi';
       videoStage?.stop?.();
       renderQRoundLeaderboard(data.rankings, data.commentary);
       switchQScreen('leaderboard');

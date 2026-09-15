@@ -1024,6 +1024,10 @@ io.on('connection', (socket) => {
     quoteEngine.sendChatMessage(roomCode, playerId || socket.id, message);
   });
 
+  socket.on('quote_leave_room', ({ roomCode, playerId }) => {
+    quoteEngine.leaveRoom(roomCode, playerId || socket.id);
+  });
+
   socket.on('room_invite_accepted', ({ roomId }) => {
     if (!currentUser) return;
     const targetRoom = (roomId || '').trim().toUpperCase();

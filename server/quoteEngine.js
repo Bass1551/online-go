@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Real-time Game Engine & Room Manager for 'ประโยคนี้...พูดว่าอะไร?'
  * Implements strict Server State Machine:
  * LOBBY -> COUNTDOWN -> INTRO -> ANSWERING -> REVEAL -> SCOREBOARD -> NEXT or FINISHED
@@ -332,8 +332,8 @@ class GameEngine {
 
     const qIndex = room.currentQuestionIndex;
     const currentQ = room.questions[qIndex];
-    const clipDurationSec = currentQ.muteEnd || 8.0;
-    const clipDurationMs = clipDurationSec * 1000;
+    const clipDurationSec = parseFloat(currentQ.clipDuration) || parseFloat(currentQ.introDuration) || 12.0;
+    const clipDurationMs = Math.round((clipDurationSec + 1.2) * 1000);
 
     room.phaseStartAt = Date.now();
     room.phaseDeadline = room.phaseStartAt + clipDurationMs;
@@ -495,6 +495,8 @@ class GameEngine {
       gameId: room.gameId,
       questionSeq: qIndex + 1,
       stateVersion: room.stateVersion,
+      choiceId: revealPayload.correctChoiceId,
+      correctChoiceId: revealPayload.correctChoiceId,
       correctAnswer: revealPayload.correctAnswer,
       explanation: revealPayload.explanation,
       quoteStart: revealPayload.quoteStart,
@@ -715,11 +717,44 @@ class GameEngine {
     return null;
   }
 
+  leaveRoom(roomCode, playerIdentifier) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+    const player = this.findPlayer(room, playerIdentifier);
+    if (!player) return;
+
+    if (player.socketId) {
+      const s = this.io.sockets.sockets.get(player.socketId);
+      if (s) s.leave('room_' + roomCode);
+    }
+
+    if (room.state === 'LOBBY') {
+      room.players.delete(player.id);
+      if (room.players.size === 0) {
+        this.rooms.delete(roomCode);
+        return;
+      }
+      if (player.isHost) {
+        const nextPlayer = room.players.values().next().value;
+        if (nextPlayer) {
+          nextPlayer.isHost = true;
+          nextPlayer.isReady = true;
+          room.hostPlayerId = nextPlayer.id;
+        }
+      }
+      this.broadcastRoomUpdate(roomCode);
+    } else {
+      player.isConnected = false;
+      this.broadcastRoomUpdate(roomCode);
+    }
+  }
+
   serializeRoom(room) {
     return {
       code: room.code,
       gameId: room.gameId,
       hostId: room.hostPlayerId,
+      hostPlayerId: room.hostPlayerId,
       category: room.category,
       difficulty: room.difficulty,
       state: room.state,
@@ -742,7 +777,9 @@ class GameEngine {
   broadcastRoomUpdate(roomCode) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
-    this.io.to('room_' + roomCode).emit('room_updated', this.serializeRoom(room));
+    const payload = this.serializeRoom(room);
+    this.io.to('room_' + roomCode).emit('room_updated', payload);
+    this.io.to('room_' + roomCode).emit('room_update', payload);
   }
 }
 
