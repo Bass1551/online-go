@@ -371,6 +371,7 @@
         <p class="brand-sub">เกมโชว์ทายประโยคเด็ด หนัง ละคร ซีรีส์ ซิตคอมไทยในตำนาน</p>
         <div style="display: flex; justify-content: center; gap: 0.6rem; margin-top: 0.8rem;">
           <button type="button" class="btn btn-history-sm" id="btnQOpenRules">❓ กติกาการเล่น</button>
+          <button type="button" class="btn btn-history-sm" id="btnQOpenStats">📊 สถิติของฉัน</button>
         </div>
       </div>
 
@@ -1296,6 +1297,86 @@
         <p>5. <b>โหมดแข่งกับเพื่อน:</b> หากคะแนนเท่ากัน คนที่ใช้เวลาตอบข้อที่ถูกน้อยกว่าจะอยู่อันดับสูงกว่า!</p>
       </div>
       <button type="button" class="btn btn-primary" style="width:100%;" onclick="closeQuoteModal('modalQHowToPlay')">เข้าใจแล้ว ลุยเลย! 🚀</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Quote Game - My Stats -->
+  <div class="modal-backdrop" id="modalQStats">
+    <div class="modal-dialog" style="max-width: 580px; text-align: left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+        <h3 class="modal-title" style="margin:0; font-weight:800; color:var(--accent-gold);">📊 สถิติของฉัน (My Stats)</h3>
+        <button style="background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closeQuoteModal('modalQStats')">&times;</button>
+      </div>
+      <div id="qStatsLoading" style="text-align:center; padding:2rem; color:var(--text-secondary);">กำลังโหลดข้อมูลสถิติ...</div>
+      <div id="qStatsContent" style="display:none; flex-direction:column; gap:1rem;">
+        <!-- Overview Cards -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.6rem;">
+          <div class="stat-card" style="background:rgba(255,255,255,0.04); border:1px solid var(--panel-border); border-radius:10px; padding:0.8rem; text-align:center;">
+            <div style="font-size:0.75rem; color:var(--text-secondary);">รอบที่เล่นจบ</div>
+            <div id="stCompletedRounds" style="font-size:1.4rem; font-weight:800; color:var(--accent-gold); margin-top:0.2rem;">0</div>
+          </div>
+          <div class="stat-card" style="background:rgba(255,255,255,0.04); border:1px solid var(--panel-border); border-radius:10px; padding:0.8rem; text-align:center;">
+            <div style="font-size:0.75rem; color:var(--text-secondary);">คะแนนสูงสุด</div>
+            <div id="stHighScore" style="font-size:1.4rem; font-weight:800; color:#10b981; margin-top:0.2rem;">0/10</div>
+          </div>
+          <div class="stat-card" style="background:rgba(255,255,255,0.04); border:1px solid var(--panel-border); border-radius:10px; padding:0.8rem; text-align:center;">
+            <div style="font-size:0.75rem; color:var(--text-secondary);">คะแนนเฉลี่ย</div>
+            <div id="stAvgScore" style="font-size:1.4rem; font-weight:800; color:#38bdf8; margin-top:0.2rem;">0.0</div>
+          </div>
+          <div class="stat-card" style="background:rgba(255,255,255,0.04); border:1px solid var(--panel-border); border-radius:10px; padding:0.8rem; text-align:center;">
+            <div style="font-size:0.75rem; color:var(--text-secondary);">ความแม่นยำรวม</div>
+            <div id="stAccuracy" style="font-size:1.4rem; font-weight:800; color:#f59e0b; margin-top:0.2rem;">0%</div>
+          </div>
+        </div>
+
+        <!-- Detail Metrics -->
+        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--panel-border); border-radius:12px; padding:0.9rem; font-size:0.88rem; display:flex; flex-direction:column; gap:0.5rem;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-secondary);">ตอบทั้งหมด:</span>
+            <span id="stTotalAnswered" style="font-weight:700;">0 ข้อ</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-secondary);">ตอบถูกต้อง:</span>
+            <span id="stTotalCorrect" style="font-weight:700; color:#10b981;">0 ข้อ</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-secondary);">เวลาตอบถูกสะสม:</span>
+            <span id="stTotalCorrectTime" style="font-weight:700;">0 วินาที</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-secondary);">เวลาเฉลี่ยต่อข้อที่ถูก:</span>
+            <span id="stAvgAnswerTime" style="font-weight:700; color:#38bdf8;">0.0 วินาที</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.5rem; margin-top:0.2rem;">
+            <span style="color:var(--text-secondary);">หมวดที่แม่นยำที่สุด:</span>
+            <span id="stBestCategory" style="font-weight:700; color:var(--accent-gold);">-</span>
+          </div>
+        </div>
+
+        <!-- Multiplayer Podium Stats -->
+        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--panel-border); border-radius:12px; padding:0.9rem;">
+          <div style="font-size:0.85rem; font-weight:700; color:var(--accent-gold); margin-bottom:0.5rem;">👥 สถิติโหมดผู้เล่นหลายคน (Multiplayer)</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.4rem; text-align:center;">
+            <div style="background:rgba(255,255,255,0.02); border-radius:8px; padding:0.4rem;">
+              <div style="font-size:0.72rem; color:var(--text-secondary);">ชนะ (อันดับ 1)</div>
+              <div id="stMpWins" style="font-size:1.1rem; font-weight:800; color:#fbbf24;">0 ครั้ง</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02); border-radius:8px; padding:0.4rem;">
+              <div style="font-size:0.72rem; color:var(--text-secondary);">🥇 ที่ 1</div>
+              <div id="stMpFirst" style="font-size:1.1rem; font-weight:800; color:#fde047;">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02); border-radius:8px; padding:0.4rem;">
+              <div style="font-size:0.72rem; color:var(--text-secondary);">🥈 ที่ 2</div>
+              <div id="stMpSecond" style="font-size:1.1rem; font-weight:800; color:#cbd5e1;">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02); border-radius:8px; padding:0.4rem;">
+              <div style="font-size:0.72rem; color:var(--text-secondary);">🥉 ที่ 3</div>
+              <div id="stMpThird" style="font-size:1.1rem; font-weight:800; color:#d97706;">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-secondary" style="width:100%; margin-top:1rem;" onclick="closeQuoteModal('modalQStats')">ปิดหน้าต่าง</button>
     </div>
   </div>
 

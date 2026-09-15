@@ -1,0 +1,605 @@
+[
+  {
+    "id": "q_001",
+    "title": "แฟนฉัน",
+    "mediaType": "movie",
+    "year": 2003,
+    "categories": [
+      "all",
+      "movie",
+      "romantic",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "easy",
+    "character": "น้อยหน่า",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "น้อยหน่าวิ่งหน้าตาตื่นมาเห็นเจี๊ยบตัดหนังยางกระโดดขาดต่อหน้าต่อตา...",
+    "correctAnswer": "เจี๊ยบตัดยางเราทำไมอ่ะ",
+    "options": [
+      "เจี๊ยบตัดยางเราทำไมอ่ะ",
+      "เจี๊ยบไม่เล่นด้วยแล้วหรอ!",
+      "เจี๊ยบใจร้ายที่สุดเลย!",
+      "เจี๊ยบเอาหนังยางเราคืนมานะ!"
+    ],
+    "explanation": "ฉากตัดยางในตำนานของแฟนฉัน เสียงจริงของน้อยหน่า (โฟกัส จีระกุล) ในภาพยนตร์",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_001_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_001_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_001_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_001_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_001_quote.mp4"
+  },
+  {
+    "id": "q_002",
+    "title": "บุพเพสันนิวาส",
+    "mediaType": "drama",
+    "year": 2018,
+    "categories": [
+      "all",
+      "drama",
+      "romantic",
+      "legendary",
+      "trending"
+    ],
+    "difficulty": "easy",
+    "character": "คุณพี่เดช",
+    "clipDuration": 13,
+    "muteStart": 5,
+    "muteEnd": 8.8,
+    "quoteStart": 5,
+    "quoteEnd": 8.8,
+    "contextDialogue": "คุณพี่เดชจับพิรุธแม่หญิงการะเกดที่พูดจาและมีท่าทางแปลกประหลาดผิดมนุษย์อยุธยา...",
+    "correctAnswer": "ออเจ้าเป็นใคร มาจากไหน ทำไมมาอยู่ในร่างแม่การะเกด",
+    "options": [
+      "ออเจ้าเป็นใคร มาจากไหน ทำไมมาอยู่ในร่างแม่การะเกด",
+      "ออเจ้าเป็นคนหรือเป็นผีกันแน่",
+      "ออเจ้าพูดจาประหลาดพิกลนัก",
+      "ออเจ้ามาจากที่ใดกันแน่"
+    ],
+    "explanation": "ฉากคาดคั้นความจริงของคุณพี่เดช (โป๊ป ธนวรรธน์) ในละครบุพเพสันนิวาส",
+    "stats": {
+      "playedCount": 3,
+      "correctCount": 2
+    },
+    "audioUrl": "/audio/quotes/q_002_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_002_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_002_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_002_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_002_quote.mp4"
+  },
+  {
+    "id": "q_003",
+    "title": "พี่มาก..พระโขนง",
+    "mediaType": "movie",
+    "year": 2013,
+    "categories": [
+      "all",
+      "movie",
+      "comedy",
+      "horror",
+      "legendary"
+    ],
+    "difficulty": "easy",
+    "character": "พี่มาก",
+    "clipDuration": 14,
+    "muteStart": 5.2,
+    "muteEnd": 9.5,
+    "quoteStart": 5.2,
+    "quoteEnd": 9.5,
+    "contextDialogue": "เพื่อนๆ พยายามเรียกชื่อพี่มาก แต่พี่มากหันมาแก้สำเนียงการเรียกชื่อตัวเอง...",
+    "correctAnswer": "จริงๆ แล้วชื่อกูต้องออกเสียงว่า มาร์ค แต่พวกมึงเรียกกูว่า มาก ก็ได้",
+    "options": [
+      "จริงๆ แล้วชื่อกูต้องออกเสียงว่า มาร์ค แต่พวกมึงเรียกกูว่า มาก ก็ได้",
+      "ฉันอาจจะบื้อ แต่ฉันไม่ได้โง่นะจ๊ะ",
+      "กูบอกกี่รอบแล้วว่ากูชื่อมาร์ค ไม่ใช่มาก",
+      "พวกมึงจะเรียกอะไรก็เรียกเถอะ กูชินแล้ว"
+    ],
+    "explanation": "มุกออกเสียงชื่อ มาร์ค สุดกวนของพี่มาก (มาริโอ้ เมาเร่อ) กับแก๊งเพื่อนสี่เกลอ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_003_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_003_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_003_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_003_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_003_quote.mp4"
+  },
+  {
+    "id": "q_004",
+    "title": "สิ่งเล็กๆ ที่เรียกว่ารัก",
+    "mediaType": "movie",
+    "year": 2010,
+    "categories": [
+      "all",
+      "movie",
+      "romantic",
+      "comedy",
+      "legendary"
+    ],
+    "difficulty": "easy",
+    "character": "น้ำ",
+    "clipDuration": 13,
+    "muteStart": 4.8,
+    "muteEnd": 9.2,
+    "quoteStart": 4.8,
+    "quoteEnd": 9.2,
+    "contextDialogue": "น้ำรวบรวมความกล้าเดินไปหาพี่โชนข้างสระว่ายน้ำในวันสุดท้ายก่อนจบการศึกษา...",
+    "correctAnswer": "คือน้ำชอบพี่โชนมาก ชอบมา 3 ปีแล้วค่ะ",
+    "options": [
+      "คือน้ำชอบพี่โชนมาก ชอบมา 3 ปีแล้วค่ะ",
+      "พี่โชนอย่าเพิ่งไปได้ไหมคะ",
+      "น้ำแอบมองพี่โชนมาตลอดเลยนะคะ",
+      "น้ำอยากให้พี่โชนรู้ว่าน้ำรักพี่โชนค่ะ"
+    ],
+    "explanation": "ฉากสารภาพรักริมสระน้ำสุดซึ้งของน้องน้ำ (ใบเฟิร์น พิมพ์ชนก) ต่อพี่โชน (มาริโอ้ เมาเร่อ)",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_004_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_004_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_004_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_004_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_004_quote.mp4"
+  },
+  {
+    "id": "q_005",
+    "title": "ฉลาดเกมส์โกง",
+    "mediaType": "movie",
+    "year": 2017,
+    "categories": [
+      "all",
+      "movie",
+      "drama",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "medium",
+    "character": "ลิน",
+    "clipDuration": 13,
+    "muteStart": 4.5,
+    "muteEnd": 8.8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8.8,
+    "contextDialogue": "แบงค์ถามลินว่าจะไปสอบ STIC ที่ออสเตรเลียแล้วเราจะได้ส่วนแบ่งเท่าไหร่ ลินจึงตอบว่า...",
+    "correctAnswer": "ล้านนึง!",
+    "options": [
+      "ล้านนึง!",
+      "ต่อให้เราไม่โกง โรงเรียนก็โกงเราอยู่ดี",
+      "คนละสองแสนห้า",
+      "แล้วแต่นายจะโกงได้กี่คน"
+    ],
+    "explanation": "ประโยคยื่นข้อเสนอสุดสะเทือนของลิน (ออกแบบ ชุติมณฑน์) กับแบงค์ในฉลาดเกมส์โกง",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_005_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_005_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_005_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_005_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_005_quote.mp4"
+  },
+  {
+    "id": "q_006",
+    "title": "ฮอร์โมน วัยว้าวุ่น",
+    "mediaType": "series",
+    "year": 2013,
+    "categories": [
+      "all",
+      "series",
+      "drama",
+      "legendary",
+      "modern"
+    ],
+    "difficulty": "medium",
+    "character": "เจน",
+    "clipDuration": 12,
+    "muteStart": 4.2,
+    "muteEnd": 8.5,
+    "quoteStart": 4.2,
+    "quoteEnd": 8.5,
+    "contextDialogue": "เมื่อครูในห้องเรียนดุเจนว่าเถียงคำไม่ตกฟาก เจนจึงสวนกลับไปทันทีว่า...",
+    "correctAnswer": "หนูไม่ได้เถียงค่ะ หนูอธิบาย",
+    "options": [
+      "หนูไม่ได้เถียงค่ะ หนูอธิบาย",
+      "ถ้าไม่มีใครกล้าตั้งคำถาม แล้วเราจะรู้ได้ไงว่ามันถูก",
+      "ทำไมครูต้องบังคับหนูด้วยคะ",
+      "หนูแค่พูดความจริง ทำไมรับไม่ได้ล่ะคะ"
+    ],
+    "explanation": "ประโยคเปิดตัวสุดแสบของ เจน (ต้าเหนิง กัญญาวีร์) ในฮอร์โมน วัยว้าวุ่น ซีซั่น 2",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_006_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_006_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_006_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_006_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_006_quote.mp4"
+  },
+  {
+    "id": "q_007",
+    "title": "แปลรักฉันด้วยใจเธอ",
+    "mediaType": "y_series",
+    "year": 2020,
+    "categories": [
+      "all",
+      "y_series",
+      "romantic",
+      "drama",
+      "trending"
+    ],
+    "difficulty": "easy",
+    "character": "โอ้เอ๋ว",
+    "clipDuration": 13,
+    "muteStart": 4.6,
+    "muteEnd": 8.9,
+    "quoteStart": 4.6,
+    "quoteEnd": 8.9,
+    "contextDialogue": "เต๋กับโอ้เอ๋วนอนคุยกันบนเตียง โอ้เอ๋วเอ่ยถามเต๋ที่กำลังแอบมีความรู้สึกพิเศษ...",
+    "correctAnswer": "แต่กูคิดว่ามึงรู้นะ",
+    "options": [
+      "แต่กูคิดว่ามึงรู้นะ",
+      "ถ้ามึงไม่ได้ชอบกู มึงไม่ต้องมาทำดีกับกูแบบนี้",
+      "มึงลืมเรื่องของเราไปหมดแล้วเหรอเต๋",
+      "กูไม่อยากเป็นแค่เพื่อนมึงแล้วว่ะ"
+    ],
+    "explanation": "ฉากความรู้สึกที่ลึกซึ้งและละมุนของ โอ้เอ๋ว (พีพี กฤษฏ์) กับ เต๋ (บิวกิ้น) ใน แปลรักฉันด้วยใจเธอ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_007_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_007_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_007_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_007_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_007_quote.mp4"
+  },
+  {
+    "id": "q_008",
+    "title": "เพราะเราคู่กัน 2gether The Series",
+    "mediaType": "y_series",
+    "year": 2020,
+    "categories": [
+      "all",
+      "y_series",
+      "romantic",
+      "comedy",
+      "trending"
+    ],
+    "difficulty": "easy",
+    "character": "สารวัตร",
+    "clipDuration": 12,
+    "muteStart": 4,
+    "muteEnd": 8,
+    "quoteStart": 4,
+    "quoteEnd": 8,
+    "contextDialogue": "สารวัตรนั่งมองไทน์ที่แอบจ้องหน้าตัวเองไม่ละสายตา...",
+    "correctAnswer": "มองกูขนาดนี้ เดี๋ยวกูก็จูบให้ล้มเลย",
+    "options": [
+      "มองกูขนาดนี้ เดี๋ยวกูก็จูบให้ล้มเลย",
+      "มองหน้ากู มีปัญหาอะไรหรือเปล่า",
+      "ถ้ามึงยังไม่เลิกมอง กูจะจูบมึงจริงๆ นะ",
+      "มองอยู่ได้ ชอบกูแล้วล่ะสิ"
+    ],
+    "explanation": "ประโยคเต๊าะสายรุกในตำนานของ สารวัตร (ไบรท์ วชิรวิชญ์) ถึง ไทน์ (วิน เมธวิน)",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_008_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_008_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_008_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_008_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_008_quote.mp4"
+  },
+  {
+    "id": "q_009",
+    "title": "เนื้อคู่ประตูถัดไป",
+    "mediaType": "sitcom",
+    "year": 2008,
+    "categories": [
+      "all",
+      "sitcom",
+      "comedy",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "medium",
+    "character": "โจ ศักดินา",
+    "clipDuration": 12,
+    "muteStart": 4,
+    "muteEnd": 8,
+    "quoteStart": 4,
+    "quoteEnd": 8,
+    "contextDialogue": "คุณวีแนะนำตัวแบบเด็กเนิร์ดสุภาพ โจ ศักดินา จึงสวนกลับทันควันว่า...",
+    "correctAnswer": "ปัญญาอ่อน!",
+    "options": [
+      "ปัญญาอ่อน!",
+      "ขวัญใจครับ อย่าเพิ่งเข้าใจผมผิด!",
+      "คนอะไรชื่อเหมือนตัววีภาษาอังกฤษ",
+      "ยินดีที่ไม่รู้จักนะไอ้แว่น"
+    ],
+    "explanation": "มุกเปิดตัวรับน้องคุณวีสุดฮาของ โจ ศักดินา (ซันนี่ สุวรรณเมธานนท์) ใน เนื้อคู่ประตูถัดไป",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_009_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_009_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_009_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_009_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_009_quote.mp4"
+  },
+  {
+    "id": "q_010",
+    "title": "เป็นต่อ",
+    "mediaType": "sitcom",
+    "year": 2004,
+    "categories": [
+      "all",
+      "sitcom",
+      "comedy",
+      "legendary"
+    ],
+    "difficulty": "easy",
+    "character": "พี่ยม & วอก",
+    "clipDuration": 12,
+    "muteStart": 4.2,
+    "muteEnd": 8,
+    "quoteStart": 4.2,
+    "quoteEnd": 8,
+    "contextDialogue": "แก๊งเป็นต่อกำลังเอ่ยถึงฉายาคนที่ไม่ใช่คนธรรมดา แต่เขาคือ...",
+    "correctAnswer": "ศักรินทร์ ดาวร้าย!",
+    "options": [
+      "ศักรินทร์ ดาวร้าย!",
+      "คืนนี้เจอกันที่บางบาร์นะพวกมึง",
+      "เป็นต่อ พ่อมดหน้าใส!",
+      "วอก แพนด้าแห่งบางบาร์!"
+    ],
+    "explanation": "ฉายาในตำนานของ ศักรินทร์ ดาวร้าย ตัวตึงแห่งซิทคอมเป็นต่อ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_010_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_010_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_010_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_010_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_010_quote.mp4"
+  },
+  {
+    "id": "q_011",
+    "title": "ทองเนื้อเก้า",
+    "mediaType": "drama",
+    "year": 2013,
+    "categories": [
+      "all",
+      "drama",
+      "legendary"
+    ],
+    "difficulty": "medium",
+    "character": "ลำยอง",
+    "clipDuration": 12,
+    "muteStart": 4.2,
+    "muteEnd": 8.2,
+    "quoteStart": 4.2,
+    "quoteEnd": 8.2,
+    "contextDialogue": "ลำยองยืนยันความบริสุทธิ์ใจกับยายแลเรื่องผู้ชาย พร้อมกับลั่นวาจาว่า...",
+    "correctAnswer": "ให้ฉันสาบานต่อหน้าพระ ให้ฉันตายโหงตายห่าอะไรก็ได้",
+    "options": [
+      "ให้ฉันสาบานต่อหน้าพระ ให้ฉันตายโหงตายห่าอะไรก็ได้",
+      "อีลำยอง มึงหยุดเมาได้แล้ว!",
+      "ฉันรักพี่สันคนเดียว แม่จะมาว่าฉันไม่ได้นะ!",
+      "ฉันไม่ได้ทำอะไรผิด ทำไมต้องมาด่าฉันด้วย!"
+    ],
+    "explanation": "คำพูดประชดประชันสุดเดือดของ ลำยอง (นุ่น วรนุช) ในละครทองเนื้อเก้า",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_011_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_011_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_011_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_011_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_011_quote.mp4"
+  },
+  {
+    "id": "q_012",
+    "title": "เมีย 2018",
+    "mediaType": "drama",
+    "year": 2018,
+    "categories": [
+      "all",
+      "drama",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "medium",
+    "character": "อรุณา",
+    "clipDuration": 13,
+    "muteStart": 4.6,
+    "muteEnd": 8.8,
+    "quoteStart": 4.6,
+    "quoteEnd": 8.8,
+    "contextDialogue": "อรุณายืนยันศักดิ์ศรีของตนเองต่อหน้าทุกคนในบริษัท ว่าพร้อมจะลาออก...",
+    "correctAnswer": "แต่ต้องไม่ใช่ในฐานะคนคดโกงบริษัท!",
+    "options": [
+      "แต่ต้องไม่ใช่ในฐานะคนคดโกงบริษัท!",
+      "ความซื่อสัตย์มันเป็นเรื่องพื้นฐานของชีวิตคู่",
+      "คนทรยศไม่มีวันเจริญหรอกคุณธาดา",
+      "ถ้าหมดรักกันแล้ว ก็ปล่อยฉันไปเถอะ"
+    ],
+    "explanation": "คำพูดเชือดเฉือนเพื่อศักดิ์ศรีและความถูกต้องของ อรุณา (บี น้ำทิพย์) ใน เมีย 2018",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_012_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_012_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_012_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_012_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_012_quote.mp4"
+  },
+  {
+    "id": "q_013",
+    "title": "ไดอารี่ตุ๊ดซี่ส์",
+    "mediaType": "series",
+    "year": 2016,
+    "categories": [
+      "all",
+      "series",
+      "comedy",
+      "trending"
+    ],
+    "difficulty": "easy",
+    "character": "แนตตี้",
+    "clipDuration": 12,
+    "muteStart": 4,
+    "muteEnd": 7.8,
+    "quoteStart": 4,
+    "quoteEnd": 7.8,
+    "contextDialogue": "แนตตี้วิ่งหน้าตาตื่นมาหน้าห้องน้ำปั๊ม พนักงานถามว่ามีอะไรให้ช่วยไหม แนตตี้จึงตะโกนลั่นว่า...",
+    "correctAnswer": "กูปวดขี้!",
+    "options": [
+      "กูปวดขี้!",
+      "เรื่องนี้กูจะไม่ทน!",
+      "เปิดประตูเดี๋ยวนี้ ฉันจะระเบิดแล้ว!",
+      "ห้องน้ำเต็มหมดเลยเหรอคะ!"
+    ],
+    "explanation": "ฉากในตำนานหน้าห้องน้ำปั๊มของ แนตตี้ (พีค ภัทรศยา) ใน ไดอารี่ตุ๊ดซี่ส์ เดอะ ซีรีส์",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_013_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_013_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_013_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_013_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_013_quote.mp4"
+  },
+  {
+    "id": "q_014",
+    "title": "เด็กใหม่ (Girl from Nowhere)",
+    "mediaType": "series",
+    "year": 2018,
+    "categories": [
+      "all",
+      "series",
+      "horror",
+      "drama",
+      "trending"
+    ],
+    "difficulty": "medium",
+    "character": "แนนโน๊ะ",
+    "clipDuration": 13,
+    "muteStart": 4.5,
+    "muteEnd": 8.5,
+    "quoteStart": 4.5,
+    "quoteEnd": 8.5,
+    "contextDialogue": "เด็กสาวปริศนายืนยิ้มมุมปากและแนะนำตัวกับทุกคนในห้องเรียนใหม่...",
+    "correctAnswer": "สวัสดีค่ะ แนนโน๊ะนะคะ",
+    "options": [
+      "สวัสดีค่ะ แนนโน๊ะนะคะ",
+      "ขอต้อนรับสู่เทอมใหม่ค่ะ",
+      "ทุกคนพร้อมจะชดใช้กรรมหรือยังคะ",
+      "ความลับไม่มีในโลกหรอกนะคะอาจารย์"
+    ],
+    "explanation": "เสียงแนะนำตัวอันเป็นเอกลักษณ์และแฝงความน่าสะพรึงของแนนโน๊ะ (คิทตี้ ชิชา)",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_014_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_014_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_014_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_014_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_014_quote.mp4"
+  },
+  {
+    "id": "q_015",
+    "title": "รถไฟฟ้า มาหานะเธอ",
+    "mediaType": "movie",
+    "year": 2009,
+    "categories": [
+      "all",
+      "movie",
+      "romantic",
+      "comedy",
+      "legendary"
+    ],
+    "difficulty": "medium",
+    "character": "เป็ด (เพื่อนเหมยลี่)",
+    "clipDuration": 13,
+    "muteStart": 4.5,
+    "muteEnd": 8.8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8.8,
+    "contextDialogue": "เหมยลี่นั่งบ่นน้อยใจกับเพื่อนเรื่องแฟนไม่มีเวลาให้เราจะมีแฟนไปทำไมวะ เพื่อนจึงพูดขึ้นมาว่า...",
+    "correctAnswer": "มีแฟนไม่ได้มีให้อยู่ด้วยกันตลอดเวลาหรอกนะเว้ย เขามีเพื่อให้รู้ว่ายังมีอีกคนที่รักเรา",
+    "options": [
+      "มีแฟนไม่ได้มีให้อยู่ด้วยกันตลอดเวลาหรอกนะเว้ย เขามีเพื่อให้รู้ว่ายังมีอีกคนที่รักเรา",
+      "ผู้ชายดีๆ ไม่ได้มีแต่ในนิยายนะแก เดี๋ยวเขาก็มา",
+      "ถ้าไม่มีเวลาให้กัน ก็อย่ามีแฟนเลยดีกว่าไหมแก",
+      "ความรักก็เหมือนรถไฟฟ้า ต่อให้มาช้าแต่ก็ยังมานะ"
+    ],
+    "explanation": "ประโยคเด็ดกินใจคนมีคู่ในภาพยนตร์ รถไฟฟ้า มาหานะเธอ ที่พูดเตือนสติความหมายของความรัก",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_015_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_015_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_015_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_015_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_015_quote.mp4"
+  },
+  {
+    "id": "q_016",
+    "title": "Bad Buddy Series แค่เพื่อนครับเพื่อน",
+    "mediaType": "y_series",
+    "year": 2021,
+    "categories": [
+      "all",
+      "y_series",
+      "romantic",
+      "drama",
+      "trending"
+    ],
+    "difficulty": "hard",
+    "character": "ปราณ",
+    "clipDuration": 13,
+    "muteStart": 4.8,
+    "muteEnd": 9,
+    "quoteStart": 4.8,
+    "quoteEnd": 9,
+    "contextDialogue": "ปราณระเบิดอารมณ์ใส่ภัทรบนดาดฟ้าหอพัก ท่ามกลางความบาดหมางของสองครอบครัว...",
+    "correctAnswer": "มึงกับกูไม่ได้เป็นอะไรกัน แค่เพื่อนยังเป็นกันไม่ได้เลย!",
+    "options": [
+      "มึงกับกูไม่ได้เป็นอะไรกัน แค่เพื่อนยังเป็นกันไม่ได้เลย!",
+      "กูไม่ได้อยากเป็นแค่เพื่อนกับมึง",
+      "เราเป็นเพื่อนกันได้เปล่าวะภัทร",
+      "วิศวะกับสถาปัตย์ทำไมต้องมาทะเลาะกันด้วยวะ"
+    ],
+    "explanation": "ประโยคตัดพ้อสุดสะเทือนอารมณ์บนดาดฟ้าของ ปราณ (นนน กรภัทร์) ถึง ภัทร (โอม ภวัต)",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "/audio/quotes/q_016_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_016_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_016_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_016_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_016_quote.mp4"
+  }
+]

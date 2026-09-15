@@ -36,8 +36,14 @@ const PORT = process.env.PORT || 3000;
 const Database = require('./db');
 const EmailService = require('./emailService');
 const QuoteDatabase = require('./quoteDb');
+const QuoteStatsDb = require('./quoteStatsDb');
 const QuoteGameEngine = require('./quoteEngine');
 const quoteEngine = new QuoteGameEngine(io);
+
+// Initialize persistent stats database
+QuoteStatsDb.init().catch(err => {
+  console.error('[QuoteStatsDb] Startup initialization error:', err);
+});
 
 function maskEmail(email) {
   if (!email || !email.includes('@')) return email || '';
@@ -203,49 +209,171 @@ app.get('/api/quote/categories', (req, res) => {
   res.json({ success: true, categories, difficulties });
 });
 
-app.post('/api/quote/single/start', (req, res) => {
-  const { category = 'all', difficulty = 'mixed' } = req.body || {};
-
-  const categories = QuoteDatabase.getCategoryList();
-  const catItem = categories.find(c => c.id === category);
-  if (category !== 'all' && catItem && !catItem.isUnlocked) {
-    return res.status(400).json({
-      success: false,
-      message: `หมวด "${catItem.name}" มีคำถามที่พร้อมเล่นจริง ${catItem.count}/10 ข้อ (ยังไม่เปิดให้เล่นจนกว่าจะมีคลิปครบ 10 ข้อตามกติกา)`
-    });
+app.get('/api/quote/user/stats', async (req, res) => {
+  try {
+    const authUser = getAuthUser(req);
+    const userId = (req.query.userId || (authUser ? authUser.username : '') || '').trim();
+    if (!userId) {
+      return res.json({
+        success: true,
+        stats: {
+          completedRounds: 0,
+          highScore: 0,
+          avgScore: 0,
+          totalAnswered: 0,
+          totalCorrect: 0,
+          totalCorrectTime: 0,
+          avgAnswerTime: 0,
+          bestCategory: null,
+          multiplayerWins: 0,
+          podiumFirst: 0,
+          podiumSecond: 0,
+          podiumThird: 0
+        }
+      });
+    }
+    const stats = await QuoteStatsDb.getUserStats(userId);
+    res.json({ success: true, stats });
+  } catch (err) {
+    console.error('Error fetching quote user stats:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch user stats' });
   }
-
-  const difficulties = QuoteDatabase.getDifficultyList();
-  const diffItem = difficulties.find(d => d.id === difficulty);
-  if (difficulty !== 'mixed' && diffItem && !diffItem.isUnlocked) {
-    return res.status(400).json({
-      success: false,
-      message: `ระดับความยากนี้มีคำถามที่พร้อมเล่นจริง ${diffItem.count}/10 ข้อ (ยังไม่เปิดให้เล่นจนกว่าจะมีคลิปครบ 10 ข้อตามกติกา)`
-    });
-  }
-
-  const selectedQuestions = QuoteDatabase.selectRoundQuestions(category, difficulty);
-  if (!selectedQuestions || selectedQuestions.length < 10) {
-    return res.status(400).json({
-      success: false,
-      message: 'มีคำถามที่พร้อมเล่นจริงไม่ครบ 10 ข้อสำหรับรอบนี้ กรุณาเลือกหมวด "รวมทุกประเภท"'
-    });
-  }
-
-  const clientQuestions = selectedQuestions.map(q => QuoteDatabase.formatQuestionForClient(q, true));
-  res.json({ success: true, totalQuestions: clientQuestions.length, questions: clientQuestions });
 });
 
-app.post('/api/quote/single/answer', (req, res) => {
-  const { questionId, selectedOption } = req.body || {};
-  if (!questionId) return res.status(400).json({ success: false, message: 'Missing questionId' });
-  const result = QuoteDatabase.verifyAnswer(questionId, selectedOption);
-  res.json(result);
+app.post('/api/quote/single/start', async (req, res) => {
+  try {
+    const { category = 'all', difficulty = 'mixed' } = req.body || {};
+    const authUser = getAuthUser(req);
+    const userId = ((req.body && req.body.userId) || (authUser ? authUser.username : null) || ('guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5))).trim();
+
+    const categories = QuoteDatabase.getCategoryList();
+    const catItem = categories.find(c => c.id === category);
+    if (category !== 'all' && catItem && !catItem.isUnlocked) {
+      return res.status(400).json({
+        success: false,
+        message: `หมวด "${catItem.name}" มีคำถามที่พร้อมเล่นจริง ${catItem.count}/10 ข้อ (ยังไม่เปิดให้เล่นจนกว่าจะมีคลิปครบ 10 ข้อตามกติกา)`
+      });
+    }
+
+    const difficulties = QuoteDatabase.getDifficultyList();
+    const diffItem = difficulties.find(d => d.id === difficulty);
+    if (difficulty !== 'mixed' && diffItem && !diffItem.isUnlocked) {
+      return res.status(400).json({
+        success: false,
+        message: `ระดับความยากนี้มีคำถามที่พร้อมเล่นจริง ${diffItem.count}/10 ข้อ (ยังไม่เปิดให้เล่นจนกว่าจะมีคลิปครบ 10 ข้อตามกติกา)`
+      });
+    }
+
+    const selectedQuestions = QuoteDatabase.selectRoundQuestions(category, difficulty);
+    if (!selectedQuestions || selectedQuestions.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'มีคำถามที่พร้อมเล่นจริงไม่ครบ 10 ข้อสำหรับรอบนี้ กรุณาเลือกหมวด "รวมทุกประเภท"'
+      });
+    }
+
+    const roundId = 'rnd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    await QuoteStatsDb.createRound({
+      roundId,
+      userId,
+      username: userId,
+      mode: 'single',
+      category,
+      difficulty,
+      totalQuestions: selectedQuestions.length,
+      startedAt: Date.now()
+    });
+
+    const clientQuestions = selectedQuestions.map(q => QuoteDatabase.formatQuestionForClient(q, true));
+    res.json({
+      success: true,
+      roundId,
+      userId,
+      totalQuestions: clientQuestions.length,
+      questions: clientQuestions
+    });
+  } catch (err) {
+    console.error('Error starting single quote game:', err);
+    res.status(500).json({ success: false, message: 'Failed to start game' });
+  }
 });
 
-app.post('/api/quote/single/finish', (req, res) => {
-  QuoteDatabase.recordRoundCompleted();
-  res.json({ success: true });
+app.post('/api/quote/single/answer', async (req, res) => {
+  try {
+    const { roundId, userId, questionId, choiceId, selectedOption, answerTimeMs, clientDeadline } = req.body || {};
+    if (!questionId) return res.status(400).json({ success: false, message: 'Missing questionId' });
+
+    const chosen = choiceId || selectedOption;
+    const now = Date.now();
+    const verification = QuoteDatabase.verifyAnswer(questionId, chosen, now, clientDeadline);
+
+    let recorded = true;
+    let isDuplicate = false;
+
+    if (roundId && userId) {
+      const rec = await QuoteStatsDb.recordAnswer({
+        roundId,
+        userId,
+        questionId,
+        choiceId: verification.choiceId || chosen,
+        isCorrect: verification.isCorrect,
+        responseTimeMs: Math.round(Number(answerTimeMs) || 0),
+        serverTimestamp: now,
+        isLate: verification.isLate || false
+      });
+      recorded = rec.recorded;
+      isDuplicate = rec.isDuplicate;
+    }
+
+    res.json({
+      ...verification,
+      recorded,
+      isDuplicate
+    });
+  } catch (err) {
+    console.error('Error recording answer:', err);
+    res.status(500).json({ success: false, message: 'Failed to record answer' });
+  }
+});
+
+app.post('/api/quote/single/finish', async (req, res) => {
+  try {
+    const { roundId, userId, score = 0, totalCorrectTimeMs = 0, categoryBreakdown = {} } = req.body || {};
+    QuoteDatabase.recordRoundCompleted();
+
+    if (roundId && userId) {
+      const finishRes = await QuoteStatsDb.finishRound({
+        roundId,
+        userId,
+        score: Number(score) || 0,
+        totalCorrectTimeMs: Number(totalCorrectTimeMs) || 0,
+        status: 'completed',
+        rank: 1,
+        totalPlayers: 1,
+        finishedAt: Date.now(),
+        categoryBreakdown
+      });
+      return res.json({ success: true, ...finishRes });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error finishing single game:', err);
+    res.status(500).json({ success: false, message: 'Failed to finish game' });
+  }
+});
+
+app.post('/api/quote/single/abandon', async (req, res) => {
+  try {
+    const { roundId, userId } = req.body || {};
+    if (roundId && userId) {
+      await QuoteStatsDb.abandonRound(roundId, userId);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error abandoning single game:', err);
+    res.status(500).json({ success: false, message: 'Failed to abandon game' });
+  }
 });
 
 app.post('/api/quote/report', (req, res) => {
@@ -865,29 +993,35 @@ io.on('connection', (socket) => {
     if (typeof callback === 'function') callback(res);
   });
 
-  socket.on('quote_toggle_ready', ({ roomCode }) => {
-    quoteEngine.toggleReady(roomCode, socket.id);
-  });
-
-  socket.on('quote_update_room_settings', ({ roomCode, category, difficulty }) => {
-    quoteEngine.updateSettings(roomCode, socket.id, { category, difficulty });
-  });
-
-  socket.on('quote_kick_player', ({ roomCode, targetSocketId }) => {
-    quoteEngine.kickPlayer(roomCode, socket.id, targetSocketId);
-  });
-
-  socket.on('quote_start_game', ({ roomCode }, callback) => {
-    const res = quoteEngine.startGame(roomCode, socket.id);
+  socket.on('quote_reconnect', ({ roomCode, playerId, reconnectToken }, callback) => {
+    const res = quoteEngine.reconnect(roomCode, playerId, reconnectToken, socket);
     if (typeof callback === 'function') callback(res);
   });
 
-  socket.on('quote_submit_answer', ({ roomCode, selectedOption }) => {
-    quoteEngine.submitAnswer(roomCode, socket.id, selectedOption);
+  socket.on('quote_toggle_ready', ({ roomCode, playerId }) => {
+    quoteEngine.toggleReady(roomCode, playerId || socket.id);
   });
 
-  socket.on('quote_send_chat', ({ roomCode, message }) => {
-    quoteEngine.sendChatMessage(roomCode, socket.id, message);
+  socket.on('quote_update_room_settings', ({ roomCode, playerId, category, difficulty }) => {
+    quoteEngine.updateSettings(roomCode, playerId || socket.id, { category, difficulty });
+  });
+
+  socket.on('quote_kick_player', ({ roomCode, playerId, targetPlayerId, targetSocketId }) => {
+    quoteEngine.kickPlayer(roomCode, playerId || socket.id, targetPlayerId || targetSocketId);
+  });
+
+  socket.on('quote_start_game', ({ roomCode, playerId }, callback) => {
+    const res = quoteEngine.startGame(roomCode, playerId || socket.id);
+    if (typeof callback === 'function') callback(res);
+  });
+
+  socket.on('quote_submit_answer', ({ roomCode, playerId, choiceId, selectedOption, answerTimeMs }) => {
+    const chosen = choiceId || selectedOption;
+    quoteEngine.submitAnswer(roomCode, playerId || socket.id, chosen, answerTimeMs);
+  });
+
+  socket.on('quote_send_chat', ({ roomCode, playerId, message }) => {
+    quoteEngine.sendChatMessage(roomCode, playerId || socket.id, message);
   });
 
   socket.on('room_invite_accepted', ({ roomId }) => {

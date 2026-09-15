@@ -1,9 +1,25 @@
-/**
+﻿/**
  * Real-time Game Engine & Room Manager for 'ประโยคนี้...พูดว่าอะไร?'
- * Controls synchronized timers, question state machine, and anti-cheat ranking
+ * Implements strict Server State Machine:
+ * LOBBY -> COUNTDOWN -> INTRO -> ANSWERING -> REVEAL -> SCOREBOARD -> NEXT or FINISHED
+ * Handles CAS state transitions, choice randomization, signed reconnection tokens,
+ * server-driven timers, and persistent multiplayer stats.
  */
 
+const crypto = require('crypto');
 const Database = require('./quoteDb');
+const QuoteStatsDb = require('./quoteStatsDb');
+
+const SECRET_KEY = process.env.QUOTE_SECRET_KEY || 'agy_quote_secret_salt_2026';
+
+function signToken(playerId, roomCode) {
+  return crypto.createHmac('sha256', SECRET_KEY).update(`${playerId}::${roomCode}`).digest('hex');
+}
+
+function verifyToken(playerId, roomCode, token) {
+  const expected = signToken(playerId, roomCode);
+  return expected === token;
+}
 
 class GameEngine {
   constructor(io) {
@@ -21,27 +37,37 @@ class GameEngine {
     return code;
   }
 
+  generateId() {
+    return 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+  }
+
   createRoom(hostSocket, hostName) {
     const code = this.generateRoomCode();
     const cleanName = (hostName || 'ผู้เล่น 1').trim().slice(0, 16);
+    const playerId = this.generateId();
+    const reconnectToken = signToken(playerId, code);
 
     const room = {
       code,
-      hostId: hostSocket.id,
+      gameId: 'g_' + Date.now().toString(36),
+      stateVersion: 1,
+      hostPlayerId: playerId,
       category: 'all',
       difficulty: 'mixed',
-      state: 'lobby', // lobby | interstitial | clip | question | reveal | leaderboard | finished
-      players: new Map(),
+      state: 'LOBBY', // LOBBY, COUNTDOWN, INTRO, ANSWERING, REVEAL, SCOREBOARD, FINISHED
+      players: new Map(), // playerId -> Player
       questions: [],
       currentQuestionIndex: 0,
-      currentQuestionStartTime: 0,
-      questionTimer: null,
-      revealTimer: null,
+      phaseDeadline: 0,
+      phaseStartAt: 0,
+      stateTimer: null,
+      playerReadiness: new Set(),
       chatMessages: []
     };
 
-    room.players.set(hostSocket.id, {
-      id: hostSocket.id,
+    const hostPlayer = {
+      id: playerId,
+      socketId: hostSocket.id,
       username: cleanName,
       isHost: true,
       isReady: true,
@@ -49,13 +75,22 @@ class GameEngine {
       totalCorrectTime: 0,
       streak: 0,
       maxStreak: 0,
-      answers: {}, // qIndex -> { selected, isCorrect, timeTaken }
-      isConnected: true
-    });
+      answers: {}, // qIndex -> { selectedChoiceId, isCorrect, timeTaken, isLate }
+      choicesLayout: {}, // qIndex -> array of choices
+      isConnected: true,
+      reconnectToken
+    };
 
+    room.players.set(playerId, hostPlayer);
     this.rooms.set(code, room);
     hostSocket.join('room_' + code);
-    return { success: true, room: this.serializeRoom(room) };
+
+    return {
+      success: true,
+      room: this.serializeRoom(room),
+      playerId,
+      reconnectToken
+    };
   }
 
   joinRoom(roomCode, socket, username) {
@@ -63,21 +98,8 @@ class GameEngine {
     const room = this.rooms.get(code);
     if (!room) return { success: false, message: 'ไม่พบห้องรหัสนี้ กรุณาตรวจสอบอีกครั้ง' };
 
-    // If reconnecting existing player
-    for (const [sId, p] of room.players.entries()) {
-      if (p.username.toLowerCase() === (username || '').trim().toLowerCase() && !p.isConnected) {
-        room.players.delete(sId);
-        p.id = socket.id;
-        p.isConnected = true;
-        room.players.set(socket.id, p);
-        socket.join('room_' + code);
-        this.broadcastRoomUpdate(code);
-        return { success: true, room: this.serializeRoom(room), isReconnected: true };
-      }
-    }
-
-    if (room.state !== 'lobby') {
-      return { success: false, message: 'เกมในห้องนี้เริ่มไปแล้ว ไม่สามารถเข้าร่วมได้' };
+    if (room.state !== 'LOBBY') {
+      return { success: false, message: 'เกมในห้องนี้เริ่มไปแล้ว ไม่สามารถเข้าร่วมได้ (ยกเว้นผู้เล่นเดิมที่หลุดแล้วกลับมา)' };
     }
 
     if (room.players.size >= 10) {
@@ -85,8 +107,12 @@ class GameEngine {
     }
 
     const cleanName = (username || 'ผู้เล่น').trim().slice(0, 16);
-    room.players.set(socket.id, {
-      id: socket.id,
+    const playerId = this.generateId();
+    const reconnectToken = signToken(playerId, code);
+
+    const player = {
+      id: playerId,
+      socketId: socket.id,
       username: cleanName,
       isHost: false,
       isReady: false,
@@ -95,54 +121,568 @@ class GameEngine {
       streak: 0,
       maxStreak: 0,
       answers: {},
-      isConnected: true
-    });
+      choicesLayout: {},
+      isConnected: true,
+      reconnectToken
+    };
 
+    room.players.set(playerId, player);
     socket.join('room_' + code);
     this.broadcastRoomUpdate(code);
-    return { success: true, room: this.serializeRoom(room) };
+
+    return {
+      success: true,
+      room: this.serializeRoom(room),
+      playerId,
+      reconnectToken
+    };
   }
 
-  toggleReady(roomCode, socketId) {
+  /**
+   * Reconnection using signed token
+   */
+  reconnect(roomCode, playerId, reconnectToken, socket) {
+    const code = (roomCode || '').trim().toUpperCase();
+    const room = this.rooms.get(code);
+    if (!room) return { success: false, message: 'ไม่พบห้องที่ต้องการเชื่อมต่อใหม่' };
+
+    if (!verifyToken(playerId, code, reconnectToken)) {
+      return { success: false, message: 'โทเคนเชื่อมต่อใหม่ไม่ถูกต้อง' };
+    }
+
+    const player = room.players.get(playerId);
+    if (!player) return { success: false, message: 'ไม่พบข้อมูลผู้เล่นในห้องนี้' };
+
+    // Invalidate old socket if active
+    if (player.socketId && player.socketId !== socket.id) {
+      this.io.to(player.socketId).emit('session_superseded', { message: 'มีการเชื่อมต่อใหม่จากอุปกรณ์หรือแท็บอื่น' });
+    }
+
+    player.socketId = socket.id;
+    player.isConnected = true;
+    socket.join('room_' + code);
+
+    // Prepare state snapshot
+    const qIndex = room.currentQuestionIndex;
+    const currentQ = room.questions[qIndex];
+    const snapshot = {
+      roomId: room.code,
+      gameId: room.gameId,
+      phase: room.state,
+      questionSeq: qIndex + 1,
+      stateVersion: room.stateVersion,
+      deadline: room.phaseDeadline,
+      startAt: room.phaseStartAt,
+      score: player.score,
+      answered: !!player.answers[qIndex],
+      selectedChoiceId: player.answers[qIndex]?.selectedChoiceId || null,
+      options: player.choicesLayout[qIndex] || (currentQ ? Database.formatQuestionForClient(currentQ, true).choices : [])
+    };
+
+    // If game finished, attach final rankings
+    if (room.state === 'FINISHED') {
+      snapshot.rankings = this.getRankedPlayers(room);
+    }
+
+    this.broadcastRoomUpdate(code);
+
+    return {
+      success: true,
+      snapshot,
+      room: this.serializeRoom(room)
+    };
+  }
+
+  toggleReady(roomCode, playerIdOrSocketId) {
     const room = this.rooms.get(roomCode);
-    if (!room || room.state !== 'lobby') return;
-    const player = room.players.get(socketId);
-    if (!player) return;
-    if (player.isHost) return; // host is always ready
+    if (!room || room.state !== 'LOBBY') return;
+    const player = this.findPlayer(room, playerIdOrSocketId);
+    if (!player || player.isHost) return;
 
     player.isReady = !player.isReady;
     this.broadcastRoomUpdate(roomCode);
   }
 
-  kickPlayer(roomCode, hostSocketId, targetSocketId) {
+  kickPlayer(roomCode, hostIdentifier, targetPlayerIdOrSocketId) {
     const room = this.rooms.get(roomCode);
-    if (!room || room.state !== 'lobby' || room.hostId !== hostSocketId) return;
-    if (targetSocketId === hostSocketId) return;
+    if (!room || room.state !== 'LOBBY') return;
+    const host = this.findPlayer(room, hostIdentifier);
+    if (!host || !host.isHost) return;
 
-    const target = room.players.get(targetSocketId);
-    if (target) {
-      room.players.delete(targetSocketId);
-      this.io.to(targetSocketId).emit('kicked_from_room');
-      this.broadcastRoomUpdate(roomCode);
+    const target = this.findPlayer(room, targetPlayerIdOrSocketId);
+    if (!target || target.isHost) return;
+
+    room.players.delete(target.id);
+    if (target.socketId) {
+      this.io.to(target.socketId).emit('kicked_from_room');
     }
+    this.broadcastRoomUpdate(roomCode);
   }
 
-  updateSettings(roomCode, hostSocketId, { category, difficulty }) {
+  updateSettings(roomCode, hostIdentifier, { category, difficulty }) {
     const room = this.rooms.get(roomCode);
-    if (!room || room.state !== 'lobby' || room.hostId !== hostSocketId) return;
+    if (!room || room.state !== 'LOBBY') return;
+    const host = this.findPlayer(room, hostIdentifier);
+    if (!host || !host.isHost) return;
 
     if (category) room.category = category;
     if (difficulty) room.difficulty = difficulty;
     this.broadcastRoomUpdate(roomCode);
   }
 
-  sendChatMessage(roomCode, socketId, message) {
+  startGame(roomCode, hostIdentifier) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'LOBBY') {
+      return { success: false, message: 'ห้องไม่อยู่ในสถานะที่สามารถเริ่มเกมได้' };
+    }
+
+    const host = this.findPlayer(room, hostIdentifier);
+    if (!host || !host.isHost) {
+      return { success: false, message: 'เฉพาะหัวหน้าห้องเท่านั้นที่สามารถกดเริ่มเกมได้' };
+    }
+
+    // Check all ready
+    for (const p of room.players.values()) {
+      if (!p.isReady && !p.isHost && p.isConnected) {
+        return { success: false, message: 'ผู้เล่นทุกคนต้องกดพร้อมก่อนเริ่มเกมครับ' };
+      }
+    }
+
+    let selectedQ = Database.selectRoundQuestions(room.category || 'all', room.difficulty || 'mixed');
+    if (!selectedQ || selectedQ.length < 10) {
+      selectedQ = Database.selectRoundQuestions('all', 'mixed');
+    }
+    if (!selectedQ || selectedQ.length < 10) {
+      return { success: false, message: 'มีคำถามที่พร้อมเล่นจริงไม่เพียงพอสำหรับเริ่มเกม (ต้องการอย่างน้อย 10 ข้อ)' };
+    }
+
+    room.questions = selectedQ;
+    room.currentQuestionIndex = 0;
+    room.gameId = 'g_' + Date.now().toString(36);
+
+    // Reset player scores and answers
+    for (const p of room.players.values()) {
+      p.score = 0;
+      p.totalCorrectTime = 0;
+      p.streak = 0;
+      p.maxStreak = 0;
+      p.answers = {};
+      p.choicesLayout = {};
+    }
+
+    // Transition to COUNTDOWN
+    this.transitionState(room, 'LOBBY', 'COUNTDOWN', () => {
+      this.runCountdown(roomCode);
+    });
+
+    return { success: true };
+  }
+
+  /**
+   * Compare-and-set State Transition
+   */
+  transitionState(room, expectedState, nextState, onEntered) {
+    if (!room || room.state !== expectedState) {
+      return false;
+    }
+
+    clearTimeout(room.stateTimer);
+    room.state = nextState;
+    room.stateVersion++;
+    room.playerReadiness.clear();
+
+    if (typeof onEntered === 'function') {
+      onEntered();
+    }
+    return true;
+  }
+
+  runCountdown(roomCode) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'COUNTDOWN') return;
+
+    const currentSeq = room.currentQuestionIndex + 1;
+    const currentQ = room.questions[room.currentQuestionIndex];
+    const durationMs = 2500;
+    room.phaseStartAt = Date.now();
+    room.phaseDeadline = room.phaseStartAt + durationMs;
+
+    this.io.to('room_' + roomCode).emit('game_countdown', {
+      roomId: room.code,
+      gameId: room.gameId,
+      questionSeq: currentSeq,
+      stateVersion: room.stateVersion,
+      totalQuestions: 10,
+      title: currentQ.title,
+      character: currentQ.character,
+      startAt: room.phaseStartAt,
+      deadline: room.phaseDeadline
+    });
+
+    room.stateTimer = setTimeout(() => {
+      this.transitionState(room, 'COUNTDOWN', 'INTRO', () => {
+        this.runIntroPhase(roomCode);
+      });
+    }, durationMs);
+  }
+
+  runIntroPhase(roomCode) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'INTRO') return;
+
+    const qIndex = room.currentQuestionIndex;
+    const currentQ = room.questions[qIndex];
+    const clipDurationSec = currentQ.muteEnd || 8.0;
+    const clipDurationMs = clipDurationSec * 1000;
+
+    room.phaseStartAt = Date.now();
+    room.phaseDeadline = room.phaseStartAt + clipDurationMs;
+
+    // Send question info with randomized choice positions per player
+    for (const p of room.players.values()) {
+      const formatted = Database.formatQuestionForClient(currentQ, true);
+      p.choicesLayout[qIndex] = formatted.choices;
+
+      if (p.socketId && p.isConnected) {
+        this.io.to(p.socketId).emit('game_intro', {
+          roomId: room.code,
+          gameId: room.gameId,
+          questionSeq: qIndex + 1,
+          stateVersion: room.stateVersion,
+          totalQuestions: 10,
+          question: formatted,
+          startAt: room.phaseStartAt,
+          deadline: room.phaseDeadline
+        });
+      }
+    }
+
+    room.stateTimer = setTimeout(() => {
+      this.transitionState(room, 'INTRO', 'ANSWERING', () => {
+        this.runAnsweringPhase(roomCode);
+      });
+    }, clipDurationMs);
+  }
+
+  runAnsweringPhase(roomCode) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'ANSWERING') return;
+
+    const qIndex = room.currentQuestionIndex;
+    const answerDurationMs = 15000; // 15 seconds
+    room.phaseStartAt = Date.now();
+    room.phaseDeadline = room.phaseStartAt + answerDurationMs;
+
+    this.io.to('room_' + roomCode).emit('game_answering', {
+      roomId: room.code,
+      gameId: room.gameId,
+      questionSeq: qIndex + 1,
+      stateVersion: room.stateVersion,
+      startAt: room.phaseStartAt,
+      deadline: room.phaseDeadline,
+      timeLimitSeconds: 15
+    });
+
+    // Server-side timeout
+    room.stateTimer = setTimeout(() => {
+      this.evaluateQuestion(roomCode, qIndex, 'timeout');
+    }, answerDurationMs);
+  }
+
+  submitAnswer(roomCode, playerIdentifier, choiceId) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'ANSWERING') return;
+
+    const player = this.findPlayer(room, playerIdentifier);
+    if (!player) return;
+
+    const qIndex = room.currentQuestionIndex;
+    if (player.answers[qIndex]) return; // Already answered
+
+    const now = Date.now();
+    const isLate = now > room.phaseDeadline;
+    const timeTaken = Math.min(15, Math.max(0.1, (now - room.phaseStartAt) / 1000));
+    const currentQ = room.questions[qIndex];
+
+    const verifyResult = Database.verifyAnswer(currentQ.id, choiceId, now, room.phaseDeadline);
+    const isCorrect = verifyResult.isCorrect && !isLate;
+
+    player.answers[qIndex] = {
+      selectedChoiceId: choiceId,
+      isCorrect,
+      isLate,
+      timeTaken
+    };
+
+    if (isCorrect) {
+      player.score++;
+      player.totalCorrectTime += timeTaken;
+      player.streak++;
+      if (player.streak > player.maxStreak) player.maxStreak = player.streak;
+    } else {
+      player.streak = 0;
+    }
+
+    // Broadcast that player answered (without revealing choice or correctness)
+    this.io.to('room_' + roomCode).emit('player_answered', {
+      roomId: room.code,
+      gameId: room.gameId,
+      questionSeq: qIndex + 1,
+      playerId: player.id,
+      username: player.username
+    });
+
+    // Check if all connected active players have answered
+    const activeConnected = Array.from(room.players.values()).filter(p => p.isConnected);
+    const allAnswered = activeConnected.every(p => p.answers[qIndex] !== undefined);
+
+    if (allAnswered) {
+      clearTimeout(room.stateTimer);
+      // Small pause of 300ms before reveal
+      room.stateTimer = setTimeout(() => {
+        this.evaluateQuestion(roomCode, qIndex, 'all_answered');
+      }, 350);
+    }
+  }
+
+  evaluateQuestion(roomCode, qIndex, triggerReason) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.currentQuestionIndex !== qIndex) return;
+
+    // CAS: Transition ANSWERING -> REVEAL atomically
+    const transitioned = this.transitionState(room, 'ANSWERING', 'REVEAL', () => {});
+    if (!transitioned) return; // Prevent double reveal!
+
+    const currentQ = room.questions[qIndex];
+
+    // Mark unanswered players as wrong
+    for (const p of room.players.values()) {
+      if (!p.answers[qIndex]) {
+        p.answers[qIndex] = { selectedChoiceId: null, isCorrect: false, isLate: false, timeTaken: 15 };
+        p.streak = 0;
+      }
+    }
+
+    // Commentary
+    const commentary = [];
+    const correctPlayers = Array.from(room.players.values()).filter(p => p.answers[qIndex]?.isCorrect);
+    if (correctPlayers.length === 0) {
+      commentary.push('😱 ข้อนี้ไม่มีใครตอบถูกเลย!');
+    } else if (correctPlayers.length === room.players.size) {
+      commentary.push('🎉 เก่งมาก! ทุกคนตอบถูกหมด!');
+    } else {
+      const fastest = [...correctPlayers].sort((a,b) => a.answers[qIndex].timeTaken - b.answers[qIndex].timeTaken)[0];
+      if (fastest) {
+        commentary.push(`⚡ ${fastest.username} ตอบเร็วที่สุด (${fastest.answers[qIndex].timeTaken.toFixed(1)} วินาที)!`);
+      }
+    }
+
+    for (const p of room.players.values()) {
+      if (p.streak >= 3) {
+        commentary.push(`🔥 ${p.username} ตอบถูกติดกัน ${p.streak} ข้อแล้ว!`);
+      }
+    }
+
+    const rankings = this.getRankedPlayers(room);
+    const revealPayload = Database.verifyAnswer(currentQ.id, currentQ.correctAnswer);
+
+    const replayDurationMs = Math.max(3500, ((currentQ.quoteEnd - currentQ.quoteStart) * 1000) + 3500);
+    room.phaseStartAt = Date.now();
+    room.phaseDeadline = room.phaseStartAt + replayDurationMs;
+
+    this.io.to('room_' + roomCode).emit('game_reveal', {
+      roomId: room.code,
+      gameId: room.gameId,
+      questionSeq: qIndex + 1,
+      stateVersion: room.stateVersion,
+      correctAnswer: revealPayload.correctAnswer,
+      explanation: revealPayload.explanation,
+      quoteStart: revealPayload.quoteStart,
+      quoteEnd: revealPayload.quoteEnd,
+      audioUrl: revealPayload.quoteAudioUrl,
+      introAudioUrl: revealPayload.introAudioUrl,
+      quoteAudioUrl: revealPayload.quoteAudioUrl,
+      videoUrl: revealPayload.quoteVideoUrl,
+      introVideoUrl: revealPayload.introVideoUrl,
+      quoteVideoUrl: revealPayload.quoteVideoUrl,
+      character: revealPayload.character,
+      title: revealPayload.title,
+      mediaType: revealPayload.mediaType,
+      playersResults: Array.from(room.players.values()).map(p => ({
+        id: p.id,
+        username: p.username,
+        isCorrect: p.answers[qIndex].isCorrect,
+        selectedChoiceId: p.answers[qIndex].selectedChoiceId,
+        timeTaken: p.answers[qIndex].timeTaken.toFixed(1),
+        score: p.score
+      })),
+      rankings,
+      commentary,
+      startAt: room.phaseStartAt,
+      deadline: room.phaseDeadline
+    });
+
+    room.stateTimer = setTimeout(() => {
+      this.transitionState(room, 'REVEAL', 'SCOREBOARD', () => {
+        this.runScoreboardPhase(roomCode);
+      });
+    }, replayDurationMs);
+  }
+
+  runScoreboardPhase(roomCode) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.state !== 'SCOREBOARD') return;
+
+    const qIndex = room.currentQuestionIndex;
+    const rankings = this.getRankedPlayers(room);
+    const scoreboardDurationMs = 2500;
+    room.phaseStartAt = Date.now();
+    room.phaseDeadline = room.phaseStartAt + scoreboardDurationMs;
+
+    this.io.to('room_' + roomCode).emit('game_scoreboard', {
+      roomId: room.code,
+      gameId: room.gameId,
+      questionSeq: qIndex + 1,
+      stateVersion: room.stateVersion,
+      rankings,
+      startAt: room.phaseStartAt,
+      deadline: room.phaseDeadline
+    });
+
+    room.stateTimer = setTimeout(() => {
+      room.currentQuestionIndex++;
+      if (room.currentQuestionIndex >= 10 || room.currentQuestionIndex >= room.questions.length) {
+        this.finishGame(roomCode);
+      } else {
+        this.transitionState(room, 'SCOREBOARD', 'COUNTDOWN', () => {
+          this.runCountdown(roomCode);
+        });
+      }
+    }, scoreboardDurationMs);
+  }
+
+  getRankedPlayers(room) {
+    const sorted = Array.from(room.players.values()).sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      // Tie-breaker: lower total correct response time wins
+      return a.totalCorrectTime - b.totalCorrectTime;
+    });
+
+    let currentRank = 1;
+    return sorted.map((p, idx) => {
+      if (idx > 0) {
+        const prev = sorted[idx - 1];
+        const isTie = (p.score === prev.score && Math.abs(p.totalCorrectTime - prev.totalCorrectTime) < 0.05);
+        if (!isTie) {
+          currentRank = idx + 1;
+        }
+      }
+      return {
+        rank: currentRank,
+        id: p.id,
+        username: p.username,
+        score: p.score,
+        totalCorrectTime: p.totalCorrectTime.toFixed(1),
+        maxStreak: p.maxStreak
+      };
+    });
+  }
+
+  async finishGame(roomCode) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
-    // Disallow chat during question answering to prevent spoiling
-    if (room.state === 'clip' || room.state === 'question') return;
 
-    const player = room.players.get(socketId);
+    this.transitionState(room, room.state, 'FINISHED', () => {});
+
+    const rankings = this.getRankedPlayers(room);
+    const winner = rankings[0];
+
+    // Atomically persist multiplayer stats to QuoteStatsDb
+    const totalPlayers = room.players.size;
+    for (const rankItem of rankings) {
+      const player = room.players.get(rankItem.id);
+      if (player) {
+        const roundId = `${room.gameId}_${player.id}`;
+        try {
+          await QuoteStatsDb.createRound({
+            roundId,
+            userId: player.id,
+            username: player.username,
+            mode: 'multi',
+            category: room.category,
+            difficulty: room.difficulty,
+            totalQuestions: 10,
+            startedAt: room.phaseStartAt
+          });
+
+          await QuoteStatsDb.finishRound({
+            roundId,
+            userId: player.id,
+            username: player.username,
+            score: player.score,
+            totalCorrectTimeMs: Math.round(player.totalCorrectTime * 1000),
+            status: 'completed',
+            rank: rankItem.rank,
+            totalPlayers,
+            finishedAt: Date.now()
+          });
+        } catch (err) {
+          console.error('Error recording multiplayer round stats:', err);
+        }
+      }
+    }
+
+    this.io.to('room_' + roomCode).emit('game_finished', {
+      roomId: room.code,
+      gameId: room.gameId,
+      stateVersion: room.stateVersion,
+      rankings,
+      winner,
+      questionsPlayed: room.questions.map(q => ({
+        title: q.title,
+        mediaType: q.mediaType,
+        character: q.character,
+        correctAnswer: q.correctAnswer
+      }))
+    });
+  }
+
+  handleDisconnect(socketId) {
+    for (const [code, room] of this.rooms.entries()) {
+      const player = this.findPlayerBySocket(room, socketId);
+      if (player) {
+        player.isConnected = false;
+
+        if (room.state === 'LOBBY') {
+          room.players.delete(player.id);
+          if (room.players.size === 0) {
+            this.rooms.delete(code);
+            return;
+          }
+          if (player.isHost) {
+            const nextPlayer = room.players.values().next().value;
+            if (nextPlayer) {
+              nextPlayer.isHost = true;
+              nextPlayer.isReady = true;
+              room.hostPlayerId = nextPlayer.id;
+            }
+          }
+          this.broadcastRoomUpdate(code);
+        } else {
+          // Mid-game: server state machine continues ticking
+          this.broadcastRoomUpdate(code);
+        }
+        return;
+      }
+    }
+  }
+
+  sendChatMessage(roomCode, playerIdentifier, message) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+    if (room.state === 'INTRO' || room.state === 'ANSWERING') return;
+
+    const player = this.findPlayer(room, playerIdentifier);
     if (!player) return;
 
     const cleanMsg = (message || '').trim().slice(0, 100);
@@ -159,337 +699,50 @@ class GameEngine {
     this.io.to('room_' + roomCode).emit('new_chat_message', chatItem);
   }
 
-  startGame(roomCode, hostSocketId) {
-    const room = this.rooms.get(roomCode);
-    if (!room || room.state !== 'lobby' || room.hostId !== hostSocketId) return;
-
-    // Check all ready
-    for (const [id, p] of room.players.entries()) {
-      if (!p.isReady && !p.isHost) {
-        return { success: false, message: 'ผู้เล่นทุกคนต้องกดพร้อมก่อนเริ่มเกมครับ' };
-      }
-    }
-
-    let selectedQ = Database.selectRoundQuestions(room.category || 'all', room.difficulty || 'mixed');
-    if (!selectedQ || selectedQ.length < 10) {
-      selectedQ = Database.selectRoundQuestions('all', 'mixed');
-    }
-    if (!selectedQ || selectedQ.length < 10) {
-      return { success: false, message: 'มีคำถามที่พร้อมเล่นจริงไม่เพียงพอสำหรับเริ่มเกม (ต้องการอย่างน้อย 10 ข้อ)' };
-    }
-    room.questions = selectedQ;
-    room.currentQuestionIndex = 0;
-    room.state = 'interstitial';
-
-    // Reset scores
+  findPlayer(room, identifier) {
+    if (!room || !identifier) return null;
+    if (room.players.has(identifier)) return room.players.get(identifier);
     for (const p of room.players.values()) {
-      p.score = 0;
-      p.totalCorrectTime = 0;
-      p.streak = 0;
-      p.maxStreak = 0;
-      p.answers = {};
+      if (p.socketId === identifier) return p;
     }
-
-    this.runQuestionSequence(roomCode);
-    return { success: true };
+    return null;
   }
 
-  runQuestionSequence(roomCode) {
-    const room = this.rooms.get(roomCode);
-    if (!room) return;
-
-    const qIndex = room.currentQuestionIndex;
-    if (qIndex >= 10 || qIndex >= room.questions.length) {
-      this.finishGame(roomCode);
-      return;
-    }
-
-    const currentQ = room.questions[qIndex];
-    room.state = 'interstitial';
-
-    // 1. Interstitial Screen: "ข้อที่ X/10 เตรียมตัว..." (2 seconds)
-    this.io.to('room_' + roomCode).emit('game_interstitial', {
-      questionNumber: qIndex + 1,
-      totalQuestions: 10,
-      title: currentQ.title,
-      character: currentQ.character
-    });
-
-    setTimeout(() => {
-      const liveRoom = this.rooms.get(roomCode);
-      if (!liveRoom || liveRoom.currentQuestionIndex !== qIndex) return;
-
-      // 2. Video Clip Phase
-      liveRoom.state = 'clip';
-      // Deliver question details without answer
-      for (const [sockId, p] of liveRoom.players.entries()) {
-        const clientPayload = Database.formatQuestionForClient(currentQ, true);
-        this.io.to(sockId).emit('game_clip_start', {
-          questionNumber: qIndex + 1,
-          totalQuestions: 10,
-          question: clientPayload
-        });
-      }
-
-      // Clip plays for currentQ.muteEnd seconds before pausing and revealing choices
-      const clipDurationMs = (currentQ.muteEnd || 8.0) * 1000;
-
-      setTimeout(() => {
-        const activeRoom = this.rooms.get(roomCode);
-        if (!activeRoom || activeRoom.currentQuestionIndex !== qIndex) return;
-
-        // 3. Question Answering Phase: 15 Seconds Countdown
-        activeRoom.state = 'question';
-        activeRoom.currentQuestionStartTime = Date.now();
-
-        this.io.to('room_' + roomCode).emit('game_question_start', {
-          questionNumber: qIndex + 1,
-          timeLimitSeconds: 15
-        });
-
-        // 15 seconds timer
-        clearTimeout(activeRoom.questionTimer);
-        activeRoom.questionTimer = setTimeout(() => {
-          this.evaluateQuestion(roomCode, qIndex);
-        }, 15500);
-
-      }, clipDurationMs);
-
-    }, 2000);
-  }
-
-  submitAnswer(roomCode, socketId, selectedOption) {
-    const room = this.rooms.get(roomCode);
-    if (!room || room.state !== 'question') return;
-
-    const player = room.players.get(socketId);
-    if (!player) return;
-
-    const qIndex = room.currentQuestionIndex;
-    if (player.answers[qIndex]) return; // already answered
-
-    const now = Date.now();
-    const timeTaken = Math.min(15, Math.max(0.1, (now - room.currentQuestionStartTime) / 1000));
-    const currentQ = room.questions[qIndex];
-    const isCorrect = (selectedOption || '').trim() === (currentQ.correctAnswer || '').trim();
-
-    player.answers[qIndex] = {
-      selected: selectedOption,
-      isCorrect,
-      timeTaken
-    };
-
-    if (isCorrect) {
-      player.score++;
-      player.totalCorrectTime += timeTaken;
-      player.streak++;
-      if (player.streak > player.maxStreak) player.maxStreak = player.streak;
-    } else {
-      player.streak = 0;
-    }
-
-    // Broadcast that player answered (without revealing choice)
-    this.io.to('room_' + roomCode).emit('player_answered', {
-      playerId: socketId,
-      username: player.username
-    });
-
-    // Check if all connected players have answered
-    const activePlayers = Array.from(room.players.values()).filter(p => p.isConnected);
-    const allAnswered = activePlayers.every(p => p.answers[qIndex] !== undefined);
-
-    if (allAnswered) {
-      clearTimeout(room.questionTimer);
-      // Small pause of 300ms before reveal
-      setTimeout(() => {
-        this.evaluateQuestion(roomCode, qIndex);
-      }, 400);
-    }
-  }
-
-  evaluateQuestion(roomCode, qIndex) {
-    const room = this.rooms.get(roomCode);
-    if (!room || room.currentQuestionIndex !== qIndex || room.state === 'reveal') return;
-
-    room.state = 'reveal';
-    clearTimeout(room.questionTimer);
-
-    const currentQ = room.questions[qIndex];
-
-    // Mark unanswered players as wrong
+  findPlayerBySocket(room, socketId) {
     for (const p of room.players.values()) {
-      if (!p.answers[qIndex]) {
-        p.answers[qIndex] = { selected: '', isCorrect: false, timeTaken: 15 };
-        p.streak = 0;
-      }
+      if (p.socketId === socketId) return p;
     }
-
-    // Calculate dynamic commentary
-    const commentary = [];
-    const correctPlayers = Array.from(room.players.values()).filter(p => p.answers[qIndex]?.isCorrect);
-    if (correctPlayers.length === 0) {
-      commentary.push('😱 ข้อนี้ไม่มีใครตอบถูกเลย!');
-    } else if (correctPlayers.length === room.players.size) {
-      commentary.push('🎉 เก่งมาก! ทุกคนตอบถูกหมด!');
-    } else {
-      // Find fastest correct answer
-      const fastest = [...correctPlayers].sort((a,b) => a.answers[qIndex].timeTaken - b.answers[qIndex].timeTaken)[0];
-      if (fastest) {
-        commentary.push(`⚡ ${fastest.username} ตอบเร็วที่สุด (${fastest.answers[qIndex].timeTaken.toFixed(1)} วินาที)!`);
-      }
-    }
-
-    for (const p of room.players.values()) {
-      if (p.streak >= 3) {
-        commentary.push(`🔥 ${p.username} ตอบถูกติดกัน ${p.streak} ข้อแล้ว!`);
-      }
-    }
-
-    // Sort players for leaderboard
-    const rankings = this.getRankedPlayers(room);
-
-    // Broadcast Reveal payload
-    this.io.to('room_' + roomCode).emit('game_reveal', {
-      questionNumber: qIndex + 1,
-      correctAnswer: currentQ.correctAnswer,
-      explanation: currentQ.explanation,
-      quoteStart: currentQ.quoteStart,
-      quoteEnd: currentQ.quoteEnd,
-      audioUrl: currentQ.audioUrl || (currentQ.quoteAudioUrl || ''),
-      introAudioUrl: currentQ.introAudioUrl || '',
-      quoteAudioUrl: currentQ.quoteAudioUrl || '',
-      videoUrl: currentQ.videoUrl || '',
-      introVideoUrl: currentQ.introVideoUrl || '',
-      quoteVideoUrl: currentQ.quoteVideoUrl || '',
-      character: currentQ.character,
-      title: currentQ.title,
-      mediaType: currentQ.mediaType,
-      playersResults: Array.from(room.players.values()).map(p => ({
-        id: p.id,
-        username: p.username,
-        isCorrect: p.answers[qIndex].isCorrect,
-        selected: p.answers[qIndex].selected,
-        timeTaken: p.answers[qIndex].timeTaken.toFixed(1),
-        score: p.score
-      })),
-      rankings,
-      commentary
-    });
-
-    // Length of replay sentence + 3.5s for reading reveal
-    const replayDurationMs = Math.max(3500, ((currentQ.quoteEnd - currentQ.quoteStart) * 1000) + 3500);
-
-    setTimeout(() => {
-      const activeRoom = this.rooms.get(roomCode);
-      if (!activeRoom) return;
-
-      activeRoom.currentQuestionIndex++;
-      this.runQuestionSequence(roomCode);
-    }, replayDurationMs);
-  }
-
-  getRankedPlayers(room) {
-    return Array.from(room.players.values()).sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      // If tied, lower total time taken on correct answers wins
-      return a.totalCorrectTime - b.totalCorrectTime;
-    }).map((p, idx) => ({
-      rank: idx + 1,
-      id: p.id,
-      username: p.username,
-      score: p.score,
-      totalCorrectTime: p.totalCorrectTime.toFixed(1),
-      maxStreak: p.maxStreak
-    }));
-  }
-
-  finishGame(roomCode) {
-    const room = this.rooms.get(roomCode);
-    if (!room) return;
-
-    room.state = 'finished';
-    const rankings = this.getRankedPlayers(room);
-    const winner = rankings[0];
-
-    Database.recordRoundCompleted();
-
-    this.io.to('room_' + roomCode).emit('game_finished', {
-      rankings,
-      winner,
-      questionsPlayed: room.questions.map(q => ({
-        title: q.title,
-        mediaType: q.mediaType,
-        character: q.character,
-        correctAnswer: q.correctAnswer
-      }))
-    });
-  }
-
-  handleDisconnect(socketId) {
-    for (const [code, room] of this.rooms.entries()) {
-      if (room.players.has(socketId)) {
-        const player = room.players.get(socketId);
-        player.isConnected = false;
-
-        if (room.state === 'lobby') {
-          // Remove from lobby
-          room.players.delete(socketId);
-          if (room.players.size === 0) {
-            this.rooms.delete(code);
-            return;
-          }
-          // If host left, migrate host to next player
-          if (player.isHost) {
-            const nextPlayer = room.players.values().next().value;
-            if (nextPlayer) {
-              nextPlayer.isHost = true;
-              nextPlayer.isReady = true;
-              room.hostId = nextPlayer.id;
-            }
-          }
-          this.broadcastRoomUpdate(code);
-        } else {
-          // During game, announce disconnect
-          this.io.to('room_' + code).emit('player_disconnected', {
-            playerId: socketId,
-            username: player.username
-          });
-          // If host disconnected during game, migrate host
-          if (player.isHost) {
-            const activePlayer = Array.from(room.players.values()).find(p => p.isConnected);
-            if (activePlayer) {
-              activePlayer.isHost = true;
-              room.hostId = activePlayer.id;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  broadcastRoomUpdate(roomCode) {
-    const room = this.rooms.get(roomCode);
-    if (!room) return;
-    this.io.to('room_' + roomCode).emit('room_update', this.serializeRoom(room));
+    return null;
   }
 
   serializeRoom(room) {
     return {
       code: room.code,
-      hostId: room.hostId,
+      gameId: room.gameId,
+      hostId: room.hostPlayerId,
       category: room.category,
       difficulty: room.difficulty,
       state: room.state,
+      stateVersion: room.stateVersion,
       players: Array.from(room.players.values()).map(p => ({
         id: p.id,
+        socketId: p.socketId,
         username: p.username,
         isHost: p.isHost,
         isReady: p.isReady,
         score: p.score,
+        totalCorrectTime: p.totalCorrectTime.toFixed(1),
+        maxStreak: p.maxStreak,
         isConnected: p.isConnected
       })),
-      playerCount: room.players.size
+      chatMessages: room.chatMessages
     };
+  }
+
+  broadcastRoomUpdate(roomCode) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+    this.io.to('room_' + roomCode).emit('room_updated', this.serializeRoom(room));
   }
 }
 

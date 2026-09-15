@@ -1,0 +1,16 @@
+{
+  "usr_0b9dba9c264c132d": {
+    "friends": [
+      "usr_746446234dd97b99"
+    ],
+    "pendingOut": [],
+    "pendingIn": []
+  },
+  "usr_746446234dd97b99": {
+    "friends": [
+      "usr_0b9dba9c264c132d"
+    ],
+    "pendingOut": [],
+    "pendingIn": []
+  }
+}

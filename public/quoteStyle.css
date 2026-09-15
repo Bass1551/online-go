@@ -843,12 +843,98 @@
   cursor: pointer;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .hero-title { font-size: 1.8rem; }
-  .options-grid { grid-template-columns: 1fr; }
+/* ========================================================
+   IN-GAME FOCUS MODE & RESPONSIVE DESIGN (REQUIREMENT 8)
+   ======================================================== */
+
+/* Touch Target Accessibility: minimum 44px for all interactive targets */
+.option-btn,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-icon,
+.mode-card,
+.btn-history-sm {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.option-btn {
+  min-height: 52px;
+  padding: 0.75rem 1rem;
+}
+
+/* In-game mode: Lock distractions outside gameplay */
+body.quote-in-game .app-header,
+body.quote-in-game .game-hub-bar,
+body.quote-in-game .nav-bar,
+body.quote-in-game #friendsPanel,
+body.quote-in-game #friendsSidebar,
+body.quote-in-game .brand-header {
+  display: none !important;
+}
+
+body.quote-in-game #quoteGameContainer {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  padding-left: max(0.5rem, env(safe-area-inset-left));
+  padding-right: max(0.5rem, env(safe-area-inset-right));
+}
+
+/* 16:9 Cinema Stage - Responsive scaling without overflow */
+.stage-container {
+  width: 100%;
+  max-width: 720px;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: 52vh;
+  margin: 0 auto 1rem auto;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+#stageVideo, #stageCanvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Responsive Viewport Rules (Supports 360x640, 390x844, 412x915, 768x1024, 1024x768, 1366x768) */
+@media (max-width: 480px) {
+  .hero-title { font-size: 1.6rem; }
+  .options-grid { grid-template-columns: 1fr; gap: 0.5rem; }
   .mode-grid { grid-template-columns: 1fr; }
+  .option-btn { min-height: 48px; font-size: 0.92rem; padding: 0.6rem 0.8rem; }
+  .opt-letter { width: 28px; height: 28px; font-size: 0.85rem; }
+  .stage-container { max-height: 38vh; border-radius: 12px; }
   .results-score-big { font-size: 2.6rem; }
   .results-stats-grid { grid-template-columns: 1fr; gap: 0.5rem; }
-  .stage-container { max-height: 250px; }
+  .top-hud { padding: 0.4rem 0.6rem; }
+  .hud-item { font-size: 0.85rem; }
+}
+
+@media (min-width: 481px) and (max-width: 640px) {
+  .hero-title { font-size: 1.8rem; }
+  .options-grid { grid-template-columns: 1fr; gap: 0.6rem; }
+  .mode-grid { grid-template-columns: 1fr; }
+  .results-score-big { font-size: 2.8rem; }
+  .results-stats-grid { grid-template-columns: 1fr; gap: 0.5rem; }
+  .stage-container { max-height: 40vh; }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .options-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+  .stage-container { max-height: 44vh; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .options-grid { grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .stage-container { max-height: 48vh; }
+}
+
+@media (min-width: 1025px) {
+  .options-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .stage-container { max-height: 52vh; }
 }

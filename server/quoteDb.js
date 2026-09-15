@@ -39,20 +39,12 @@ let reports = loadJSON(REPORTS_FILE, []);
 let totalRoundsPlayed = 0;
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+const QuoteMediaValidator = require('./quoteMediaValidator.js');
 
 class QuoteDatabase {
   static isQuestionPlayable(q) {
-    if (!q || q.status !== 'published') return false;
-    if (!q.introVideoUrl || !q.quoteVideoUrl || !q.quoteAudioUrl) return false;
-    try {
-      const iv = path.join(PUBLIC_DIR, q.introVideoUrl);
-      const qv = path.join(PUBLIC_DIR, q.quoteVideoUrl);
-      const qa = path.join(PUBLIC_DIR, q.quoteAudioUrl);
-      const ia = path.join(PUBLIC_DIR, q.introAudioUrl || q.audioUrl || '');
-      return fs.existsSync(iv) && fs.existsSync(qv) && fs.existsSync(qa) && fs.existsSync(ia);
-    } catch (e) {
-      return false;
-    }
+    if (!q || q.status !== 'published' || q.isDeleted) return false;
+    return QuoteMediaValidator.validateQuestionForPublish(q).valid;
   }
 
   static getPlayableQuestions() {
@@ -230,11 +222,19 @@ class QuoteDatabase {
     return selected.slice(0, 10);
   }
 
-  static formatQuestionForClient(q, shuffleOptions = true) {
+  static getStructuredChoices(q) {
+    if (!q || !Array.isArray(q.options)) return [];
+    return q.options.map((text, idx) => ({
+      choiceId: `opt_${idx}`,
+      text: text
+    }));
+  }
+
+  static formatQuestionForClient(q, shuffleChoices = true) {
     if (!q) return null;
-    let opts = [...(q.options || [])];
-    if (shuffleOptions) {
-      opts.sort(() => 0.5 - Math.random());
+    let choices = this.getStructuredChoices(q);
+    if (shuffleChoices) {
+      choices = [...choices].sort(() => 0.5 - Math.random());
     }
     return {
       id: q.id,
@@ -248,21 +248,36 @@ class QuoteDatabase {
       quoteStart: q.quoteStart || q.muteStart,
       quoteEnd: q.quoteEnd || q.muteEnd,
       contextDialogue: q.contextDialogue,
-      audioUrl: q.audioUrl || (q.introAudioUrl || ''),
+      // INTRO MEDIA ONLY - Reveal audio/video is strictly withheld until REVEAL phase!
+      audioUrl: q.introAudioUrl || q.audioUrl || '',
       introAudioUrl: q.introAudioUrl || q.audioUrl || '',
-      quoteAudioUrl: q.quoteAudioUrl || '',
-      videoUrl: q.videoUrl || '',
+      videoUrl: q.introVideoUrl || '',
       introVideoUrl: q.introVideoUrl || '',
-      quoteVideoUrl: q.quoteVideoUrl || '',
-      options: opts
+      choices: choices,
+      // Backward compatibility for legacy clients that read string options
+      options: choices.map(c => c.text)
     };
   }
 
-  static verifyAnswer(questionId, selectedOption) {
+  static verifyAnswer(questionId, selectedChoiceIdOrText, serverTimestamp = Date.now(), deadline = null) {
     const q = this.getQuestionById(questionId);
     if (!q) return { success: false, message: 'Question not found' };
 
-    const isCorrect = (selectedOption || '').trim() === (q.correctAnswer || '').trim();
+    const isLate = (typeof deadline === 'number' && deadline > 0) ? (serverTimestamp > deadline) : false;
+
+    const choices = this.getStructuredChoices(q);
+    const matchedChoice = choices.find(c => c.choiceId === selectedChoiceIdOrText);
+    let selectedText = '';
+    if (matchedChoice) {
+      selectedText = matchedChoice.text;
+    } else {
+      selectedText = selectedChoiceIdOrText || '';
+    }
+
+    const correctChoice = choices.find(c => (c.text || '').trim() === (q.correctAnswer || '').trim());
+    const isCorrectText = (selectedText || '').trim() === (q.correctAnswer || '').trim();
+    // Late answer is strictly marked as incorrect!
+    const isCorrect = isCorrectText && !isLate;
 
     if (!q.stats) q.stats = { playedCount: 0, correctCount: 0 };
     q.stats.playedCount++;
@@ -272,6 +287,9 @@ class QuoteDatabase {
     return {
       success: true,
       isCorrect,
+      isLate,
+      selectedChoiceId: matchedChoice?.choiceId || null,
+      correctChoiceId: correctChoice?.choiceId || null,
       correctAnswer: q.correctAnswer,
       character: q.character,
       title: q.title,
@@ -279,10 +297,11 @@ class QuoteDatabase {
       explanation: q.explanation,
       quoteStart: q.quoteStart || q.muteStart,
       quoteEnd: q.quoteEnd || q.muteEnd,
-      audioUrl: q.audioUrl || (q.quoteAudioUrl || ''),
+      // REVEAL MEDIA: Only provided here in the reveal phase!
+      audioUrl: q.quoteAudioUrl || q.audioUrl || '',
       introAudioUrl: q.introAudioUrl || '',
       quoteAudioUrl: q.quoteAudioUrl || q.audioUrl || '',
-      videoUrl: q.videoUrl || '',
+      videoUrl: q.quoteVideoUrl || '',
       introVideoUrl: q.introVideoUrl || '',
       quoteVideoUrl: q.quoteVideoUrl || ''
     };
@@ -290,6 +309,46 @@ class QuoteDatabase {
 
   static recordRoundCompleted() {
     totalRoundsPlayed++;
+  }
+
+  static publishQuestionAtomic(id, updatedBy = 'admin') {
+    const q = this.getQuestionById(id);
+    if (!q) return { success: false, message: 'Question not found' };
+
+    const validation = QuoteMediaValidator.validateQuestionForPublish(q);
+    if (!validation.valid) {
+      return { success: false, message: 'Media validation failed', errors: validation.errors };
+    }
+
+    q.status = 'published';
+    q.isDeleted = false;
+    q.revision = (q.revision || 1) + 1;
+    q.updatedAt = Date.now();
+    q.updatedBy = updatedBy;
+    q.publishedAt = Date.now();
+    saveJSON(QUESTIONS_FILE, questions);
+
+    return { success: true, question: q };
+  }
+
+  static softDeleteQuestion(id, deletedBy = 'admin') {
+    const idx = questions.findIndex(q => q.id === id);
+    if (idx === -1) return { success: false, message: 'Question not found' };
+
+    const q = questions[idx];
+    if (q.stats && q.stats.playedCount > 0) {
+      q.isDeleted = true;
+      q.status = 'draft';
+      q.revision = (q.revision || 1) + 1;
+      q.updatedAt = Date.now();
+      q.deletedBy = deletedBy;
+      saveJSON(QUESTIONS_FILE, questions);
+      return { success: true, softDeleted: true, question: q };
+    }
+
+    questions.splice(idx, 1);
+    saveJSON(QUESTIONS_FILE, questions);
+    return { success: true, deleted: true };
   }
 
   static addQuestion(data) {

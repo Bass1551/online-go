@@ -1,0 +1,29 @@
+{
+  "บาสคนหล่อ": {
+    "id": "usr_4b551187096b5b64",
+    "username": "บาสคนหล่อ",
+    "email": "basskup49@gmail.com",
+    "salt": "ca07716280537c6a663ca1f9c2fc6826",
+    "passwordHash": "4b930e58caa2f953f3ca535740f4b51ad43af66a3ba8ab07cf00200cf2d473ec554e7f9b1b6ecffa015017a25de2f420d448218a967f79caa5a44f5341689175",
+    "recoveryPin": "2547",
+    "createdAt": "2026-09-14T14:36:15.830Z"
+  },
+  "กิ้บ": {
+    "id": "usr_d390da987d4f2fa7",
+    "username": "กิ้บ",
+    "email": "",
+    "salt": "0febe7129a970287f112e42960e0fd05",
+    "passwordHash": "982dc3cec7334fff1893067d134ca660d2fdaa8f8921123a4f111c5c57519c6cf8c1ca504f59d12a8ac1b296411379d7cc955dd0ec99ab8ae5e3d29437be6b3a",
+    "recoveryPin": "0752",
+    "createdAt": "2026-09-14T14:37:59.325Z"
+  },
+  "บาส": {
+    "id": "usr_d251383e0ac6624f",
+    "username": "บาส",
+    "email": "",
+    "salt": "080aa982e642b94750129333010d74ec",
+    "passwordHash": "581524afb3e7ef0fe0f3285ae3c19550b92354ef7a63ef99bf34d77d2e570b3625a3051560955feecb6443ee4ce4dd37a66d67e9235ec559d070ffc2037af1ea",
+    "recoveryPin": "",
+    "createdAt": "2026-09-14T15:17:05.453Z"
+  }
+}
