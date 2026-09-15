@@ -50,18 +50,35 @@
     }
   }
 
+  let cachedCategories = [];
+  let cachedDifficulties = [];
+
   function resetCategoryScreen() {
+    // If quoteCategory is locked or invalid, default to 'all'
+    const curCat = cachedCategories.find(c => c.id === quoteCategory);
+    if (!curCat || !curCat.isUnlocked) {
+      quoteCategory = 'all';
+    }
+    // If quoteDifficulty is locked or invalid, default to 'mixed'
+    const curDiff = cachedDifficulties.find(d => d.id === quoteDifficulty);
+    if (!curDiff || !curDiff.isUnlocked) {
+      quoteDifficulty = 'mixed';
+    }
+
     // Sync difficulty pills to match current quoteDifficulty variable
     document.querySelectorAll('.q-diff-pill').forEach(pill => {
-      if (pill.getAttribute('data-diff') === quoteDifficulty) {
+      const diffId = pill.getAttribute('data-diff');
+      if (diffId === quoteDifficulty) {
         pill.classList.add('active');
       } else {
         pill.classList.remove('active');
       }
     });
+
     // Sync category grid to match current quoteCategory variable
     document.querySelectorAll('.cat-card').forEach(card => {
-      if (card.getAttribute('data-cat') === quoteCategory) {
+      const catId = card.getAttribute('data-cat');
+      if (catId === quoteCategory) {
         card.classList.add('active');
       } else {
         card.classList.remove('active');
@@ -83,37 +100,70 @@
     try {
       const res = await fetch('/api/quote/categories');
       const data = await res.json();
-      if (data.success && data.categories) {
-        const grid = document.getElementById('qCategoryGrid');
-        if (!grid) return;
-        grid.innerHTML = data.categories.map(c => {
-          const isPure = c.count >= 10;
-          const countLabel = c.id === 'all'
-            ? `${c.count} ข้อ (ครบทุกเรื่อง)`
-            : isPure
-              ? `${c.count} ข้อ (เล่นได้ครบ 10 ข้อ)`
-              : `${c.count} ข้อ + เติมข้อจากหมวดอื่น`;
-          const noteStyle = !isPure && c.id !== 'all'
-            ? 'font-size:0.72rem; color:var(--accent-gold);'
-            : '';
-          return `
-          <div class="cat-card ${c.id === quoteCategory ? 'active' : ''}" data-cat="${c.id}">
-            <div class="cat-icon">${c.icon}</div>
-            <div class="cat-name">${c.name}</div>
-            <div class="cat-count" style="${noteStyle}">${countLabel}</div>
-          </div>
-        `;
-        }).join('');
+      if (data.success) {
+        cachedCategories = data.categories || [];
+        cachedDifficulties = data.difficulties || [];
 
-        grid.querySelectorAll('.cat-card').forEach(card => {
-          card.addEventListener('click', () => {
-            grid.querySelectorAll('.cat-card').forEach(el => el.classList.remove('active'));
-            card.classList.add('active');
-            quoteCategory = card.getAttribute('data-cat');
+        // 1. Render Category Cards
+        const grid = document.getElementById('qCategoryGrid');
+        if (grid && cachedCategories.length > 0) {
+          grid.innerHTML = cachedCategories.map(c => {
+            const isUnlocked = c.isUnlocked;
+            const countLabel = isUnlocked
+              ? `${c.count} ข้อ (เปิดให้เล่นได้ 🎉)`
+              : `🔒 ${c.count}/10 ข้อ (รอคลิปเพิ่ม)`;
+            const noteStyle = isUnlocked
+              ? 'font-size:0.75rem; color:#34d399; font-weight:600;'
+              : 'font-size:0.73rem; color:var(--text-secondary); opacity:0.85;';
+            const cardClass = `cat-card ${c.id === quoteCategory ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`;
+            return `
+            <div class="${cardClass}" data-cat="${c.id}" data-unlocked="${isUnlocked}">
+              <div class="cat-icon">${c.icon}</div>
+              <div class="cat-name">${c.name}</div>
+              <div class="cat-count" style="${noteStyle}">${countLabel}</div>
+            </div>
+          `;
+          }).join('');
+
+          grid.querySelectorAll('.cat-card').forEach(card => {
+            card.addEventListener('click', () => {
+              const isUnlocked = card.getAttribute('data-unlocked') === 'true';
+              const catId = card.getAttribute('data-cat');
+              const catObj = cachedCategories.find(c => c.id === catId);
+              if (!isUnlocked) {
+                alert(`หมวด "${catObj?.name || catId}" มีคำถามที่พร้อมเล่นจริงเพียง ${catObj?.count || 0} ข้อ (ต้องการอย่างน้อย 10 ข้อตามกติกา)\n\nระบบเปิดให้เล่นเฉพาะหมวดที่มีคำถามสมบูรณ์ครบ 10 ข้อเท่านั้น กรุณาเลือกหมวด "รวมทุกประเภท" เพื่อเริ่มเล่นครับ`);
+                return;
+              }
+              grid.querySelectorAll('.cat-card').forEach(el => el.classList.remove('active'));
+              card.classList.add('active');
+              quoteCategory = catId;
+            });
           });
-        });
+        }
+
+        // 2. Render Difficulty Pills
+        if (cachedDifficulties.length > 0) {
+          const diffPills = document.querySelectorAll('.q-diff-pill');
+          diffPills.forEach(pill => {
+            const diffId = pill.getAttribute('data-diff');
+            const diffObj = cachedDifficulties.find(d => d.id === diffId);
+            if (diffObj) {
+              const isUnlocked = diffObj.isUnlocked;
+              pill.setAttribute('data-unlocked', String(isUnlocked));
+              if (!isUnlocked) {
+                pill.classList.add('locked');
+                pill.innerText = `🔒 ${diffObj.name} (${diffObj.count}/10 ข้อ)`;
+              } else {
+                pill.classList.remove('locked');
+                pill.innerText = diffObj.name;
+              }
+            }
+          });
+        }
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
   }
 
   function setupQuoteEvents() {
@@ -164,9 +214,16 @@
     // Difficulty selection
     document.querySelectorAll('.q-diff-pill').forEach(pill => {
       pill.addEventListener('click', () => {
+        const isUnlocked = pill.getAttribute('data-unlocked') !== 'false';
+        const diffId = pill.getAttribute('data-diff');
+        const diffObj = cachedDifficulties.find(d => d.id === diffId);
+        if (!isUnlocked) {
+          alert(`ระดับความยาก "${diffObj?.name || diffId}" มีคำถามที่พร้อมเล่นจริงเพียง ${diffObj?.count || 0} ข้อ (ต้องการอย่างน้อย 10 ข้อตามกติกา)\n\nกรุณาเลือกระดับ "รวมระดับ" เพื่อเริ่มเล่นรอบ 10 ข้อครับ`);
+          return;
+        }
         document.querySelectorAll('.q-diff-pill').forEach(el => el.classList.remove('active'));
         pill.classList.add('active');
-        quoteDifficulty = pill.getAttribute('data-diff');
+        quoteDifficulty = diffId;
       });
     });
 
@@ -337,7 +394,7 @@
       });
       const data = await res.json();
       if (!data.success || !data.questions || data.questions.length === 0) {
-        alert('ไม่พบคำถามในหมวดนี้');
+        alert(data.message || 'ไม่พบคำถามพร้อมเล่นในหมวดนี้ (ต้องการอย่างน้อย 10 ข้อตามกติกา)');
         return;
       }
 
@@ -882,22 +939,40 @@
     const res = await fetch('/api/quote/admin/questions');
     const data = await res.json();
     if (data.success && data.questions) {
-      document.getElementById('qAdminList').innerHTML = data.questions.map(q => `
-        <div style="background:rgba(255,255,255,0.04); padding:0.6rem 0.8rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+      const allQ = data.questions;
+      const pubCount = allQ.filter(q => q.status === 'published').length;
+      const draftCount = allQ.filter(q => q.status === 'draft').length;
+
+      const titleEl = document.getElementById('qAdminListTitle');
+      if (titleEl) {
+        titleEl.innerText = `📚 คลังคำถาม (ทั้งหมด ${allQ.length} ข้อ: พร้อมเล่นจริง ${pubCount} ข้อ | ฉบับร่างรอคลิป ${draftCount} ข้อ)`;
+      }
+
+      document.getElementById('qAdminList').innerHTML = allQ.map(q => {
+        const isPub = q.status === 'published';
+        const hasMedia = q.introVideoUrl && q.quoteVideoUrl;
+        const statusBadge = isPub && hasMedia
+          ? `<span style="background:rgba(16,185,129,0.2); color:#34d399; font-size:0.72rem; padding:0.15rem 0.4rem; border-radius:4px; font-weight:600;">🟢 Published (${q.difficulty})</span>`
+          : `<span style="background:rgba(234,179,8,0.2); color:#fde047; font-size:0.72rem; padding:0.15rem 0.4rem; border-radius:4px; font-weight:600;">📝 Draft (${q.difficulty} - รอคลิป)</span>`;
+
+        return `
+        <div style="background:rgba(255,255,255,0.04); padding:0.6rem 0.8rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center; gap:0.5rem; border-left: 3px solid ${isPub ? '#10b981' : '#eab308'};">
           <div style="flex:1;">
             <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
               <b>${escapeHtml(q.title)}</b> (${escapeHtml(q.character)})
-              ${q.audioUrl ? `<span style="background:rgba(16,185,129,0.2); color:#34d399; font-size:0.72rem; padding:0.15rem 0.4rem; border-radius:4px; font-weight:600;">🔊 เสียงหนังจริง</span>` : `<span style="background:rgba(239,68,68,0.2); color:#fca5a5; font-size:0.72rem; padding:0.15rem 0.4rem; border-radius:4px;">🔇 ยังไม่มีเสียง</span>`}
+              ${statusBadge}
+              ${q.introVideoUrl ? `<span style="background:rgba(56,189,248,0.2); color:#38bdf8; font-size:0.72rem; padding:0.15rem 0.4rem; border-radius:4px;">🎥 วิดีโอครบ</span>` : `<span style="background:rgba(239,68,68,0.15); color:#fca5a5; font-size:0.72rem; padding:0.15rem 0.4rem; border-radius:4px;">🔇 ไม่มีวิดีโอ</span>`}
             </div>
             <span style="font-size:0.78rem; color:var(--accent-gold); display:block; margin-top:0.15rem;">"${escapeHtml(q.correctAnswer)}"</span>
           </div>
           <div style="display:flex; gap:0.35rem; align-items:center;">
-            ${q.audioUrl ? `<button style="background:none; border:1px solid #34d399; color:#34d399; border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer; font-size:0.75rem;" onclick="playQuoteAudioPreview('${q.audioUrl}')">▶️ ฟัง</button>` : ''}
+            ${q.quoteAudioUrl || q.audioUrl ? `<button style="background:none; border:1px solid #34d399; color:#34d399; border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer; font-size:0.75rem;" onclick="playQuoteAudioPreview('${q.quoteAudioUrl || q.audioUrl}')">▶️ ฟัง</button>` : ''}
             <button style="background:none; border:1px solid var(--accent-cyan); color:var(--accent-cyan); border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer; font-size:0.75rem;" onclick="attachQuoteAudioPrompt('${q.id}')">🎵 ลิงก์เสียง</button>
             <button style="background:none; border:1px solid var(--accent-rose); color:#fecdd3; border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer; font-size:0.75rem;" onclick="deleteQAdminQuestion('${q.id}')">ลบ</button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
   }
 

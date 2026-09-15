@@ -346,7 +346,7 @@
   margin-bottom: 2rem;
 }
 
-.diff-pill {
+.diff-pill, .q-diff-pill {
   flex: 1;
   min-width: 120px;
   background: var(--bg-card);
@@ -358,13 +358,29 @@
   transition: all 0.2s;
   font-weight: 600;
   font-size: 0.95rem;
+  user-select: none;
 }
 
-.diff-pill.active {
+.diff-pill.active, .q-diff-pill.active {
   background: rgba(16, 185, 129, 0.2);
   border-color: var(--accent-green);
   color: #6ee7b7;
   box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+}
+
+.cat-card.locked, .q-diff-pill.locked, .diff-pill.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--text-secondary);
+}
+
+.cat-card.locked:hover, .q-diff-pill.locked:hover, .diff-pill.locked:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
+  box-shadow: none;
 }
 
 /* Game Stage View */

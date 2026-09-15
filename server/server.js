@@ -198,26 +198,40 @@ app.get('/api/games/:id', (req, res) => {
 
 // ================= THAI QUOTE GAME API =================
 app.get('/api/quote/categories', (req, res) => {
-  const allQ = QuoteDatabase.getAllQuestions();
-  const categories = [
-    { id: 'all', name: 'รวมทุกประเภท', count: allQ.length, icon: '🌟' },
-    { id: 'movie', name: 'ภาพยนตร์ไทย', count: allQ.filter(q => q.mediaType === 'movie').length, icon: '🎬' },
-    { id: 'drama', name: 'ละครไทย', count: allQ.filter(q => q.mediaType === 'drama').length, icon: '📺' },
-    { id: 'series', name: 'ซีรีส์ไทย', count: allQ.filter(q => q.mediaType === 'series').length, icon: '🍿' },
-    { id: 'y_series', name: 'ซีรีส์วายไทย', count: allQ.filter(q => q.mediaType === 'y_series').length, icon: '👬' },
-    { id: 'sitcom', name: 'ซิตคอมไทย', count: allQ.filter(q => q.mediaType === 'sitcom').length, icon: '🎭' },
-    { id: 'legendary', name: 'ประโยคระดับตำนาน', count: allQ.filter(q => (q.categories || []).includes('legendary')).length, icon: '👑' },
-    { id: 'trending', name: 'เรื่องกระแสฮิต', count: allQ.filter(q => (q.categories || []).includes('trending')).length, icon: '🔥' },
-    { id: 'comedy', name: 'ตลก/ฮา', count: allQ.filter(q => (q.categories || []).includes('comedy')).length, icon: '🤣' },
-    { id: 'romantic', name: 'โรแมนติก', count: allQ.filter(q => (q.categories || []).includes('romantic')).length, icon: '💖' },
-    { id: 'drama_genre', name: 'ดราม่าเข้มข้น', count: allQ.filter(q => (q.categories || []).includes('drama')).length, icon: '😭' }
-  ];
-  res.json({ success: true, categories });
+  const categories = QuoteDatabase.getCategoryList();
+  const difficulties = QuoteDatabase.getDifficultyList();
+  res.json({ success: true, categories, difficulties });
 });
 
 app.post('/api/quote/single/start', (req, res) => {
   const { category = 'all', difficulty = 'mixed' } = req.body || {};
+
+  const categories = QuoteDatabase.getCategoryList();
+  const catItem = categories.find(c => c.id === category);
+  if (category !== 'all' && catItem && !catItem.isUnlocked) {
+    return res.status(400).json({
+      success: false,
+      message: `หมวด "${catItem.name}" มีคำถามที่พร้อมเล่นจริง ${catItem.count}/10 ข้อ (ยังไม่เปิดให้เล่นจนกว่าจะมีคลิปครบ 10 ข้อตามกติกา)`
+    });
+  }
+
+  const difficulties = QuoteDatabase.getDifficultyList();
+  const diffItem = difficulties.find(d => d.id === difficulty);
+  if (difficulty !== 'mixed' && diffItem && !diffItem.isUnlocked) {
+    return res.status(400).json({
+      success: false,
+      message: `ระดับความยากนี้มีคำถามที่พร้อมเล่นจริง ${diffItem.count}/10 ข้อ (ยังไม่เปิดให้เล่นจนกว่าจะมีคลิปครบ 10 ข้อตามกติกา)`
+    });
+  }
+
   const selectedQuestions = QuoteDatabase.selectRoundQuestions(category, difficulty);
+  if (!selectedQuestions || selectedQuestions.length < 10) {
+    return res.status(400).json({
+      success: false,
+      message: 'มีคำถามที่พร้อมเล่นจริงไม่ครบ 10 ข้อสำหรับรอบนี้ กรุณาเลือกหมวด "รวมทุกประเภท"'
+    });
+  }
+
   const clientQuestions = selectedQuestions.map(q => QuoteDatabase.formatQuestionForClient(q, true));
   res.json({ success: true, totalQuestions: clientQuestions.length, questions: clientQuestions });
 });

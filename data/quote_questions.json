@@ -35,7 +35,8 @@
     "introAudioUrl": "/audio/quotes/q_001_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_001_quote.mp3",
     "introVideoUrl": "/video/quotes/q_001_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_001_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_001_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_002",
@@ -73,7 +74,8 @@
     "introAudioUrl": "/audio/quotes/q_002_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_002_quote.mp3",
     "introVideoUrl": "/video/quotes/q_002_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_002_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_002_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_003",
@@ -111,7 +113,8 @@
     "introAudioUrl": "/audio/quotes/q_003_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_003_quote.mp3",
     "introVideoUrl": "/video/quotes/q_003_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_003_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_003_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_004",
@@ -149,7 +152,8 @@
     "introAudioUrl": "/audio/quotes/q_004_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_004_quote.mp3",
     "introVideoUrl": "/video/quotes/q_004_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_004_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_004_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_005",
@@ -187,7 +191,8 @@
     "introAudioUrl": "/audio/quotes/q_005_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_005_quote.mp3",
     "introVideoUrl": "/video/quotes/q_005_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_005_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_005_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_006",
@@ -225,7 +230,8 @@
     "introAudioUrl": "/audio/quotes/q_006_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_006_quote.mp3",
     "introVideoUrl": "/video/quotes/q_006_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_006_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_006_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_007",
@@ -263,7 +269,8 @@
     "introAudioUrl": "/audio/quotes/q_007_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_007_quote.mp3",
     "introVideoUrl": "/video/quotes/q_007_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_007_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_007_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_008",
@@ -301,7 +308,8 @@
     "introAudioUrl": "/audio/quotes/q_008_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_008_quote.mp3",
     "introVideoUrl": "/video/quotes/q_008_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_008_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_008_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_009",
@@ -339,7 +347,8 @@
     "introAudioUrl": "/audio/quotes/q_009_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_009_quote.mp3",
     "introVideoUrl": "/video/quotes/q_009_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_009_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_009_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_010",
@@ -376,7 +385,8 @@
     "introAudioUrl": "/audio/quotes/q_010_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_010_quote.mp3",
     "introVideoUrl": "/video/quotes/q_010_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_010_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_010_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_011",
@@ -412,7 +422,8 @@
     "introAudioUrl": "/audio/quotes/q_011_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_011_quote.mp3",
     "introVideoUrl": "/video/quotes/q_011_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_011_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_011_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_012",
@@ -449,7 +460,8 @@
     "introAudioUrl": "/audio/quotes/q_012_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_012_quote.mp3",
     "introVideoUrl": "/video/quotes/q_012_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_012_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_012_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_013",
@@ -486,7 +498,8 @@
     "introAudioUrl": "/audio/quotes/q_013_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_013_quote.mp3",
     "introVideoUrl": "/video/quotes/q_013_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_013_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_013_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_014",
@@ -524,7 +537,8 @@
     "introAudioUrl": "/audio/quotes/q_014_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_014_quote.mp3",
     "introVideoUrl": "/video/quotes/q_014_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_014_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_014_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_015",
@@ -562,7 +576,8 @@
     "introAudioUrl": "/audio/quotes/q_015_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_015_quote.mp3",
     "introVideoUrl": "/video/quotes/q_015_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_015_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_015_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_016",
@@ -600,6 +615,1333 @@
     "introAudioUrl": "/audio/quotes/q_016_intro.mp3",
     "quoteAudioUrl": "/audio/quotes/q_016_quote.mp3",
     "introVideoUrl": "/video/quotes/q_016_intro.mp4",
-    "quoteVideoUrl": "/video/quotes/q_016_quote.mp4"
+    "quoteVideoUrl": "/video/quotes/q_016_quote.mp4",
+    "status": "published"
+  },
+  {
+    "id": "q_017",
+    "status": "draft",
+    "title": "ชัตเตอร์ กดติดวิญญาณ",
+    "mediaType": "movie",
+    "year": 2004,
+    "categories": [
+      "all",
+      "movie",
+      "horror",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "hard",
+    "character": "ธรรม์ (อนันดา เอเวอร์ริ่งแฮม)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ธรรม์นั่งคุยกับเจนถึงวิญญาณเนตรที่ตามหลอกหลอนไม่ยอมไปไหน จนเกิดคำถามชวนขนหัวลุก",
+    "correctAnswer": "ถ้าเค้าไม่ยอมไป...เค้าจะอยู่ตรงไหน",
+    "options": [
+      "ถ้าเค้าไม่ยอมไป...เค้าจะอยู่ตรงไหน",
+      "เค้าคงอยากได้ยินคำขอโทษจากเรา",
+      "ภาพถ่ายพวกนี้มันหลอกเราไม่ได้หรอก",
+      "ทำไมเนตรถึงยังไม่ยอมปล่อยเราไป"
+    ],
+    "explanation": "ฉากสยองขวัญระดับตำนานของภาพยนตร์ชัตเตอร์ กดติดวิญญาณ ก่อนที่จะเฉลยจุดหักมุมช็อกคนดูว่าเนตรนั่งอยู่บนคอของธรรม์มาโดยตลอด",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_018",
+    "status": "draft",
+    "title": "กวน มึน โฮ",
+    "mediaType": "movie",
+    "year": 2010,
+    "categories": [
+      "all",
+      "movie",
+      "romantic",
+      "comedy",
+      "legendary"
+    ],
+    "difficulty": "easy",
+    "character": "ด่าง (เต๋อ ฉันทวิชช์)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ด่างชวนหญิงสาวคนไทยที่ไม่รู้จักชื่อเที่ยวเกาหลีด้วยกัน โดยตั้งกฎขึ้นมาเพื่อความสบายใจของทั้งสองฝ่าย",
+    "correctAnswer": "เราไม่ต้องรู้จักชื่อกันหรอก",
+    "options": [
+      "เราไม่ต้องรู้จักชื่อกันหรอก",
+      "ทริปนี้เรามาแชร์ค่ากินกันนะ",
+      "ยินดีที่ไม่รู้จักนะคุณ",
+      "อย่าหลงรักผมก็แล้วกัน"
+    ],
+    "explanation": "ประโยคคอนเซ็ปต์หลักของเรื่อง 'กวน มึน โฮ' ที่พระเอกนางเอกตกลงกันว่าจะเที่ยวด้วยกันโดยไม่บอกชื่อจริง ไม่ถามเรื่องส่วนตัว จนกลายเป็นจุดเริ่มต้นของความรัก",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_019",
+    "status": "draft",
+    "title": "เพื่อนสนิท",
+    "mediaType": "movie",
+    "year": 2005,
+    "categories": [
+      "all",
+      "movie",
+      "romantic",
+      "drama",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "medium",
+    "character": "ดากานดา (นุ่น ศิรพันธ์)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "เมื่อไข่ย้อยรวบรวมความกล้าบอกรักดากานดาเพื่อนสนิทในวันจบการศึกษา ดากานดาจึงหันมาตอบด้วยน้ำเสียงสั่นเครือ",
+    "correctAnswer": "แกมาทำอะไรเอาป่านนี้",
+    "options": [
+      "แกมาทำอะไรเอาป่านนี้",
+      "ทำไมแกเพิ่งมาบอกฉันตอนนี้",
+      "เราเป็นเพื่อนกันดีที่สุดแล้วไข่ย้อย",
+      "แกแกล้งพูดเล่นใช่ไหม"
+    ],
+    "explanation": "ประโยคเจ็บลึกในตำนานของเด็กสถาปัตย์ มช. เมื่อไข่ย้อยบอกรักช้าเกินไปในวันที่ดากานดามีคนอื่นแล้ว กลายเป็นวลีฮิตของคำว่า 'เฟรนด์โซน' ยุคแรก",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_020",
+    "status": "draft",
+    "title": "รักแห่งสยาม",
+    "mediaType": "movie",
+    "year": 2007,
+    "categories": [
+      "all",
+      "movie",
+      "y_series",
+      "romantic",
+      "drama",
+      "legendary"
+    ],
+    "difficulty": "medium",
+    "character": "มิว (พิช วิชญ์วิสิฐ)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ในคืนวันคริสต์มาสที่สยามสแควร์ มิวเอ่ยคำพูดสุดท้ายกับโต้งด้วยรอยยิ้มทั้งน้ำตา",
+    "correctAnswer": "เราคงไปด้วยกันไม่ได้ แต่ไม่ได้แปลว่าเราไม่ได้รักโต้งนะ",
+    "options": [
+      "เราคงไปด้วยกันไม่ได้ แต่ไม่ได้แปลว่าเราไม่ได้รักโต้งนะ",
+      "ขอบคุณสำหรับทุกอย่างนะโต้ง",
+      "ถ้าเราไม่ได้เจอกันอีก โต้งอย่าลืมมิวนะ",
+      "ความรักมันไม่มีเหตุผลหรอกโต้ง"
+    ],
+    "explanation": "ประโยคจบที่สร้างความซาบซึ้งและตรึงใจผู้ชมภาพยนตร์ 'รักแห่งสยาม' มาจนถึงทุกวันนี้ เป็นบทสรุปความรักที่สวยงามแม้ไม่ได้ครอบครอง",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_021",
+    "status": "draft",
+    "title": "สุริโยไท",
+    "mediaType": "movie",
+    "year": 2001,
+    "categories": [
+      "all",
+      "movie",
+      "drama",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "hard",
+    "character": "พระสุริโยไท (ม.ล.ปิยาภัสร์ ภิรมย์ภักดี)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "พระสุริโยไทกล่าวเตือนสติในที่ประชุมเหล่าขุนนางเพื่อความมั่นคงของแผ่นดินอโยธยา",
+    "correctAnswer": "แผ่นดินนี้หาใช่ของใครคนเดียวไม่",
+    "options": [
+      "แผ่นดินนี้หาใช่ของใครคนเดียวไม่",
+      "จักรักษาเอกราชไว้ด้วยเลือดเนื้อ",
+      "เพื่อความร่มเย็นของราษฎรทั้งปวง",
+      "หากสิ้นข้า ขอฝากแผ่นดินไว้ด้วย"
+    ],
+    "explanation": "มหากาพย์ภาพยนตร์ประวัติศาสตร์เรื่องยิ่งใหญ่ที่สุดของไทย กำกับโดย ม.จ.ชาตรีเฉลิม ยุคล ถ่ายทอดความเสียสละของวีรกษัตรีไทย",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_022",
+    "status": "draft",
+    "title": "บางระจัน",
+    "mediaType": "movie",
+    "year": 2000,
+    "categories": [
+      "all",
+      "movie",
+      "drama",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "easy",
+    "character": "นายจันหนวดเขี้ยว (จรัญ งามดี)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "นายจันหนวดเขี้ยวปลุกใจชาวบ้านบางระจันให้จับอาวุธขึ้นสู้หน้าค่าย",
+    "correctAnswer": "พวกกูจะสู้จนตัวตาย!",
+    "options": [
+      "พวกกูจะสู้จนตัวตาย!",
+      "อย่ายอมให้มันเหยียบแผ่นดินเรา!",
+      "ดาบนี้เพื่อบ้านเมืองของเรา!",
+      "ถอยไม่ได้อีกแล้วพวกเรา!"
+    ],
+    "explanation": "ฉากปลุกใจสุดฮึกเหิมของภาพยนตร์ 'บางระจัน' ที่ทำรายได้ถล่มทลายและสร้างกระแสความรักชาติทั่วประเทศ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_023",
+    "status": "draft",
+    "title": "องค์บาก",
+    "mediaType": "movie",
+    "year": 2003,
+    "categories": [
+      "all",
+      "movie",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "easy",
+    "character": "ทิง (จา พนม)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ทิงเดินทางเข้ากรุงเทพฯ เพื่อตามหาเศียรพระพุทธรูปองค์บากของหมู่บ้านหนองประดู่",
+    "correctAnswer": "เอาเศียรพระพุทธรูปกูคืนมา!",
+    "options": [
+      "เอาเศียรพระพุทธรูปกูคืนมา!",
+      "กูมาตามหาพระของหมู่บ้านกู!",
+      "อย่ายุ่งกับของศักดิ์สิทธิ์!",
+      "พวกมึงต้องชดใช้ด้วยมวยไทย!"
+    ],
+    "explanation": "ภาพยนตร์แอ็กชันศิลปะการต่อสู้มวยไทยโบราณ 'องค์บาก' ที่แจ้งเกิด จา พนม สู่เวทีระดับโลกอย่างยิ่งใหญ่ 'เล่นจริง เจ็บจริง ไม่ใช้สลิง'",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_024",
+    "status": "draft",
+    "title": "ต้มยำกุ้ง",
+    "mediaType": "movie",
+    "year": 2005,
+    "categories": [
+      "all",
+      "movie",
+      "comedy",
+      "legendary",
+      "trending"
+    ],
+    "difficulty": "easy",
+    "character": "ขาม (จา พนม)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ขามบุกทะลวงร้านอาหารในซิดนีย์เพื่อทวงช้างพลายบัวบานคืนจากแก๊งมาเฟียข้ามชาติ",
+    "correctAnswer": "ช้างกูอยู่ไหน!",
+    "options": [
+      "ช้างกูอยู่ไหน!",
+      "เอาช้างกูคืนมาเดี๋ยวนี้!",
+      "พวกมึงขโมยช้างกูไปไว้ที่ไหน!",
+      "กูถามว่าช้างกูอยู่ที่ไหน!"
+    ],
+    "explanation": "ประโยคเด็ดระดับปรากฏการณ์ป๊อปคัลเจอร์ของไทย 'ช้างกูอยู่ไหน!' ที่ถูกนำไปทำมีมและล้อเลียนอย่างกว้างขวางทั่วโลก",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_025",
+    "status": "draft",
+    "title": "ฟรีแลนซ์..ห้ามป่วย ห้ามพัก ห้ามรักหมอ",
+    "mediaType": "movie",
+    "year": 2015,
+    "categories": [
+      "all",
+      "movie",
+      "drama",
+      "comedy",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "medium",
+    "character": "ยุ่น (ซันนี่ สุวรรณเมธานนท์)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ยุ่นพูดถึงปรัชญาการทำงานกราฟิกแบบโต้รุ่งไม่หลับไม่นอนให้กับลูกค้าคนสำคัญ",
+    "correctAnswer": "คนเรามันไม่ตายเพราะการอดนอนหรอก",
+    "options": [
+      "คนเรามันไม่ตายเพราะการอดนอนหรอก",
+      "งานเสร็จแล้วค่อยนอนก็ได้",
+      "ฟรีแลนซ์ไม่มีคำว่าพักผ่อน",
+      "ส่งงานตรงเวลาสำคัญกว่าชีวิต"
+    ],
+    "explanation": "ผลงานกำกับของ เต๋อ นวพล ถ่ายทอดชีวิตฟรีแลนซ์ที่โหมงานหนักจนร่างกายพัง จนได้พบกับหมออิม (ใหม่ ดาวิกา) ที่โรงพยาบาลรัฐ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_026",
+    "status": "draft",
+    "title": "ไอฟาย..แต๊งกิ้ว..เลิฟยู้",
+    "mediaType": "movie",
+    "year": 2014,
+    "categories": [
+      "all",
+      "movie",
+      "comedy",
+      "romantic",
+      "legendary"
+    ],
+    "difficulty": "easy",
+    "character": "ยิม (ซันนี่ สุวรรณเมธานนท์)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ช่างเทคนิคโรงงานสุดห้าวอย่างยิม มาดักรอครูเพลงติวเตอร์สาวสวยเพื่อขอให้สอนภาษาอังกฤษให้",
+    "correctAnswer": "สอนภาษาอังกฤษให้ผมหน่อย",
+    "options": [
+      "สอนภาษาอังกฤษให้ผมหน่อย",
+      "ผมอยากพูดฝรั่งได้เหมือนเค้า",
+      "ช่วยติวสอบไปอเมริกาให้ผมที",
+      "คิดชั่วโมงละเท่าไหร่บอกมาเลย"
+    ],
+    "explanation": "ภาพยนตร์โรแมนติกคอมเมดี้ทำเงินกว่า 300 ล้านบาท นำแสดงโดย ซันนี่ และ ไอซ์ ปรีชญา กับท่าเต้นเพลง 'ABC ชักกระตุก' อันโด่งดัง",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_027",
+    "status": "draft",
+    "title": "ร่างทรง (The Medium)",
+    "mediaType": "movie",
+    "year": 2021,
+    "categories": [
+      "all",
+      "movie",
+      "horror",
+      "drama",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "hard",
+    "character": "ป้านิ่ม (เอี้ยง สวนีย์ อุทุมมา)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ป้านิ่มให้สัมภาษณ์ทีมงานสารคดีเรื่องความเชื่อและสิ่งศักดิ์สิทธิ์ที่สถิตในสายเลือดครอบครัว",
+    "correctAnswer": "ย่าบาหยันไม่เคยทอดทิ้งพวกเรา",
+    "options": [
+      "ย่าบาหยันไม่เคยทอดทิ้งพวกเรา",
+      "สิ่งที่มองไม่เห็นไม่ได้แปลว่าไม่มีจริง",
+      "กรรมของบรรพบุรุษมันกำลังเอาคืน",
+      "ข้าสัมผัสถึงย่าบาหยันไม่ได้อีกแล้ว"
+    ],
+    "explanation": "หนังสยองขวัญร่วมทุนไทย-เกาหลี กำกับโดย โต้ง บรรจง และโปรดิวซ์โดย นา ฮงจิน กวาดคำชมและรางวัลระดับนานาชาติมากมาย",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_028",
+    "status": "draft",
+    "title": "แฟนเดย์..แฟนกันแค่วันเดียว",
+    "mediaType": "movie",
+    "year": 2016,
+    "categories": [
+      "all",
+      "movie",
+      "romantic",
+      "drama",
+      "trending"
+    ],
+    "difficulty": "medium",
+    "character": "เด่นชัย (เต๋อ ฉันทวิชช์)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "เด่นชัยหนุ่มไอทีไร้ตัวตนสารภาพความในใจตอนที่นุ้ยสูญเสียความทรงจำชั่วคราว 1 วันที่ฮอกไกโด",
+    "correctAnswer": "ขอเป็นแฟนแค่วันเดียวก็พอ",
+    "options": [
+      "ขอเป็นแฟนแค่วันเดียวก็พอ",
+      "แค่วันนี้วันเดียวที่คุณเป็นของผม",
+      "พรุ่งนี้ตื่นมาคุณก็ลืมผมแล้ว",
+      "ขอบคุณที่ทำให้ผมมีตัวตนหนึ่งวัน"
+    ],
+    "explanation": "ภาพยนตร์เรื่องแรกของค่าย GDH นำแสดงโดย เต๋อ ฉันทวิชช์ และ มิว นิษฐา ถ่ายทอดความรักของคนแอบชอบที่สมหวังเพียงแค่วันเดียว",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_029",
+    "status": "draft",
+    "title": "15 ค่ำ เดือน 11",
+    "mediaType": "movie",
+    "year": 2002,
+    "categories": [
+      "all",
+      "movie",
+      "drama",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "easy",
+    "character": "หลวงพ่อโล่ห์ (สมชาย เข็มกลัด)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "หลวงพ่อให้ข้อคิดเรื่องความศรัทธาของชาวบ้านที่มีต่อบั้งไฟพญานาคริมแม่น้ำโขง",
+    "correctAnswer": "เชื่อในสิ่งที่เฮ็ด เฮ็ดในสิ่งที่เชื่อ",
+    "options": [
+      "เชื่อในสิ่งที่เฮ็ด เฮ็ดในสิ่งที่เชื่อ",
+      "ศรัทธาบ่มีวันเสื่อมคลาย",
+      "ความจริงกับศรัทธาบางทีก็ไปนำกันบ่ได้",
+      "ถ้าบ่เชื่ออย่าลบหลู่เด้อโยม"
+    ],
+    "explanation": "ปรัชญาประโยคทองของภาพยนตร์ '15 ค่ำ เดือน 11' ผลงานกำกับของ เก้ง จิระ มะลิกุล ที่กลายเป็นวลีคลาสสิกของสังคมไทย",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_030",
+    "status": "draft",
+    "title": "มหา'ลัย เหมืองแร่",
+    "mediaType": "movie",
+    "year": 2005,
+    "categories": [
+      "all",
+      "movie",
+      "drama",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "hard",
+    "character": "นายฝรั่ง (เอ็ดเวิร์ด แวน สโลเทน)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "นายฝรั่งสั่งสอนอาจินต์ เด็กหนุ่มที่ถูกรีไทร์จากจุฬาฯ มาเริ่มชีวิตใหม่ที่เหมืองแร่กะโชน",
+    "correctAnswer": "ชีวิตคนเรามันก็เหมือนแร่ดีบุก",
+    "options": [
+      "ชีวิตคนเรามันก็เหมือนแร่ดีบุก",
+      "ที่นี่ไม่มีใครสนหรอกว่ามึงมาจากไหน",
+      "ทำงานให้คุ้มข้าวสุกนะอาจินต์",
+      "เหมืองแร่แห่งนี้คือมหาวิทยาลัยชีวิตจริง"
+    ],
+    "explanation": "ผลงานวรรณกรรมของ อาจินต์ ปัญจพรรค์ ดัดแปลงเป็นภาพยนตร์ชั้นครูโดย เก้ง จิระ มะลิกุล ได้รับรางวัลสุพรรณหงส์ภาพยนตร์ยอดเยี่ยม",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_031",
+    "status": "draft",
+    "title": "Seasons Change เพราะอากาศเปลี่ยนแปลงบ่อย",
+    "mediaType": "movie",
+    "year": 2006,
+    "categories": [
+      "all",
+      "movie",
+      "romantic",
+      "comedy",
+      "classic"
+    ],
+    "difficulty": "medium",
+    "character": "ป้อม (บอล วิทวัส สิงห์ลำพอง)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ป้อมสารภาพความลับกับอ้อมเรื่องเหตุผลที่แท้จริงที่เขาแอบมาสอบเข้าวิทยาลัยดุริยางคศิลป์",
+    "correctAnswer": "ผมไม่ได้มาเรียนดนตรีเพราะชอบดนตรี",
+    "options": [
+      "ผมไม่ได้มาเรียนดนตรีเพราะชอบดนตรี",
+      "ผมตามดาวมาเรียนที่นี่",
+      "กลองชุดมันคือทั้งชีวิตของผมนะอ้อม",
+      "ผมอยากให้อ้อมช่วยเก็บเป็นความลับ"
+    ],
+    "explanation": "หนังวัยรุ่นฟีลกู๊ดแห่งยุค 2000s กำกับโดย นิธิวัฒน์ ธราธร กับเพลงประกอบ 'ฤดูที่แตกต่าง' และ 'วัดใจ' ที่ดังกระหึ่ม",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_032",
+    "status": "draft",
+    "title": "เลือดข้นคนจาง (In Family We Trust)",
+    "mediaType": "series",
+    "year": 2018,
+    "categories": [
+      "all",
+      "series",
+      "drama",
+      "legendary",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "easy",
+    "character": "ภัสสร (แหม่ม คัทลียา แมคอินทอช)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ภัสสรเปิดศึกเผชิญหน้ากับคนในตระกูลจิระอนันต์หลังเหตุการณ์สังหารประเสริฐพี่ชายคนโต",
+    "correctAnswer": "ใครฆ่าประเสริฐ?",
+    "options": [
+      "ใครฆ่าประเสริฐ?",
+      "ทำไมทุกคนต้องมองว่าฉันเป็นคนทำ!",
+      "กงสีนี้ไม่มีความยุติธรรมให้ลูกผู้หญิงเลย",
+      "เต้ยไม่ได้ทำอะไรผิดนะป๊า!"
+    ],
+    "explanation": "ประโยคคำถามสร้างปรากฏการณ์ระดับชาติ 'ใครฆ่าประเสริฐ?' ที่คนไทยทั้งประเทศร่วมกันสืบสวนหาตัวคนร้ายทุกสัปดาห์",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_033",
+    "status": "draft",
+    "title": "กรงกรรม",
+    "mediaType": "drama",
+    "year": 2019,
+    "categories": [
+      "all",
+      "drama",
+      "legendary",
+      "trending"
+    ],
+    "difficulty": "medium",
+    "character": "ย้อย (ใหม่ เจริญปุระ)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "แม่ย้อยตวาดใส่เรณูสะใภ้ใหญ่ที่แอบแต่งงานเข้ามาในบ้านแบ้ ชุมแสง",
+    "correctAnswer": "มึงมันนังแพศยา ชุมแสงต้องลุกเป็นไฟ!",
+    "options": [
+      "มึงมันนังแพศยา ชุมแสงต้องลุกเป็นไฟ!",
+      "กูไม่มีวันนับผู้หญิงหากินอย่างมึงเป็นสะใภ้!",
+      "เงินทองของบ้านนี้มึงอย่าหวังจะได้แตะ!",
+      "ชาติชั่วอย่างมึง ออกไปจากบ้านกูเดี๋ยวนี้!"
+    ],
+    "explanation": "ละครดราม่าแห่งปีที่กวาดเรตติ้งถล่มทลาย การปะทะคารมระหว่าง แม่ย้อย (ใหม่ เจริญปุระ) และ เรณู (เบลล่า ราณี)",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_034",
+    "status": "draft",
+    "title": "นาคี",
+    "mediaType": "drama",
+    "year": 2016,
+    "categories": [
+      "all",
+      "drama",
+      "romantic",
+      "legendary",
+      "trending"
+    ],
+    "difficulty": "easy",
+    "character": "เจ้าแม่นาคี / คำแก้ว (แต้ว ณฐพร)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "เจ้าแม่นาคีประกาศกร้าวต่อหน้าชาวบ้านดอนไม้ป่าที่มาล้อมทำร้ายความรักของนาง",
+    "correctAnswer": "สูอย่ามาหยามความฮักของข้า!",
+    "options": [
+      "สูอย่ามาหยามความฮักของข้า!",
+      "ผู้ใด๋ทำร้ายอ้ายทศพล ข้าบ่เอาไว้แน่!",
+      "กรรมที่พวกสูสร้างไว้ ต้องชดใช้ด้วยเลือด!",
+      "ฮักแท้ของข้า มีให้เพียงอ้ายทศพลคนเดียว!"
+    ],
+    "explanation": "ละครระดับประวัติศาสตร์ที่ทำสถิติเรตติ้งตอนจบสูงถึง 17.29 พร้อมทักษะการพูดภาษาอีสานสุดเป๊ะของ แต้ว ณฐพร",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_035",
+    "status": "draft",
+    "title": "พิษสวาท",
+    "mediaType": "drama",
+    "year": 2016,
+    "categories": [
+      "all",
+      "drama",
+      "horror",
+      "legendary"
+    ],
+    "difficulty": "medium",
+    "character": "คุณอุบล (นุ่น วรนุช ภิรมย์ภักดี)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "คุณอุบลวิญญาณผู้เฝ้าสมบัติแผ่นดินกล่าวกับพระอรรคขุนศึกอยุธยาผู้เป็นสามีที่บั่นคอนาง",
+    "correctAnswer": "หน้าที่ของข้าคือเฝ้าสมบัติแผ่นดิน",
+    "options": [
+      "หน้าที่ของข้าคือเฝ้าสมบัติแผ่นดิน",
+      "ข้าจักจองจำดวงวิญญาณท่านไว้ชั่วนิรันดร์",
+      "ท่านทรยศต่อความรักความภักดีของข้า",
+      "เลือดของข้าจักปกปักแผ่นดินนี้ตลอดไป"
+    ],
+    "explanation": "ละครพีเรียดลึกลับฟอร์มยักษ์ของช่องวัน 31 การสวมบทบาทคุณอุบลของ นุ่น วรนุช ตรึงคนดูทั่วทั้งประเทศ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_036",
+    "status": "draft",
+    "title": "วันทอง",
+    "mediaType": "drama",
+    "year": 2021,
+    "categories": [
+      "all",
+      "drama",
+      "legendary",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "hard",
+    "character": "วันทอง (ใหม่ ดาวิกา โฮร์เน่)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "วันทองยืนกล่าวความอัดอั้นต่อหน้าบัลลังก์สมเด็จพระพันวษาในศาลตัดสินประหารชีวิต",
+    "correctAnswer": "ข้าไม่ได้เป็นหญิงสองใจ แต่พวกท่านไม่เคยให้ข้าเลือก!",
+    "options": [
+      "ข้าไม่ได้เป็นหญิงสองใจ แต่พวกท่านไม่เคยให้ข้าเลือก!",
+      "หญิงอย่างข้า มีสิทธิ์เลือกชีวิตตัวเองบ้างหรือไม่",
+      "หากการรักเดียวใจเดียวเป็นบาป ก็จงประหารข้าเสียเถิด",
+      "พวกท่านตีตราผู้หญิงว่าเป็นกาลกิณีมาโดยตลอด"
+    ],
+    "explanation": "การตีความวรรณคดีขุนช้างขุนแผนในมุมมองสิทธิสตรี ยกระดับตัวละครวันทองจากการเป็น 'หญิงสองใจ' สู่ผู้หญิงที่สู้เพื่อศักดิ์ศรี",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_037",
+    "status": "draft",
+    "title": "มาตาลดา (To The Moon and Back)",
+    "mediaType": "drama",
+    "year": 2023,
+    "categories": [
+      "all",
+      "drama",
+      "romantic",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "medium",
+    "character": "มาตาลดา (เต้ย จรินทร์พร จุนเกียรติ)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "มาตาลดาปลอบประโลมคุณหมอปุริมที่มีบาดแผลทางใจในครอบครัวด้วยทัศนคติพลังบวก",
+    "correctAnswer": "ความรักไม่เคยทำให้ใครเจ็บปวด",
+    "options": [
+      "ความรักไม่เคยทำให้ใครเจ็บปวด",
+      "โลกนี้ใจดีกับคนใจดีเสมอนะคะคุณหมอ",
+      "คนเราทุกคนสมควรที่จะได้รับความรักนะคะ",
+      "ใจดีกับตัวเองให้มากๆ นะคะหมอปุริม"
+    ],
+    "explanation": "ละครฮีลใจแห่งปี 2023 ละครไทยที่กวาดกระแสชื่นชมทั่วโลกออนไลน์ด้วยเนื้อหาที่อบอุ่นและส่งเสริมความเข้าใจในความหลากหลาย LGBTQ+",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_038",
+    "status": "draft",
+    "title": "เกมรักทรยศ (The Betrayal)",
+    "mediaType": "drama",
+    "year": 2023,
+    "categories": [
+      "all",
+      "drama",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "hard",
+    "character": "หมอเจน (แอน ทองประสม)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "หมอเจนตอบโต้สามีและชู้รักบนโต๊ะอาหารค่ำอย่างเยือกเย็นและเฉียบคม",
+    "correctAnswer": "ผู้หญิงที่ยอมโง่ คือผู้หญิงที่กำลังเตรียมเอาคืน",
+    "options": [
+      "ผู้หญิงที่ยอมโง่ คือผู้หญิงที่กำลังเตรียมเอาคืน",
+      "คนที่ทรยศครอบครัว อย่าหวังจะได้อยู่อย่างสงบสุข",
+      "ฉันจะเอาคืนพวกแกให้สาสมกับที่ทำไว้",
+      "ความซื่อสัตย์คือสิ่งพื้นฐานที่คนอย่างคุณไม่มี"
+    ],
+    "explanation": "ซีรีส์ดัดแปลงจาก Doctor Foster ที่ แอน ทองประสม และ อนันดา ปะทะฝีมือกันอย่างดุเดือด สร้างกระแสมีม 'เส้นผมสีส้ม' ทั่วประเทศ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_039",
+    "status": "draft",
+    "title": "นิทานพันดาว (A Tale of Thousand Stars)",
+    "mediaType": "y_series",
+    "year": 2021,
+    "categories": [
+      "all",
+      "y_series",
+      "romantic",
+      "drama",
+      "trending"
+    ],
+    "difficulty": "hard",
+    "character": "เธียร (มิกซ์ สหภาพ วงศ์ราษฎร์)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "เธียรครูอาสาบนผาปันดาวเอ่ยถามหัวหน้าภูผาใต้ท้องฟ้าที่เต็มไปด้วยดวงดาว",
+    "correctAnswer": "หัวใจดวงนี้มันเต้นเพื่อใครกันแน่",
+    "options": [
+      "หัวใจดวงนี้มันเต้นเพื่อใครกันแน่",
+      "นับดาวครบหนึ่งพันดวงแล้วคำอธิษฐานจะเป็นจริงไหม",
+      "ถ้าผมไม่อยู่ที่นี่ หัวหน้าจะคิดถึงผมบ้างไหม",
+      "หัวใจของทอฝัน หรือหัวใจของผมที่รักคุณ"
+    ],
+    "explanation": "ซีรีส์วายฟอร์มเยี่ยมของ GMMTV นำแสดงโดย เอิร์ท พิรพัฒน์ และ มิกซ์ สหภาพ ถ่ายทอดความรักและจิตวิญญาณแห่งการให้บนดอยสูง",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_040",
+    "status": "draft",
+    "title": "คินน์พอร์ช เดอะซีรีส์ (KinnPorsche The Series)",
+    "mediaType": "y_series",
+    "year": 2022,
+    "categories": [
+      "all",
+      "y_series",
+      "drama",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "hard",
+    "character": "คินน์ (มาย ภาคภูมิ ร่มไทรทอง)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "คินน์ทายาทตระกูลมาเฟียยื่นคำขาดและออกคำสั่งกับพอร์ชบอดี้การ์ดคู่ใจ",
+    "correctAnswer": "มึงเป็นบอดี้การ์ดของกูคนเดียว",
+    "options": [
+      "มึงเป็นบอดี้การ์ดของกูคนเดียว",
+      "ชีวิตของมึงอยู่ในกำมือของกู",
+      "อย่าคิดจะหนีไปไหนเด็ดขาด",
+      "ในโลกของกู มีแต่มึงที่กูไว้ใจได้"
+    ],
+    "explanation": "ซีรีส์วายแอ็กชันมาเฟียฟอร์มยักษ์ที่โด่งดังไปทั่วโลก ติดเทรนด์ทวิตเตอร์อันดับ 1 ของโลกทุกสัปดาห์ที่ออกอากาศ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_041",
+    "status": "draft",
+    "title": "หกฉากครับจารย์",
+    "mediaType": "sitcom",
+    "year": 2019,
+    "categories": [
+      "all",
+      "sitcom",
+      "comedy",
+      "modern"
+    ],
+    "difficulty": "easy",
+    "character": "นิกกี้ (นิกกี้ ณฉัตร)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "นิกกี้กับมุกตลกในห้องเรียนตอนหาเรื่องกวนประสาทอาจารย์หน้าชั้น",
+    "correctAnswer": "จารย์ครับ ผมขอส่งการบ้าน!",
+    "options": [
+      "จารย์ครับ ผมขอส่งการบ้าน!",
+      "ข้อนี้ง่ายมากครับอาจารย์",
+      "ผมไม่เข้าใจโจทย์ครับผม",
+      "ขออนุญาตไปห้องน้ำครับจารย์"
+    ],
+    "explanation": "ซิตคอมแก๊กสั้นแนวตลกวัยเรียนยอดฮิตของเวิร์คพอยท์ รวมดาวตลกและนักแสดงรุ่นใหม่สร้างรอยยิ้มประจำสัปดาห์",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_042",
+    "status": "draft",
+    "title": "บางรักซอย 9",
+    "mediaType": "sitcom",
+    "year": 2003,
+    "categories": [
+      "all",
+      "sitcom",
+      "romantic",
+      "comedy",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "medium",
+    "character": "ชัดเจน (แท่ง ศักดิ์สิทธิ์ แท่งทอง)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "นายชัดเจนสถาปนิกหนุ่มอารมณ์ดีเปิดใจกับแป้งสาวเจ้าของบ้านเช่าในซอย 9",
+    "correctAnswer": "แป้ง...พี่รักแป้งนะ",
+    "options": [
+      "แป้ง...พี่รักแป้งนะ",
+      "อยู่ด้วยกันแบบนี้ตลอดไปได้ไหม",
+      "พี่สัญญาว่าจะดูแลแป้งเอง",
+      "บ้านนี้มันอบอุ่นเพราะมีแป้งอยู่นะ"
+    ],
+    "explanation": "ซิตคอมในตำนานคู่ขวัญเมืองไทย แท่ง-อ้อม กับเรื่องราวในบ้านเช่าบางรักซอย 9 ที่ออกอากาศยาวนานเกือบ 10 ปี",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_043",
+    "status": "draft",
+    "title": "บ้านนี้มีรัก",
+    "mediaType": "sitcom",
+    "year": 2006,
+    "categories": [
+      "all",
+      "sitcom",
+      "comedy",
+      "drama",
+      "classic"
+    ],
+    "difficulty": "hard",
+    "character": "รัก (กัปตัน ภูธเนศ หงษ์มานพ)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "รักพูดถึงความอบอุ่นของครอบครัวที่มีแม่น้อย ลิ้งค์ และริน ในวันที่ผ่านเรื่องราววุ่นวายมาด้วยกัน",
+    "correctAnswer": "ครอบครัวเรา ถึงจะทะเลาะกันแต่ก็รักกันนะ",
+    "options": [
+      "ครอบครัวเรา ถึงจะทะเลาะกันแต่ก็รักกันนะ",
+      "บ้านนี้ถ้าขาดใครไปสักคนคงเหงาน่าดู",
+      "ไม่มีที่ไหนสุขใจเท่าบ้านเราอีกแล้ว",
+      "ความรักในบ้านคือพลังที่ดีที่สุดของชีวิต"
+    ],
+    "explanation": "ซิตคอมครอบครัวอันดับหนึ่งของค่าย Exact ถ่ายทอดความผูกพันและคติสอนใจเรื่องครอบครัวยาวนานกว่า 11 ปี",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_044",
+    "status": "draft",
+    "title": "หลวงพี่เท่ง",
+    "mediaType": "movie",
+    "year": 2005,
+    "categories": [
+      "all",
+      "movie",
+      "comedy",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "easy",
+    "character": "หลวงพี่เท่ง (เท่ง เถิดเทิง)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "หลวงพี่เท่งอดีตลิเกที่มาบวชเป็นพระให้สติกับชาวบ้านที่กำลังมัวเมาในไสยศาสตร์",
+    "correctAnswer": "ธรรมะย่อมชนะอธรรมโยม",
+    "options": [
+      "ธรรมะย่อมชนะอธรรมโยม",
+      "ใจสงบก็พบทางสว่างนะโยม",
+      "อย่าไปงมงายกับสิ่งที่ไม่มีอยู่จริง",
+      "ทำดีได้ดี ทำชั่วได้ชั่วโยมเอ๊ย"
+    ],
+    "explanation": "หนังตลกคลาสสิกทำเงินกว่า 140 ล้านบาท นำแสดงโดย เท่ง เถิดเทิง ผสมผสานมุกตลกพื้นบ้านและธรรมะได้อย่างกลมกล่อม",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_045",
+    "status": "draft",
+    "title": "บอดี้การ์ดหน้าเหลี่ยม",
+    "mediaType": "movie",
+    "year": 2004,
+    "categories": [
+      "all",
+      "movie",
+      "comedy",
+      "legendary",
+      "classic"
+    ],
+    "difficulty": "easy",
+    "character": "คำเหลา (หม่ำ จ๊กมก)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "คำเหลาบอดี้การ์ดสายฮาคุยโวโอ้อวดฝีมือการอารักขาเจ้านาย",
+    "correctAnswer": "กูนี่แหละบอดี้การ์ดอันดับหนึ่ง!",
+    "options": [
+      "กูนี่แหละบอดี้การ์ดอันดับหนึ่ง!",
+      "ระดับคำเหลา ไม่มีคำว่าพลาด!",
+      "ใครกล้าแตะต้องคุณชาย ต้องข้ามศพกูไปก่อน!",
+      "ทำงานด้วยใจ หน้าเหลี่ยมแต่ใจหล่อ!"
+    ],
+    "explanation": "ผลงานกำกับเรื่องแรกของ หม่ำ จ๊กมก ที่ทำรายได้สูงเป็นประวัติการณ์กับฉากแอ็กชันสุดฮาและมุกตลกคาเฟ่ระดับตำนาน",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_046",
+    "status": "draft",
+    "title": "ส่ม ภัค เสี่ยน",
+    "mediaType": "movie",
+    "year": 2017,
+    "categories": [
+      "all",
+      "movie",
+      "romantic",
+      "comedy",
+      "trending"
+    ],
+    "difficulty": "medium",
+    "character": "เสี่ยน (โตโน่ ภาคิน คำวิลัยศักดิ์)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "เสี่ยนหนุ่มอีสานบ้านนาสารภาพรักกับสาวภัคที่ตนเองแอบชอบมานาน",
+    "correctAnswer": "ข้อยฮักเจ้าหลายเด้อภัค",
+    "options": [
+      "ข้อยฮักเจ้าหลายเด้อภัค",
+      "กลับมาหาอ้ายเถิดนะคนดี",
+      "เจ้าเป็นผู้สาวที่งามที่สุดในบ้านเฮา",
+      "อ้ายสิเฮ็ดทุกอย่างเพื่อเจ้า"
+    ],
+    "explanation": "หนังรักตลกสำเนียงอีสานที่สร้างความประทับใจและทำเงินทะลุ 200 ล้านบาททั่วประเทศ กำกับโดย เอ็ม บุษราคัม",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_047",
+    "status": "draft",
+    "title": "วัยเป้งง นักเลงขาสั้น",
+    "mediaType": "movie",
+    "year": 2014,
+    "categories": [
+      "all",
+      "movie",
+      "comedy",
+      "modern"
+    ],
+    "difficulty": "hard",
+    "character": "เป้ง (นิก คุณาธิป ปิ่นประดับ)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "เป้งหัวหน้าแก๊งนักเรียนกางเกงน้ำเงินตะโกนบอกศักดิ์ศรีของพวกตนหน้าโรงเรียนคู่อริ",
+    "correctAnswer": "กางเกงขาสั้นแต่ใจกูยาว!",
+    "options": [
+      "กางเกงขาสั้นแต่ใจกูยาว!",
+      "ใครเก๋าเข้ามาเลยกูไม่เคยกลัว!",
+      "ศักดิ์ศรีของสถาบันสำคัญกว่าชีวิต!",
+      "นักเลงจริงเขาไม่รังแกคนไม่มีทางสู้!"
+    ],
+    "explanation": "ภาพยนตร์วัยรุ่นสุดห้าวของ พจน์ อานนท์ ที่สะท้อนชีวิตและค่านิยมของเด็กช่างและนักเรียนมัธยมในยุคนั้น",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_048",
+    "status": "draft",
+    "title": "สัปเหร่อ (The Undertaker)",
+    "mediaType": "movie",
+    "year": 2023,
+    "categories": [
+      "all",
+      "movie",
+      "horror",
+      "drama",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "medium",
+    "character": "เซียง (ตาต้า ชาติชาย ชินศรี)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "เซียงที่พยายามถอดจิตไปหาแฟนเก่าที่ตาย ได้เรียนรู้สัจธรรมความตายจากหลวงพ่อและลุงสัปเหร่อ",
+    "correctAnswer": "คนตายไปแล้ว เฮาเฮ็ดหยังบ่ได้ดอก",
+    "options": [
+      "คนตายไปแล้ว เฮาเฮ็ดหยังบ่ได้ดอก",
+      "ความตายมันบ่เคยเลือกเวลาดอก",
+      "มีแต่คนที่ยังมีชีวิตอยู่เท่านั้นที่ต้องก้าวต่อไป",
+      "ฮักหลายส่ำได๋ กะต้องปล่อยวาง"
+    ],
+    "explanation": "ปรากฏการณ์หนังไทยแห่งทศวรรษจากจักรวาลไทบ้าน กำกับโดย ต้องเต ธิติ ทำรายได้ถล่มทลายทะลุ 700 ล้านบาททั่วประเทศ",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_049",
+    "status": "draft",
+    "title": "หลานม่า (How to Make Millions Before Grandma Dies)",
+    "mediaType": "movie",
+    "year": 2024,
+    "categories": [
+      "all",
+      "movie",
+      "drama",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "hard",
+    "character": "เอ็ม (บิวกิ้น พุฒิพงศ์ อัสสรัตนกุล)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "เอ็มหลานชายผู้หวังมรดกพูดกับอาม่าในวันที่เข้าใจความหมายของความรักที่แท้จริงในครอบครัว",
+    "correctAnswer": "อาม่า...เอ็มรักอาม่านะ",
+    "options": [
+      "อาม่า...เอ็มรักอาม่านะ",
+      "เอ็มไม่อยากให้อาม่าจากไปไหนเลย",
+      "มรดกที่ดีที่สุดคือความทรงจำกับอาม่า",
+      "ขอบคุณที่คอยเลี้ยงดูเอ็มมาตลอดนะอาม่า"
+    ],
+    "explanation": "ภาพยนตร์ครอบครัวแห่งปี 2024 โดยค่าย GDH ทำรายได้ถล่มทลายทั้งในไทยและทั่วทั้งเอเชีย นำแสดงโดย บิวกิ้น และ ยายแต๋ว อุษา",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
+  },
+  {
+    "id": "q_050",
+    "status": "draft",
+    "title": "ทิชา (Thicha)",
+    "mediaType": "drama",
+    "year": 2024,
+    "categories": [
+      "all",
+      "drama",
+      "trending",
+      "modern"
+    ],
+    "difficulty": "hard",
+    "character": "ทิชา (ใบเฟิร์น พิมพ์ชนก ลือวิเศษไพบูลย์)",
+    "clipDuration": 12,
+    "muteStart": 4.5,
+    "muteEnd": 8,
+    "quoteStart": 4.5,
+    "quoteEnd": 8,
+    "contextDialogue": "ทิชาลุกขึ้นสู้เพื่อเรียกร้องความเป็นธรรมและเอาคืนกลุ่มอภิสิทธิ์ชนที่กดขี่เหยียบย่ำคนจน",
+    "correctAnswer": "ชนชั้นที่เหยียบหัวคนอื่น จะต้องชดใช้อย่างสาสม",
+    "options": [
+      "ชนชั้นที่เหยียบหัวคนอื่น จะต้องชดใช้อย่างสาสม",
+      "กฎหมายมีไว้เพื่อคนรวยเท่านั้นหรืออย่างไร",
+      "พวกมึงทำลายชีวิตกู กูจะเอาคืนเป็นร้อยเท่า",
+      "ความยุติธรรมไม่มีจริง หากเราไม่สู้ด้วยตัวเอง"
+    ],
+    "explanation": "ซีรีส์ดราม่าสะท้อนชนชั้นและความเหลื่อมล้ำทางสังคมปี 2024 ของช่อง oneD Original นำแสดงโดย ใบเฟิร์น พิมพ์ชนก และ พีช พชร",
+    "stats": {
+      "playedCount": 0,
+      "correctCount": 0
+    },
+    "audioUrl": "",
+    "introAudioUrl": "",
+    "quoteAudioUrl": "",
+    "introVideoUrl": "",
+    "quoteVideoUrl": ""
   }
 ]

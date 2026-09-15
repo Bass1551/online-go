@@ -38,7 +38,27 @@ let questions = loadJSON(QUESTIONS_FILE, []);
 let reports = loadJSON(REPORTS_FILE, []);
 let totalRoundsPlayed = 0;
 
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+
 class QuoteDatabase {
+  static isQuestionPlayable(q) {
+    if (!q || q.status !== 'published') return false;
+    if (!q.introVideoUrl || !q.quoteVideoUrl || !q.quoteAudioUrl) return false;
+    try {
+      const iv = path.join(PUBLIC_DIR, q.introVideoUrl);
+      const qv = path.join(PUBLIC_DIR, q.quoteVideoUrl);
+      const qa = path.join(PUBLIC_DIR, q.quoteAudioUrl);
+      const ia = path.join(PUBLIC_DIR, q.introAudioUrl || q.audioUrl || '');
+      return fs.existsSync(iv) && fs.existsSync(qv) && fs.existsSync(qa) && fs.existsSync(ia);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static getPlayableQuestions() {
+    return questions.filter(q => this.isQuestionPlayable(q));
+  }
+
   static getAllQuestions() {
     return questions;
   }
@@ -47,70 +67,137 @@ class QuoteDatabase {
     return questions.find(q => q.id === id);
   }
 
-  static selectRoundQuestions(category = 'all', difficulty = 'mixed', excludeIds = []) {
-    const allPool = questions.filter(q => !excludeIds.includes(q.id));
+  static getCategoryList() {
+    const playable = this.getPlayableQuestions();
+    const all = questions;
+    const catDefs = [
+      { id: 'all', name: 'รวมทุกประเภท', icon: '🌟' },
+      { id: 'movie', name: 'ภาพยนตร์ไทย', icon: '🎬', filter: q => q.mediaType === 'movie' },
+      { id: 'drama', name: 'ละครไทย', icon: '📺', filter: q => q.mediaType === 'drama' },
+      { id: 'series', name: 'ซีรีส์ไทย', icon: '🍿', filter: q => q.mediaType === 'series' },
+      { id: 'y_series', name: 'ซีรีส์วายไทย', icon: '👬', filter: q => q.mediaType === 'y_series' },
+      { id: 'sitcom', name: 'ซิตคอมไทย', icon: '🎭', filter: q => q.mediaType === 'sitcom' },
+      { id: 'legendary', name: 'ประโยคระดับตำนาน', icon: '👑', filter: q => (q.categories || []).includes('legendary') },
+      { id: 'trending', name: 'เรื่องกระแสฮิต', icon: '🔥', filter: q => (q.categories || []).includes('trending') },
+      { id: 'comedy', name: 'ตลก/ฮา', icon: '🤣', filter: q => (q.categories || []).includes('comedy') },
+      { id: 'romantic', name: 'โรแมนติก', icon: '💖', filter: q => (q.categories || []).includes('romantic') },
+      { id: 'drama_genre', name: 'ดราม่าเข้มข้น', icon: '😭', filter: q => (q.categories || []).includes('drama') }
+    ];
 
-    // Determine primary pool (category-filtered) and fallback pool
-    let primaryPool = allPool;
-    let paddingPool = [];
+    return catDefs.map(def => {
+      const playableMatching = def.id === 'all'
+        ? playable
+        : playable.filter(def.filter);
+      const totalMatching = def.id === 'all'
+        ? all
+        : all.filter(def.filter);
+      const playableCount = playableMatching.length;
+      const totalCount = totalMatching.length;
+      const isUnlocked = playableCount >= 10;
+      return {
+        id: def.id,
+        name: def.name,
+        icon: def.icon,
+        count: playableCount,
+        totalCount: totalCount,
+        draftCount: totalCount - playableCount,
+        minRequired: 10,
+        isUnlocked,
+        statusText: isUnlocked
+          ? `${playableCount} ข้อ (เปิดให้เล่นได้ 🎉)`
+          : `🔒 ${playableCount}/10 ข้อ (รอคลิปเพิ่ม)`
+      };
+    });
+  }
+
+  static getDifficultyList() {
+    const playable = this.getPlayableQuestions();
+    const diffDefs = [
+      { id: 'mixed', name: 'รวมระดับ (4 ง่าย : 4 กลาง : 2 ยาก)', filter: () => true },
+      { id: 'easy', name: 'ง่าย (ประโยคฮิตติดหู)', filter: q => q.difficulty === 'easy' },
+      { id: 'medium', name: 'ปานกลาง (ต้องจำบริบทได้)', filter: q => q.difficulty === 'medium' },
+      { id: 'hard', name: 'ยาก (เซียนหนังตัวจริง)', filter: q => q.difficulty === 'hard' }
+    ];
+
+    return diffDefs.map(def => {
+      const playableMatching = playable.filter(def.filter);
+      const count = playableMatching.length;
+      const isUnlocked = def.id === 'mixed' ? (playable.length >= 10) : (count >= 10);
+      return {
+        id: def.id,
+        name: def.name,
+        count,
+        minRequired: 10,
+        isUnlocked,
+        statusText: isUnlocked
+          ? `${def.name}`
+          : `🔒 ${def.name} (${count}/10 ข้อ)`
+      };
+    });
+  }
+
+  static selectRoundQuestions(category = 'all', difficulty = 'mixed', excludeIds = []) {
+    // Only select from published questions with valid media on disk
+    const playable = this.getPlayableQuestions().filter(q => !excludeIds.includes(q.id));
+
+    let pool = playable;
     if (category && category !== 'all') {
-      const catFiltered = allPool.filter(q => (q.categories || []).includes(category) || q.mediaType === category);
-      if (catFiltered.length > 0) {
-        primaryPool = catFiltered;
-        // Padding pool = other questions NOT in primary, to fill up to 10
-        paddingPool = allPool.filter(q => !catFiltered.some(c => c.id === q.id));
+      const catMatching = playable.filter(q => (q.categories || []).includes(category) || q.mediaType === category);
+      if (catMatching.length < 10) {
+        // Strict rule: category must not be played if published count < 10
+        return [];
       }
+      pool = catMatching;
     }
 
-    const shuffle = (arr) => [...arr].sort(() => 0.5 - Math.random());
+    if (difficulty && difficulty !== 'mixed') {
+      const diffMatching = pool.filter(q => q.difficulty === difficulty);
+      if (diffMatching.length < 10) {
+        return [];
+      }
+      pool = diffMatching;
+    }
 
-    const shuffledPrimary = shuffle(primaryPool);
-    const shuffledPadding = shuffle(paddingPool);
-
+    const shuffled = [...pool].sort(() => 0.5 - Math.random());
     let selected = [];
     const usedTitles = new Set();
 
-    const pickFrom = (pool, count) => {
-      for (const q of pool) {
-        if (selected.length >= count) break;
+    if (difficulty === 'mixed') {
+      const easyPool = shuffled.filter(q => q.difficulty === 'easy');
+      const medPool  = shuffled.filter(q => q.difficulty === 'medium');
+      const hardPool = shuffled.filter(q => q.difficulty === 'hard');
+
+      const pickFrom = (subPool, count) => {
+        let picked = 0;
+        for (const q of subPool) {
+          if (picked >= count) break;
+          if (!usedTitles.has(q.title) && !selected.some(s => s.id === q.id)) {
+            selected.push(q);
+            usedTitles.add(q.title);
+            picked++;
+          }
+        }
+      };
+
+      pickFrom(easyPool, 4);
+      pickFrom(medPool, 4);
+      pickFrom(hardPool, 2);
+
+      for (const q of shuffled) {
+        if (selected.length >= 10) break;
         if (!usedTitles.has(q.title) && !selected.some(s => s.id === q.id)) {
           selected.push(q);
           usedTitles.add(q.title);
         }
       }
-    };
-
-    if (difficulty === 'mixed') {
-      // Pick from primary pool first (respecting easy/med/hard ratio as much as possible)
-      const pEasy = shuffledPrimary.filter(q => q.difficulty === 'easy');
-      const pMed  = shuffledPrimary.filter(q => q.difficulty === 'medium');
-      const pHard = shuffledPrimary.filter(q => q.difficulty === 'hard');
-
-      // Try to get ratio from primary, don't exceed primary pool size
-      const primaryCount = shuffledPrimary.length;
-      const easyTarget = Math.min(4, Math.round(primaryCount * 0.4));
-      const medTarget  = Math.min(4, Math.round(primaryCount * 0.4));
-      const hardTarget = Math.min(2, Math.round(primaryCount * 0.2));
-
-      pickFrom(pEasy, easyTarget);
-      pickFrom(pMed,  selected.length + medTarget);
-      pickFrom(pHard, selected.length + hardTarget);
-      // Fill remaining primary slots (any difficulty)
-      pickFrom(shuffledPrimary, 10);
-      // Pad with other categories if still < 10
-      pickFrom(shuffledPadding, 10);
-    } else if (difficulty && difficulty !== 'mixed') {
-      const pDiff = shuffledPrimary.filter(q => q.difficulty === difficulty);
-      pickFrom(pDiff, 10);
-      // If not enough of that difficulty in primary, try other primary questions
-      pickFrom(shuffledPrimary, 10);
-      // Pad with other categories
-      const padDiff = shuffledPadding.filter(q => q.difficulty === difficulty);
-      pickFrom(padDiff, 10);
-      pickFrom(shuffledPadding, 10);
     } else {
-      pickFrom(shuffledPrimary, 10);
-      pickFrom(shuffledPadding, 10);
+      for (const q of shuffled) {
+        if (selected.length >= 10) break;
+        if (!usedTitles.has(q.title) && !selected.some(s => s.id === q.id)) {
+          selected.push(q);
+          usedTitles.add(q.title);
+        }
+      }
     }
 
     return selected.slice(0, 10);

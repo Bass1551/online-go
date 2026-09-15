@@ -170,7 +170,14 @@ class GameEngine {
       }
     }
 
-    room.questions = Database.selectRoundQuestions(room.category, room.difficulty);
+    let selectedQ = Database.selectRoundQuestions(room.category || 'all', room.difficulty || 'mixed');
+    if (!selectedQ || selectedQ.length < 10) {
+      selectedQ = Database.selectRoundQuestions('all', 'mixed');
+    }
+    if (!selectedQ || selectedQ.length < 10) {
+      return { success: false, message: 'มีคำถามที่พร้อมเล่นจริงไม่เพียงพอสำหรับเริ่มเกม (ต้องการอย่างน้อย 10 ข้อ)' };
+    }
+    room.questions = selectedQ;
     room.currentQuestionIndex = 0;
     room.state = 'interstitial';
 
