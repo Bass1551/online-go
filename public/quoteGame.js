@@ -86,13 +86,24 @@
       if (data.success && data.categories) {
         const grid = document.getElementById('qCategoryGrid');
         if (!grid) return;
-        grid.innerHTML = data.categories.map(c => `
+        grid.innerHTML = data.categories.map(c => {
+          const isPure = c.count >= 10;
+          const countLabel = c.id === 'all'
+            ? `${c.count} ข้อ (ครบทุกเรื่อง)`
+            : isPure
+              ? `${c.count} ข้อ (เล่นได้ครบ 10 ข้อ)`
+              : `${c.count} ข้อ + เติมข้อจากหมวดอื่น`;
+          const noteStyle = !isPure && c.id !== 'all'
+            ? 'font-size:0.72rem; color:var(--accent-gold);'
+            : '';
+          return `
           <div class="cat-card ${c.id === quoteCategory ? 'active' : ''}" data-cat="${c.id}">
             <div class="cat-icon">${c.icon}</div>
             <div class="cat-name">${c.name}</div>
-            <div class="cat-count">${c.count} ข้อ</div>
+            <div class="cat-count" style="${noteStyle}">${countLabel}</div>
           </div>
-        `).join('');
+        `;
+        }).join('');
 
         grid.querySelectorAll('.cat-card').forEach(card => {
           card.addEventListener('click', () => {
