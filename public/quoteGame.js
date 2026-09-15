@@ -386,6 +386,23 @@
 
   // ── SINGLE PLAYER LOGIC ────────────────────────────────────
   async function startSingleQuoteGame() {
+    // Client-side guard: verify category and difficulty are unlocked before making start request
+    const curCat = cachedCategories.find(c => c.id === quoteCategory);
+    if (quoteCategory !== 'all' && curCat && !curCat.isUnlocked) {
+      alert(`หมวด "${curCat.name}" มีคำถามที่พร้อมเล่นจริงเพียง ${curCat.count} ข้อ (ต้องการอย่างน้อย 10 ข้อตามกติกา)\n\nระบบเปิดให้เล่นเฉพาะหมวดที่มีคำถามสมบูรณ์ครบ 10 ข้อเท่านั้น กรุณาเลือกหมวด "รวมทุกประเภท" เพื่อเริ่มเล่นครับ`);
+      quoteCategory = 'all';
+      resetCategoryScreen();
+      return;
+    }
+
+    const curDiff = cachedDifficulties.find(d => d.id === quoteDifficulty);
+    if (quoteDifficulty !== 'mixed' && curDiff && !curDiff.isUnlocked) {
+      alert(`ระดับความยากนี้มีคำถามที่พร้อมเล่นจริงเพียง ${curDiff?.count || 0} ข้อ (ต้องการอย่างน้อย 10 ข้อตามกติกา)\n\nกรุณาเลือกระดับ "รวมระดับ" เพื่อเริ่มเล่นรอบ 10 ข้อครับ`);
+      quoteDifficulty = 'mixed';
+      resetCategoryScreen();
+      return;
+    }
+
     try {
       const res = await fetch('/api/quote/single/start', {
         method: 'POST',

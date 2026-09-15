@@ -110,10 +110,37 @@ class QuoteDatabase {
     });
   }
 
+  static getMixedRatio(playablePool = null) {
+    const pool = playablePool || this.getPlayableQuestions();
+    const hardCount = pool.filter(q => q.difficulty === 'hard').length;
+    if (hardCount >= 2) {
+      return {
+        easy: 4,
+        medium: 4,
+        hard: 2,
+        label: 'รวมระดับ (4 ง่าย : 4 กลาง : 2 ยาก)'
+      };
+    } else {
+      return {
+        easy: 5,
+        medium: 4,
+        hard: 1,
+        label: 'รวมระดับ (5 ง่าย : 4 กลาง : 1 ยาก)'
+      };
+    }
+  }
+
   static getDifficultyList() {
     const playable = this.getPlayableQuestions();
+    const mixedRatio = this.getMixedRatio(playable);
+
     const diffDefs = [
-      { id: 'mixed', name: 'รวมระดับ (4 ง่าย : 4 กลาง : 2 ยาก)', filter: () => true },
+      {
+        id: 'mixed',
+        name: mixedRatio.label,
+        filter: () => true,
+        ratio: { easy: mixedRatio.easy, medium: mixedRatio.medium, hard: mixedRatio.hard }
+      },
       { id: 'easy', name: 'ง่าย (ประโยคฮิตติดหู)', filter: q => q.difficulty === 'easy' },
       { id: 'medium', name: 'ปานกลาง (ต้องจำบริบทได้)', filter: q => q.difficulty === 'medium' },
       { id: 'hard', name: 'ยาก (เซียนหนังตัวจริง)', filter: q => q.difficulty === 'hard' }
@@ -129,6 +156,7 @@ class QuoteDatabase {
         count,
         minRequired: 10,
         isUnlocked,
+        ratio: def.ratio || null,
         statusText: isUnlocked
           ? `${def.name}`
           : `🔒 ${def.name} (${count}/10 ข้อ)`
@@ -163,32 +191,31 @@ class QuoteDatabase {
     const usedTitles = new Set();
 
     if (difficulty === 'mixed') {
+      const ratio = this.getMixedRatio(pool);
       const easyPool = shuffled.filter(q => q.difficulty === 'easy');
       const medPool  = shuffled.filter(q => q.difficulty === 'medium');
       const hardPool = shuffled.filter(q => q.difficulty === 'hard');
 
-      const pickFrom = (subPool, count) => {
+      const pickFrom = (subPool, targetCount) => {
         let picked = 0;
         for (const q of subPool) {
-          if (picked >= count) break;
+          if (picked >= targetCount) break;
           if (!usedTitles.has(q.title) && !selected.some(s => s.id === q.id)) {
             selected.push(q);
             usedTitles.add(q.title);
             picked++;
           }
         }
+        return picked;
       };
 
-      pickFrom(easyPool, 4);
-      pickFrom(medPool, 4);
-      pickFrom(hardPool, 2);
+      const pickedEasy = pickFrom(easyPool, ratio.easy);
+      const pickedMed  = pickFrom(medPool, ratio.medium);
+      const pickedHard = pickFrom(hardPool, ratio.hard);
 
-      for (const q of shuffled) {
-        if (selected.length >= 10) break;
-        if (!usedTitles.has(q.title) && !selected.some(s => s.id === q.id)) {
-          selected.push(q);
-          usedTitles.add(q.title);
-        }
+      // Strict check: if cannot strictly satisfy the advertised ratio without duplicate titles, return []
+      if (pickedEasy !== ratio.easy || pickedMed !== ratio.medium || pickedHard !== ratio.hard) {
+        return [];
       }
     } else {
       for (const q of shuffled) {
