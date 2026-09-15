@@ -359,7 +359,12 @@
       document.getElementById('qRevealExp').innerText = `${result.character} (${q.title}) - ${result.explanation || ''}`;
       banner.style.display = 'block';
 
-      videoStage.loadQuestion({ ...q, correctAnswer: result.correctAnswer }, 'reveal', () => {
+      videoStage.loadQuestion({
+        ...q,
+        correctAnswer: result.correctAnswer,
+        audioUrl: result.audioUrl || q.audioUrl || '',
+        videoUrl: result.videoUrl || q.videoUrl || ''
+      }, 'reveal', () => {
         setTimeout(() => runSingleQ(quoteSingleIndex + 1), 2000);
       });
 
@@ -613,6 +618,42 @@
   }
 
   function setupQAdminControls() {
+    const fileInput = document.getElementById('qAddAudioFileInput');
+    const btnBrowse = document.getElementById('btnBrowseQuoteAudio');
+    const audioUrlInput = document.getElementById('qAddAudioUrl');
+    const statusSpan = document.getElementById('qAddAudioStatus');
+
+    btnBrowse?.addEventListener('click', () => fileInput?.click());
+
+    fileInput?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (statusSpan) statusSpan.innerText = '⏳ กำลังอัปโหลดไฟล์เสียง...';
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const res = await fetch('/api/quote/admin/upload-audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: file.name, fileBase64: reader.result })
+          });
+          const data = await res.json();
+          if (data.success && data.audioUrl) {
+            if (audioUrlInput) audioUrlInput.value = data.audioUrl;
+            if (statusSpan) statusSpan.innerText = `✅ อัปโหลดสำเร็จ: ${file.name}`;
+          } else {
+            alert(data.message || 'อัปโหลดล้มเหลว');
+            if (statusSpan) statusSpan.innerText = '❌ อัปโหลดไม่สำเร็จ';
+          }
+        } catch (err) {
+          alert('เกิดข้อผิดพลาดในการอัปโหลดไฟล์เสียง');
+          if (statusSpan) statusSpan.innerText = '❌ ผิดพลาด';
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
     document.getElementById('formQAddQuestion')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const payload = {
@@ -627,7 +668,9 @@
         option2: document.getElementById('qAddOpt2').value,
         option3: document.getElementById('qAddOpt3').value,
         option4: document.getElementById('qAddOpt4').value,
-        explanation: document.getElementById('qAddExp').value
+        explanation: document.getElementById('qAddExp').value,
+        audioUrl: document.getElementById('qAddAudioUrl')?.value || '',
+        videoUrl: document.getElementById('qAddVideoUrl')?.value || ''
       };
 
       const res = await fetch('/api/quote/admin/questions', {
@@ -639,22 +682,56 @@
       if (data.success) {
         alert('เพิ่มคำถามใหม่สำเร็จ!');
         document.getElementById('formQAddQuestion').reset();
+        if (statusSpan) statusSpan.innerText = 'รองรับ .mp3, .wav, .m4a';
         loadQAdminQuestions();
       }
     });
   }
+
+  let previewAudio = null;
+  window.playQuoteAudioPreview = function(url) {
+    if (!url) return;
+    if (previewAudio) {
+      previewAudio.pause();
+      previewAudio = null;
+    }
+    previewAudio = new Audio(url);
+    previewAudio.play().catch(() => alert('ไม่สามารถเล่นเสียงนี้ได้'));
+  };
+
+  window.attachQuoteAudioPrompt = async function(id) {
+    const url = prompt('ใส่ URL ลิงก์ไฟล์เสียงหนัง (.mp3 / .wav / .m4a):', '');
+    if (!url || !url.trim()) return;
+    const res = await fetch(`/api/quote/admin/questions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audioUrl: url.trim() })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('บันทึกไฟล์เสียงหนังเรียบร้อย!');
+      loadQAdminQuestions();
+    }
+  };
 
   async function loadQAdminQuestions() {
     const res = await fetch('/api/quote/admin/questions');
     const data = await res.json();
     if (data.success && data.questions) {
       document.getElementById('qAdminList').innerHTML = data.questions.map(q => `
-        <div style="background:rgba(255,255,255,0.04); padding:0.6rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <b>${q.title}</b> (${q.character})
-            <span style="font-size:0.75rem; color:var(--accent-gold); display:block;">"${q.correctAnswer}"</span>
+        <div style="background:rgba(255,255,255,0.04); padding:0.6rem 0.8rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+              <b>${escapeHtml(q.title)}</b> (${escapeHtml(q.character)})
+              ${q.audioUrl ? `<span style="background:rgba(16,185,129,0.2); color:#34d399; font-size:0.72rem; padding:0.15rem 0.4rem; border-radius:4px; font-weight:600;">🔊 เสียงหนังจริง</span>` : `<span style="background:rgba(239,68,68,0.2); color:#fca5a5; font-size:0.72rem; padding:0.15rem 0.4rem; border-radius:4px;">🔇 ยังไม่มีเสียง</span>`}
+            </div>
+            <span style="font-size:0.78rem; color:var(--accent-gold); display:block; margin-top:0.15rem;">"${escapeHtml(q.correctAnswer)}"</span>
           </div>
-          <button style="background:none; border:1px solid var(--accent-rose); color:#fecdd3; border-radius:4px; padding:0.2rem 0.4rem; cursor:pointer;" onclick="deleteQAdminQuestion('${q.id}')">ลบ</button>
+          <div style="display:flex; gap:0.35rem; align-items:center;">
+            ${q.audioUrl ? `<button style="background:none; border:1px solid #34d399; color:#34d399; border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer; font-size:0.75rem;" onclick="playQuoteAudioPreview('${q.audioUrl}')">▶️ ฟัง</button>` : ''}
+            <button style="background:none; border:1px solid var(--accent-cyan); color:var(--accent-cyan); border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer; font-size:0.75rem;" onclick="attachQuoteAudioPrompt('${q.id}')">🎵 ลิงก์เสียง</button>
+            <button style="background:none; border:1px solid var(--accent-rose); color:#fecdd3; border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer; font-size:0.75rem;" onclick="deleteQAdminQuestion('${q.id}')">ลบ</button>
+          </div>
         </div>
       `).join('');
     }

@@ -348,6 +348,8 @@ class GameEngine {
       explanation: currentQ.explanation,
       quoteStart: currentQ.quoteStart,
       quoteEnd: currentQ.quoteEnd,
+      audioUrl: currentQ.audioUrl || '',
+      videoUrl: currentQ.videoUrl || '',
       character: currentQ.character,
       title: currentQ.title,
       mediaType: currentQ.mediaType,

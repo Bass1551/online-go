@@ -1385,6 +1385,20 @@
             <label class="form-label">คำอธิบายที่มา/บริบท:</label>
             <input type="text" id="qAddExp" class="form-input" placeholder="คำอธิบายที่มาของประโยคนี้">
           </div>
+          <div style="background:rgba(0,0,0,0.25); border:1px dashed var(--accent-gold); border-radius:10px; padding:0.8rem; display:flex; flex-direction:column; gap:0.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label" style="color:var(--accent-gold); margin:0; font-weight:700;">🎵 ไฟล์เสียงหนังจริง (Real Movie Audio):</label>
+              <span id="qAddAudioStatus" style="font-size:0.75rem; color:var(--text-secondary);">รองรับ .mp3, .wav, .m4a</span>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <input type="file" id="qAddAudioFileInput" accept="audio/*,video/mp4" style="display:none;">
+              <button type="button" class="btn btn-secondary" id="btnBrowseQuoteAudio" style="padding:0.4rem 0.8rem; font-size:0.82rem; white-space:nowrap;">📁 เลือกไฟล์เสียงจากเครื่อง</button>
+              <input type="text" id="qAddAudioUrl" class="form-input" placeholder="หรือวาง URL ไฟล์เสียง เช่น https://... หรือ /audio/quotes/xxx.mp3" style="font-size:0.82rem;">
+            </div>
+            <div>
+              <input type="text" id="qAddVideoUrl" class="form-input" placeholder="🎥 ลิงก์คลิปวิดีโอ .mp4 (ถ้ามี - ใส่แล้วจะเล่นวิดีโอแทน canvas)" style="font-size:0.82rem;">
+            </div>
+          </div>
           <button type="submit" class="btn btn-primary" style="margin-top:0.3rem;">💾 บันทึกคำถามลงระบบ</button>
         </form>
 

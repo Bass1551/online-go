@@ -46,8 +46,10 @@ function maskEmail(email) {
   return `${name.slice(0, 2)}${'*'.repeat(Math.min(5, name.length - 2))}@${domain}`;
 }
 
-// Enable JSON body parsing for API
-app.use(express.json());
+// Enable JSON body parsing for API with 50mb limit for audio uploads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -246,6 +248,36 @@ app.get('/api/quote/admin/questions', (req, res) => {
 app.post('/api/quote/admin/questions', (req, res) => {
   const newQ = QuoteDatabase.addQuestion(req.body);
   res.json({ success: true, question: newQ });
+});
+
+app.put('/api/quote/admin/questions/:id', (req, res) => {
+  const updated = QuoteDatabase.updateQuestion(req.params.id, req.body);
+  res.json({ success: !!updated, question: updated });
+});
+
+app.post('/api/quote/admin/upload-audio', (req, res) => {
+  try {
+    const { filename, fileBase64 } = req.body;
+    if (!filename || !fileBase64) {
+      return res.status(400).json({ success: false, message: 'กรุณาส่งไฟล์เสียง' });
+    }
+    const ext = path.extname(filename).toLowerCase() || '.mp3';
+    if (!['.mp3', '.wav', '.ogg', '.m4a', '.mp4'].includes(ext)) {
+      return res.status(400).json({ success: false, message: 'รองรับเฉพาะไฟล์เสียง .mp3, .wav, .m4a, .ogg หรือ .mp4' });
+    }
+    const safeName = 'quote_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + ext;
+    const destDir = path.join(__dirname, '..', 'public', 'audio', 'quotes');
+    if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+    
+    const destPath = path.join(destDir, safeName);
+    const base64Data = fileBase64.replace(/^data:(audio|video)\/[a-z0-9-]+;base64,/, '');
+    fs.writeFileSync(destPath, Buffer.from(base64Data, 'base64'));
+
+    res.json({ success: true, audioUrl: '/audio/quotes/' + safeName, filename: safeName });
+  } catch (err) {
+    console.error('Audio upload error:', err);
+    res.status(500).json({ success: false, message: 'Upload failed: ' + err.message });
+  }
 });
 
 app.delete('/api/quote/admin/questions/:id', (req, res) => {

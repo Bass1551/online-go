@@ -1,7 +1,7 @@
-﻿/**
+/**
  * Cinematic Game Show Video & Dialogue Stage Controller
- * 100% Copyright-safe dynamic stage rendering with mute intervals,
- * audio waveforms, character dialogue simulation, and HTML5 video support
+ * Real movie audio & video clip player with precision mute intervals,
+ * audio waveforms, and zero robotic speech synthesis.
  */
 
 class VideoStageController {
@@ -9,6 +9,8 @@ class VideoStageController {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
     this.videoEl = document.getElementById(videoId);
+    this.audioEl = new Audio();
+    this.audioEl.preload = 'auto';
     this.currentQuestion = null;
     this.isPlaying = false;
     this.isMutedInterval = false;
@@ -18,7 +20,6 @@ class VideoStageController {
     this.onEndedCallback = null;
     this.onMuteStateChangeCallback = null;
     this.mode = 'question'; // 'question' or 'reveal'
-    this.synthUtterance = null;
     this.waveformOffset = 0;
   }
 
@@ -27,11 +28,11 @@ class VideoStageController {
     this.currentQuestion = question;
     this.mode = mode;
     this.onEndedCallback = onEnded;
-    this.currentTime = mode === 'reveal' ? (question.quoteStart || 4.5) : 0;
+    this.currentTime = mode === 'reveal' ? (question.quoteStart || question.muteStart || 4.5) : 0;
     this.duration = mode === 'reveal' ? (question.quoteEnd || 8.0) : (question.muteEnd || 8.0);
     this.isMutedInterval = false;
 
-    // If custom MP4 video URL provided
+    // 1. If custom MP4 video URL provided
     if (question.videoUrl && this.videoEl) {
       this.videoEl.src = question.videoUrl;
       this.videoEl.style.display = 'block';
@@ -43,7 +44,83 @@ class VideoStageController {
     if (this.videoEl) this.videoEl.style.display = 'none';
     if (this.canvas) this.canvas.style.display = 'block';
 
+    // 2. If real movie audio clip provided
+    if (question.audioUrl && this.audioEl) {
+      try {
+        this.audioEl.src = question.audioUrl;
+        if (mode === 'reveal') {
+          this.audioEl.currentTime = question.quoteStart || question.muteStart || 0;
+          this.audioEl.muted = false;
+          this.audioEl.volume = 1.0;
+        } else {
+          this.audioEl.currentTime = 0;
+          this.audioEl.muted = false;
+          this.audioEl.volume = 1.0;
+        }
+        const playPromise = this.audioEl.play();
+        if (playPromise) {
+          playPromise.catch(() => {
+            // Audio autoplay policy handled silently
+          });
+        }
+      } catch (err) {
+        console.warn('Audio play error:', err);
+      }
+    }
+
     this.playCanvasStage();
+  }
+
+  playRealVideo() {
+    if (!this.videoEl) return;
+    this.isPlaying = true;
+    const q = this.currentQuestion;
+    const muteStart = q.muteStart || 4.5;
+    const muteEnd = q.muteEnd || 8.0;
+
+    if (this.mode === 'reveal') {
+      this.videoEl.currentTime = q.quoteStart || q.muteStart || 0;
+      this.videoEl.muted = false;
+      this.videoEl.volume = 1.0;
+    } else {
+      this.videoEl.currentTime = 0;
+      this.videoEl.muted = false;
+      this.videoEl.volume = 1.0;
+    }
+
+    this.videoEl.play().catch(() => {});
+
+    const onTimeUpdate = () => {
+      if (!this.isPlaying) return;
+      const t = this.videoEl.currentTime;
+
+      if (this.mode === 'question') {
+        const inMute = t >= muteStart && t <= muteEnd;
+        if (inMute !== this.isMutedInterval) {
+          this.isMutedInterval = inMute;
+          this.videoEl.muted = inMute;
+          if (inMute) window.gameAudio?.playMuteIndicator?.();
+          if (typeof this.onMuteStateChangeCallback === 'function') {
+            this.onMuteStateChangeCallback(inMute);
+          }
+        }
+        if (t >= muteEnd) {
+          this.isPlaying = false;
+          this.videoEl.pause();
+          this.videoEl.removeEventListener('timeupdate', onTimeUpdate);
+          if (typeof this.onEndedCallback === 'function') this.onEndedCallback();
+        }
+      } else if (this.mode === 'reveal') {
+        if (t >= (q.quoteEnd || 8.0)) {
+          this.isPlaying = false;
+          this.videoEl.pause();
+          this.videoEl.removeEventListener('timeupdate', onTimeUpdate);
+          if (typeof this.onEndedCallback === 'function') this.onEndedCallback();
+        }
+      }
+    };
+
+    this.videoEl.addEventListener('timeupdate', onTimeUpdate);
   }
 
   playCanvasStage() {
@@ -51,35 +128,37 @@ class VideoStageController {
     const startTime = performance.now();
     const initialStageTime = this.currentTime;
 
-    // Trigger spoken dialogue if speech synthesis is supported
-    this.triggerDialogueAudio();
-
     const loop = (now) => {
       if (!this.isPlaying) return;
       const elapsed = (now - startTime) / 1000;
       this.currentTime = initialStageTime + elapsed;
 
       // Check Mute Interval
-      const muteStart = this.currentQuestion.muteStart || 4.5;
-      const muteEnd = this.currentQuestion.muteEnd || 8.0;
+      const muteStart = this.currentQuestion?.muteStart || 4.5;
+      const muteEnd = this.currentQuestion?.muteEnd || 8.0;
 
       if (this.mode === 'question') {
         const inMute = this.currentTime >= muteStart && this.currentTime <= muteEnd;
         if (inMute !== this.isMutedInterval) {
           this.isMutedInterval = inMute;
+          if (this.audioEl && this.currentQuestion?.audioUrl) {
+            this.audioEl.muted = inMute;
+            this.audioEl.volume = inMute ? 0 : 1.0;
+          }
           if (inMute) {
             window.gameAudio?.playMuteIndicator?.();
-            this.silenceSpeech();
           }
           if (typeof this.onMuteStateChangeCallback === 'function') {
             this.onMuteStateChangeCallback(inMute);
           }
         }
 
-        // Auto pause when mute interval ends
+        // Auto stop when mute interval ends -> proceeds to answer phase
         if (this.currentTime >= this.duration) {
           this.isPlaying = false;
-          this.silenceSpeech();
+          if (this.audioEl) {
+            this.audioEl.pause();
+          }
           this.renderStage();
           if (typeof this.onEndedCallback === 'function') {
             this.onEndedCallback();
@@ -88,9 +167,11 @@ class VideoStageController {
         }
       } else if (this.mode === 'reveal') {
         // Reveal mode: plays until quoteEnd
-        if (this.currentTime >= (this.currentQuestion.quoteEnd || 8.0)) {
+        if (this.currentTime >= (this.currentQuestion?.quoteEnd || 8.0)) {
           this.isPlaying = false;
-          this.silenceSpeech();
+          if (this.audioEl) {
+            this.audioEl.pause();
+          }
           this.renderStage();
           if (typeof this.onEndedCallback === 'function') {
             this.onEndedCallback();
@@ -164,15 +245,32 @@ class VideoStageController {
     this.ctx.fillStyle = '#fbbf24';
     this.ctx.fillText(mediaBadgeText, 32, 43);
 
+    // Audio source badge (top right)
+    if (q.audioUrl) {
+      this.ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+      this.ctx.beginPath();
+      this.ctx.roundRect(w - 180, 20, 160, 36, 18);
+      this.ctx.fill();
+      this.ctx.strokeStyle = '#10b981';
+      this.ctx.lineWidth = 1;
+      this.ctx.stroke();
+
+      this.ctx.font = 'bold 12px "Prompt", "Kanit", sans-serif';
+      this.ctx.fillStyle = '#34d399';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('🔊 เสียงหนังจริง', w - 100, 43);
+      this.ctx.textAlign = 'left';
+    }
+
     // 4. Title Header
     this.ctx.font = 'bold 22px "Prompt", "Kanit", sans-serif';
     this.ctx.fillStyle = '#ffffff';
     this.ctx.textAlign = 'center';
     this.ctx.fillText(`เรื่อง: ${q.title}`, w / 2, 45);
 
-    // 5. Center Character Avatar / Silhouette Card
-    const cardW = 280;
-    const cardH = 130;
+    // 5. Center Character Card
+    const cardW = 300;
+    const cardH = 135;
     const cardX = (w - cardW) / 2;
     const cardY = 70;
 
@@ -190,55 +288,53 @@ class VideoStageController {
     // Character Name
     this.ctx.font = 'bold 15px "Prompt", "Kanit", sans-serif';
     this.ctx.fillStyle = '#94a3b8';
-    this.ctx.fillText('ตัวละครที่กำลังพูด:', w / 2, cardY + 30);
+    this.ctx.fillText('ตัวละครที่กำลังพูด:', w / 2, cardY + 32);
 
     this.ctx.font = 'bold 22px "Prompt", "Kanit", sans-serif';
     this.ctx.fillStyle = '#fde047';
-    this.ctx.fillText(`👤 "${q.character}"`, w / 2, cardY + 62);
+    this.ctx.fillText(`👤 "${q.character}"`, w / 2, cardY + 64);
 
-    // Context Dialogue snippet (during intro)
+    // Context Dialogue snippet
     if (!this.isMutedInterval && this.mode === 'question') {
-      this.ctx.font = '12px "Prompt", "Kanit", sans-serif';
+      this.ctx.font = '13px "Prompt", "Kanit", sans-serif';
       this.ctx.fillStyle = '#cbd5e1';
-      this.ctx.fillText('🎙️ กำลังเปิดฉากและบทสนทนา...', w / 2, cardY + 95);
+      const ctxText = q.contextDialogue ? `"${q.contextDialogue}"` : 'กำลังดูคลิปและฟังบทสนทนา...';
+      this.ctx.fillText(ctxText, w / 2, cardY + 104);
     } else if (this.isMutedInterval) {
-      this.ctx.font = 'bold 13px "Prompt", "Kanit", sans-serif';
-      this.ctx.fillStyle = '#f43f5e';
-      this.ctx.fillText('🔇 [ ปิดเสียงประโยคคำถาม ]', w / 2, cardY + 95);
-    } else if (this.mode === 'reveal') {
       this.ctx.font = 'bold 14px "Prompt", "Kanit", sans-serif';
-      this.ctx.fillStyle = '#4ade80';
-      this.ctx.fillText('✨ เฉลยพร้อมเสียงจริง!', w / 2, cardY + 95);
+      this.ctx.fillStyle = '#f43f5e';
+      this.ctx.fillText('🔇 เสียงช่วงนี้ถูกปิดไว้! ทายซิพูดว่าอะไร?', w / 2, cardY + 104);
     }
 
-    // 6. Dynamic Audio Waveform Visualizer
-    const waveY = 230;
-    const waveWidth = 320;
-    const waveX = (w - waveWidth) / 2;
+    // 6. Dynamic Audio Waveform
+    this.ctx.save();
+    this.ctx.translate(w / 2, 230);
+    const barCount = 36;
+    const barWidth = 4;
+    const gap = 3;
+    const totalW = barCount * (barWidth + gap);
+    const startX = -totalW / 2;
 
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeStyle = this.isMutedInterval ? '#f43f5e' : (this.mode === 'reveal' ? '#4ade80' : '#38bdf8');
-    this.ctx.beginPath();
-    for (let x = 0; x < waveWidth; x += 6) {
-      const amp = this.isMutedInterval ? 2 : 12;
-      const y = waveY + Math.sin((x * 0.08) + this.waveformOffset) * Math.cos(x * 0.05) * amp;
-      if (x === 0) this.ctx.moveTo(waveX + x, y);
-      else this.ctx.lineTo(waveX + x, y);
+    for (let i = 0; i < barCount; i++) {
+      let amp = 0;
+      if (this.isMutedInterval) {
+        amp = 2; // Flatline when muted
+      } else {
+        amp = Math.sin(this.waveformOffset + i * 0.4) * 14 + Math.cos(this.waveformOffset * 1.5 + i * 0.2) * 8 + 14;
+      }
+      this.ctx.fillStyle = this.isMutedInterval ? 'rgba(239, 68, 68, 0.4)' : (this.mode === 'reveal' ? '#4ade80' : '#38bdf8');
+      this.ctx.fillRect(startX + i * (barWidth + gap), -amp / 2, barWidth, amp);
     }
-    this.ctx.stroke();
+    this.ctx.restore();
 
-    // 7. MUTE INDICATOR OVERLAY (During Quote Interval)
-    if (this.isMutedInterval) {
-      this.ctx.fillStyle = 'rgba(236, 72, 153, 0.15)';
-      this.ctx.fillRect(0, 0, w, h);
-
-      // Glowing Mute Badge
-      const pulse = 1 + Math.sin(this.waveformOffset * 3) * 0.06;
+    // 7. Status Banner Overlays
+    if (this.isMutedInterval && this.mode === 'question') {
       this.ctx.save();
       this.ctx.translate(w / 2, 280);
-      this.ctx.scale(pulse, pulse);
+      const pulseScale = 1 + Math.sin(this.waveformOffset * 3) * 0.04;
+      this.ctx.scale(pulseScale, pulseScale);
 
-      this.ctx.fillStyle = 'rgba(225, 29, 72, 0.9)';
+      this.ctx.fillStyle = 'rgba(225, 29, 72, 0.92)';
       this.ctx.beginPath();
       this.ctx.roundRect(-160, -26, 320, 52, 26);
       this.ctx.fill();
@@ -252,10 +348,9 @@ class VideoStageController {
       this.ctx.fillText('🔇 ปิดเสียงประโยคนี้...', 0, 7);
       this.ctx.restore();
     } else if (this.mode === 'reveal') {
-      // Reveal Quote Highlight
       this.ctx.save();
       this.ctx.translate(w / 2, 280);
-      this.ctx.fillStyle = 'rgba(22, 101, 52, 0.9)';
+      this.ctx.fillStyle = 'rgba(22, 101, 52, 0.92)';
       this.ctx.beginPath();
       this.ctx.roundRect(-180, -28, 360, 56, 28);
       this.ctx.fill();
@@ -284,42 +379,13 @@ class VideoStageController {
     this.ctx.textAlign = 'left';
   }
 
-  triggerDialogueAudio() {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-
-    const q = this.currentQuestion;
-    if (!q) return;
-
-    if (this.mode === 'question') {
-      // Speak intro context dialogue before mute
-      const introText = `${q.character} ในเรื่อง ${q.title}`;
-      const utter = new SpeechSynthesisUtterance(introText);
-      utter.lang = 'th-TH';
-      utter.rate = 1.05;
-      window.speechSynthesis.speak(utter);
-      this.synthUtterance = utter;
-    } else if (this.mode === 'reveal') {
-      // Speak the real quote loudly with high energy
-      const revealText = `${q.character} พูดว่า: ${q.correctAnswer}`;
-      const utter = new SpeechSynthesisUtterance(revealText);
-      utter.lang = 'th-TH';
-      utter.rate = 0.95;
-      window.speechSynthesis.speak(utter);
-      this.synthUtterance = utter;
-    }
-  }
-
-  silenceSpeech() {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-  }
-
   stop() {
     this.isPlaying = false;
     this.isMutedInterval = false;
-    this.silenceSpeech();
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.currentTime = 0;
+    }
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     if (this.videoEl) {
       this.videoEl.pause();

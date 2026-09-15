@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Persistent Database & Question Engine for Thai Quote Game
  * Integrated into Online Go Hub
  */
@@ -120,7 +120,11 @@ class QuoteDatabase {
       clipDuration: q.clipDuration,
       muteStart: q.muteStart,
       muteEnd: q.muteEnd,
+      quoteStart: q.quoteStart || q.muteStart,
+      quoteEnd: q.quoteEnd || q.muteEnd,
       contextDialogue: q.contextDialogue,
+      audioUrl: q.audioUrl || '',
+      videoUrl: q.videoUrl || '',
       options: opts
     };
   }
@@ -144,8 +148,10 @@ class QuoteDatabase {
       title: q.title,
       mediaType: q.mediaType,
       explanation: q.explanation,
-      quoteStart: q.quoteStart,
-      quoteEnd: q.quoteEnd
+      quoteStart: q.quoteStart || q.muteStart,
+      quoteEnd: q.quoteEnd || q.muteEnd,
+      audioUrl: q.audioUrl || '',
+      videoUrl: q.videoUrl || ''
     };
   }
 
@@ -172,6 +178,7 @@ class QuoteDatabase {
       correctAnswer: (data.correctAnswer || '').trim(),
       options: Array.isArray(data.options) ? data.options : [data.correctAnswer, data.option2, data.option3, data.option4],
       explanation: (data.explanation || '').trim(),
+      audioUrl: (data.audioUrl || '').trim(),
       videoUrl: (data.videoUrl || '').trim(),
       stats: { playedCount: 0, correctCount: 0 }
     };
