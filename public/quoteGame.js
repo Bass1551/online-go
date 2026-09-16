@@ -679,6 +679,48 @@
     const timeTaken = Math.min(15, Math.max(0.1, (Date.now() - quoteSingleStartTime) / 1000));
     const finalChoiceId = choiceId || selectedBtn?.getAttribute('data-choice-id') || null;
 
+    let countdownSec = 9;
+    let nextRoundTriggered = false;
+    let revealTimer = null;
+    const countdownEl = document.getElementById('qRevealCountdown');
+    const btnNext = document.getElementById('btnQNextQuestion');
+
+    const updateCountdown = () => {
+      if (countdownEl) {
+        countdownEl.innerText = `เปลี่ยนข้ออัตโนมัติใน ${countdownSec} วิ`;
+      }
+    };
+
+    const goToNext = () => {
+      if (nextRoundTriggered) return;
+      nextRoundTriggered = true;
+      if (revealTimer) clearInterval(revealTimer);
+      if (singleRevealTimer) {
+        clearInterval(singleRevealTimer);
+        singleRevealTimer = null;
+      }
+      videoStage.stop();
+      runSingleQ(quoteSingleIndex + 1);
+    };
+
+    if (btnNext) {
+      btnNext.style.display = 'inline-block';
+      btnNext.onclick = () => goToNext();
+    }
+
+    // ZERO-LATENCY REVEAL:
+    // Start reveal video immediately on click without awaiting server roundtrip!
+    videoStage.loadQuestion({
+      ...q,
+      quoteVideoUrl: q.quoteVideoUrl || q.videoUrl || '',
+      quoteAudioUrl: q.quoteAudioUrl || q.audioUrl || ''
+    }, 'reveal', () => {
+      if (countdownSec > 4) {
+        countdownSec = 4;
+        updateCountdown();
+      }
+    });
+
     try {
       const res = await fetch('/api/quote/single/answer', {
         method: 'POST',
@@ -694,6 +736,10 @@
         })
       });
       const result = await res.json();
+
+      if (videoStage.currentQuestion) {
+        videoStage.currentQuestion.correctAnswer = result.correctAnswer;
+      }
 
       if (result.isCorrect) {
         quoteSingleScore++;
@@ -732,36 +778,7 @@
       document.getElementById('qRevealExp').innerText = `${result.character} (${q.title}) - ${result.explanation || ''}`;
       banner.style.display = 'block';
 
-      let nextRoundTriggered = false;
-      let countdownSec = 9;
-      let revealTimer = null;
-      const countdownEl = document.getElementById('qRevealCountdown');
-      const btnNext = document.getElementById('btnQNextQuestion');
-
-      const goToNext = () => {
-        if (nextRoundTriggered) return;
-        nextRoundTriggered = true;
-        if (revealTimer) clearInterval(revealTimer);
-        if (singleRevealTimer) {
-          clearInterval(singleRevealTimer);
-          singleRevealTimer = null;
-        }
-        videoStage.stop();
-        runSingleQ(quoteSingleIndex + 1);
-      };
-
-      if (btnNext) {
-        btnNext.style.display = 'inline-block';
-        btnNext.onclick = () => goToNext();
-      }
-
-      const updateCountdown = () => {
-        if (countdownEl) {
-          countdownEl.innerText = `เปลี่ยนข้ออัตโนมัติใน ${countdownSec} วิ`;
-        }
-      };
       updateCountdown();
-
       revealTimer = setInterval(() => {
         countdownSec--;
         updateCountdown();
@@ -770,22 +787,6 @@
         }
       }, 1000);
       singleRevealTimer = revealTimer;
-
-      videoStage.loadQuestion({
-        ...q,
-        correctAnswer: result.correctAnswer,
-        audioUrl: result.audioUrl || q.audioUrl || '',
-        introAudioUrl: result.introAudioUrl || q.introAudioUrl || '',
-        quoteAudioUrl: result.quoteAudioUrl || q.quoteAudioUrl || '',
-        videoUrl: result.videoUrl || q.videoUrl || '',
-        introVideoUrl: result.introVideoUrl || q.introVideoUrl || '',
-        quoteVideoUrl: result.quoteVideoUrl || q.quoteVideoUrl || ''
-      }, 'reveal', () => {
-        if (countdownSec > 4) {
-          countdownSec = 4;
-          updateCountdown();
-        }
-      });
 
     } catch (err) {
       runSingleQ(quoteSingleIndex + 1);

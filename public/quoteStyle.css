@@ -460,7 +460,7 @@
   display: block;
 }
 
-#stageVideo {
+#stageVideo, #stageVideoReveal {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -957,7 +957,7 @@ body.quote-in-game #quoteGameContainer {
   border-radius: 16px;
 }
 
-#stageVideo, #stageCanvas {
+#stageVideo, #stageVideoReveal, #stageCanvas {
   width: 100%;
   height: 100%;
   object-fit: contain;

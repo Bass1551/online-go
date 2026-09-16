@@ -8,9 +8,12 @@ class VideoStageController {
   constructor(canvasId, videoId) {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
-    this.videoEl = document.getElementById(videoId);
+    this.videoEl = document.getElementById(videoId || 'stageVideo');
+    this.videoRevealEl = document.getElementById('stageVideoReveal');
     this.audioEl = new Audio();
     this.audioEl.preload = 'auto';
+    this.audioRevealEl = new Audio();
+    this.audioRevealEl.preload = 'auto';
     this.sessionId = 0;
     this.currentQuestion = null;
     this.isPlaying = false;
@@ -42,8 +45,14 @@ class VideoStageController {
     if (this.audioEl) {
       this.audioEl.volume = this.volume;
     }
+    if (this.audioRevealEl) {
+      this.audioRevealEl.volume = this.volume;
+    }
     if (this.videoEl) {
       this.videoEl.volume = this.volume;
+    }
+    if (this.videoRevealEl) {
+      this.videoRevealEl.volume = this.volume;
     }
     try {
       localStorage.setItem('quote_game_volume', String(this.volume));
@@ -65,6 +74,10 @@ class VideoStageController {
       this.hideUnmuteBadge();
       return;
     }
+    if (this.videoRevealEl) {
+      this.videoRevealEl.muted = false;
+      this.videoRevealEl.volume = this.volume;
+    }
     if (this.audioEl) {
       try {
         const p = this.audioEl.play();
@@ -81,6 +94,10 @@ class VideoStageController {
     if (this.videoEl) {
       this.videoEl.muted = false;
       this.videoEl.volume = this.volume;
+    }
+    if (this.videoRevealEl) {
+      this.videoRevealEl.muted = false;
+      this.videoRevealEl.volume = this.volume;
     }
     this.hideUnmuteBadge();
   }
@@ -165,23 +182,27 @@ class VideoStageController {
 
     // Check if video clip URL is provided for current mode
     const videoSrc = this.mode === 'reveal'
-      ? (question.quoteVideoUrl || '')
-      : (question.introVideoUrl || '');
+      ? (question.quoteVideoUrl || question.videoUrl || '')
+      : (question.introVideoUrl || question.videoUrl || '');
 
     const audioSrc = this.mode === 'reveal'
       ? (question.quoteAudioUrl || question.audioUrl)
       : (question.introAudioUrl || question.audioUrl);
 
-    if (videoSrc && this.videoEl) {
-      this.playRealVideo(videoSrc, audioSrc, session);
+    if (videoSrc && (this.videoEl || this.videoRevealEl)) {
+      if (this.mode === 'reveal') {
+        this.playRealRevealVideo(videoSrc, audioSrc, session);
+      } else {
+        this.playRealQuestionVideo(videoSrc, audioSrc, session);
+      }
       return;
     }
 
     this.playAudioAndCanvas(audioSrc, session);
   }
 
-  playRealVideo(videoSrc, fallbackAudioSrc, session) {
-    if (session !== this.sessionId || !this.videoEl) return;
+  playRealQuestionVideo(videoSrc, fallbackAudioSrc, session) {
+    if (session !== this.sessionId) return;
     this.isPlaying = true;
     this.hideSuspenseBadge();
 
@@ -192,54 +213,59 @@ class VideoStageController {
       this.audioEl.onended = null;
       this.audioEl.onerror = null;
     }
+    if (this.audioRevealEl) {
+      this.audioRevealEl.pause();
+      this.audioRevealEl.muted = true;
+      this.audioRevealEl.onended = null;
+      this.audioRevealEl.onerror = null;
+    }
 
-    // Clear old video handlers and timers
-    this.videoEl.onended = null;
-    this.videoEl.onerror = null;
-    this.videoEl.oncanplay = null;
-    this.videoEl.onstalled = null;
-    this.videoEl.onwaiting = null;
+    // Hide reveal element, show question element
+    if (this.videoRevealEl) {
+      this.videoRevealEl.pause();
+      this.videoRevealEl.style.display = 'none';
+    }
+    if (this.canvas) this.canvas.style.display = 'none';
+    if (this.videoEl) this.videoEl.style.display = 'block';
+
+    // Clear old question video handlers and timers
+    if (this.videoEl) {
+      this.videoEl.onended = null;
+      this.videoEl.onerror = null;
+      this.videoEl.oncanplay = null;
+      this.videoEl.onstalled = null;
+      this.videoEl.onwaiting = null;
+    }
     if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
 
-    // Make sure video is visible and canvas is hidden
-    this.videoEl.style.display = 'block';
-    if (this.canvas) this.canvas.style.display = 'none';
-
-    // Set src smoothly if not already assigned
-    const currentSrc = this.videoEl.currentSrc || this.videoEl.src || '';
-    const isAlreadyLoaded = currentSrc && (currentSrc.endsWith(videoSrc) || currentSrc === videoSrc);
-    if (!isAlreadyLoaded) {
-      this.videoEl.src = videoSrc;
-      this.videoEl.preload = 'auto';
-      this.videoEl.load();
-    }
-    this.videoEl.volume = this.volume;
-
-    // Calculate seamless start offset for reveal:
-    // Jump directly to right before the cutoff point so the speech connects seamlessly
-    // without repeating the entire 4-5s intro from the beginning!
-    let startOffset = 0;
-    if (this.mode === 'reveal') {
-      const cutoff = parseFloat(this.currentQuestion?.quoteStart || this.currentQuestion?.muteStart || this.introDuration || 3.5);
-      if (!isNaN(cutoff) && cutoff > 0.8) {
-        startOffset = Math.max(0, cutoff - 0.6);
+    // Assign question video src if needed
+    if (this.videoEl) {
+      const currentSrc = this.videoEl.currentSrc || this.videoEl.src || '';
+      const isAlreadyLoaded = currentSrc && (currentSrc.endsWith(videoSrc) || currentSrc === videoSrc);
+      if (!isAlreadyLoaded) {
+        this.videoEl.src = videoSrc;
+        this.videoEl.preload = 'auto';
+        this.videoEl.load();
       }
+      this.videoEl.volume = this.volume;
+      try { this.videoEl.currentTime = 0; } catch (e) {}
     }
 
-    const applyOffset = () => {
-      try {
-        if (startOffset > 0 && this.videoEl.duration && startOffset < this.videoEl.duration) {
-          this.videoEl.currentTime = startOffset;
-        } else if (this.mode === 'question') {
-          this.videoEl.currentTime = 0;
-        }
-      } catch (e) {}
-    };
-
-    if (this.videoEl.readyState >= 1) {
-      applyOffset();
-    } else {
-      this.videoEl.addEventListener('loadedmetadata', applyOffset, { once: true });
+    // DUAL-BUFFERING PRELOAD:
+    // Prime the reveal video element in the background during the entire question & thinking time!
+    const revealSrc = this.currentQuestion?.quoteVideoUrl;
+    if (revealSrc && this.videoRevealEl) {
+      this.videoRevealEl.preload = 'auto';
+      this.videoRevealEl.volume = this.volume;
+      this.videoRevealEl.muted = false;
+      const curRevealSrc = this.videoRevealEl.currentSrc || this.videoRevealEl.src || '';
+      if (!curRevealSrc || (!curRevealSrc.endsWith(revealSrc) && curRevealSrc !== revealSrc)) {
+        this.videoRevealEl.src = revealSrc;
+        try {
+          this.videoRevealEl.currentTime = 0;
+          this.videoRevealEl.load();
+        } catch (e) {}
+      }
     }
 
     let hasHandledEnded = false;
@@ -256,10 +282,10 @@ class VideoStageController {
       }
     };
 
-    const doFreezeOrEnd = () => {
-      if (session !== this.sessionId) return;
-      this.videoEl.pause();
-      if (this.mode === 'question') {
+    if (this.videoEl) {
+      this.videoEl.onended = () => {
+        if (session !== this.sessionId) return;
+        this.videoEl.pause();
         this.isMutedInterval = true;
         this.suspenseStartTime = performance.now();
         window.gameAudio?.playMuteIndicator?.();
@@ -270,103 +296,168 @@ class VideoStageController {
         this.muteTimeout = setTimeout(() => {
           if (session !== this.sessionId) return;
           triggerEnded();
-        }, 1200);
+        }, 1000);
+      };
+
+      const triggerAudioFallback = (reason) => {
+        if (session !== this.sessionId) return;
+        console.warn(`Question video ${reason}, falling back to audio/canvas:`, videoSrc);
+        if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
+        this.hideSuspenseBadge();
+        this.hideUnmuteBadge();
+        if (this.videoEl) {
+          this.videoEl.pause();
+          this.videoEl.muted = true;
+          this.videoEl.style.display = 'none';
+        }
+        if (this.canvas) this.canvas.style.display = 'block';
+        this.playAudioAndCanvas(fallbackAudioSrc, session);
+      };
+
+      this.videoEl.onerror = () => {
+        if (session !== this.sessionId) return;
+        const err = this.videoEl.error;
+        if (!this.videoEl.src || this.videoEl.src === window.location.href) return;
+        if (err && err.code === 1) return; // MEDIA_ERR_ABORTED
+        triggerAudioFallback('network/decode error');
+      };
+
+      // Stall detection: if video doesn't make progress within 15 seconds, fall back to audio
+      const resetStallTimer = () => {
+        if (this.stallFallbackTimer) clearTimeout(this.stallFallbackTimer);
+        this.stallFallbackTimer = setTimeout(() => {
+          triggerAudioFallback('stall timeout');
+        }, 15000);
+      };
+
+      this.videoEl.onstalled = () => {
+        if (session !== this.sessionId) return;
+        resetStallTimer();
+      };
+      this.videoEl.onwaiting = () => {
+        if (session !== this.sessionId) return;
+        resetStallTimer();
+      };
+
+      const startPlay = () => {
+        if (session !== this.sessionId) return;
+        this.videoEl.muted = false;
+        const playPromise = this.videoEl.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.then(() => {
+            this.hideUnmuteBadge();
+          }).catch(err => {
+            if (session !== this.sessionId) return;
+            if (err.name === 'AbortError') return;
+
+            console.warn('Unmuted video play prevented by browser policy, playing muted:', err);
+            this.videoEl.muted = true;
+            this.showUnmuteBadge();
+            const retryMuted = this.videoEl.play();
+            if (retryMuted && typeof retryMuted.catch === 'function') {
+              retryMuted.catch(err2 => {
+                if (session !== this.sessionId || err2.name === 'AbortError') return;
+                console.error('Muted video playback also failed:', err2);
+                triggerAudioFallback('autoplay prevented completely');
+              });
+            }
+          });
+        }
+      };
+
+      resetStallTimer();
+      if (this.videoEl.readyState >= 2) {
+        startPlay();
       } else {
-        this.showSuspenseBadge(`เฉลย: "${this.currentQuestion?.correctAnswer || ''}"`, true);
-        this.muteTimeout = setTimeout(() => {
-          if (session !== this.sessionId) return;
-          triggerEnded();
-        }, 1200);
+        let started = false;
+        const onReady = () => {
+          if (started) return;
+          started = true;
+          this.videoEl.removeEventListener('canplay', onReady);
+          this.videoEl.removeEventListener('loadeddata', onReady);
+          startPlay();
+        };
+        this.videoEl.addEventListener('canplay', onReady, { once: true });
+        this.videoEl.addEventListener('loadeddata', onReady, { once: true });
+        setTimeout(onReady, 800);
+      }
+    }
+  }
+
+  playRealRevealVideo(videoSrc, fallbackAudioSrc, session) {
+    if (session !== this.sessionId) return;
+    this.isPlaying = true;
+    this.hideSuspenseBadge();
+
+    // Use videoRevealEl if present, fallback to videoEl
+    const revealEl = this.videoRevealEl || this.videoEl;
+
+    // Immediately pause and hide the question video element
+    if (this.videoEl && this.videoRevealEl) {
+      this.videoEl.pause();
+      this.videoEl.style.display = 'none';
+    }
+    if (this.canvas) this.canvas.style.display = 'none';
+    revealEl.style.display = 'block';
+
+    // Clear old handlers
+    revealEl.onended = null;
+    revealEl.onerror = null;
+
+    const currentSrc = revealEl.currentSrc || revealEl.src || '';
+    const isAlreadyLoaded = currentSrc && (currentSrc.endsWith(videoSrc) || currentSrc === videoSrc);
+    if (!isAlreadyLoaded) {
+      revealEl.src = videoSrc;
+      revealEl.preload = 'auto';
+      revealEl.load();
+    }
+    revealEl.volume = this.volume;
+    revealEl.muted = false;
+    try { revealEl.currentTime = 0; } catch (e) {}
+
+    let hasHandledEnded = false;
+    const triggerEnded = () => {
+      if (session !== this.sessionId) return;
+      if (hasHandledEnded) return;
+      hasHandledEnded = true;
+      this.isPlaying = false;
+      if (typeof this.onEndedCallback === 'function') {
+        const cb = this.onEndedCallback;
+        this.onEndedCallback = null;
+        cb();
       }
     };
 
-    this.videoEl.onended = () => {
+    revealEl.onended = () => {
       if (session !== this.sessionId) return;
-      doFreezeOrEnd();
+      revealEl.pause();
+      this.showSuspenseBadge(`เฉลย: "${this.currentQuestion?.correctAnswer || ''}"`, true);
+      this.muteTimeout = setTimeout(() => {
+        if (session !== this.sessionId) return;
+        triggerEnded();
+      }, 1200);
     };
 
-    const triggerAudioFallback = (reason) => {
+    revealEl.onerror = () => {
       if (session !== this.sessionId) return;
-      console.warn(`Video ${reason}, falling back to audio/canvas:`, videoSrc);
-      if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
-      this.hideSuspenseBadge();
-      this.hideUnmuteBadge();
-      if (this.videoEl) {
-        this.videoEl.pause();
-        this.videoEl.muted = true;
-        this.videoEl.style.display = 'none';
-      }
+      console.warn('Reveal video error, falling back to audio/canvas:', videoSrc);
+      if (revealEl) revealEl.style.display = 'none';
       if (this.canvas) this.canvas.style.display = 'block';
       this.playAudioAndCanvas(fallbackAudioSrc, session);
     };
 
-    this.videoEl.onerror = () => {
-      if (session !== this.sessionId) return;
-      const err = this.videoEl.error;
-      if (!this.videoEl.src || this.videoEl.src === window.location.href) return;
-      if (err && err.code === 1) return; // MEDIA_ERR_ABORTED
-      triggerAudioFallback('network/decode error');
-    };
-
-    // Stall detection: if video doesn't make progress within 15 seconds, fall back to audio
-    const resetStallTimer = () => {
-      if (this.stallFallbackTimer) clearTimeout(this.stallFallbackTimer);
-      this.stallFallbackTimer = setTimeout(() => {
-        triggerAudioFallback('stall timeout');
-      }, 15000);
-    };
-
-    this.videoEl.onstalled = () => {
-      if (session !== this.sessionId) return;
-      resetStallTimer();
-    };
-    this.videoEl.onwaiting = () => {
-      if (session !== this.sessionId) return;
-      resetStallTimer();
-    };
-
-    const startPlay = () => {
-      if (session !== this.sessionId) return;
-      this.videoEl.muted = false;
-      const playPromise = this.videoEl.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.then(() => {
-          this.hideUnmuteBadge();
-        }).catch(err => {
-          if (session !== this.sessionId) return;
-          if (err.name === 'AbortError') return;
-
-          console.warn('Unmuted video play prevented by browser policy, playing muted video:', err);
-          this.videoEl.muted = true;
-          this.showUnmuteBadge();
-          const retryMuted = this.videoEl.play();
-          if (retryMuted && typeof retryMuted.catch === 'function') {
-            retryMuted.catch(err2 => {
-              if (session !== this.sessionId || err2.name === 'AbortError') return;
-              console.error('Muted video playback also failed:', err2);
-              triggerAudioFallback('autoplay prevented completely');
-            });
-          }
-        });
-      }
-    };
-
-    resetStallTimer();
-    // Start immediately if ready, or wait for buffer event
-    if (this.videoEl.readyState >= 2) {
-      startPlay();
-    } else {
-      let started = false;
-      const onReady = () => {
-        if (started) return;
-        started = true;
-        this.videoEl.removeEventListener('canplay', onReady);
-        this.videoEl.removeEventListener('loadeddata', onReady);
-        startPlay();
-      };
-      this.videoEl.addEventListener('canplay', onReady, { once: true });
-      this.videoEl.addEventListener('loadeddata', onReady, { once: true });
-      setTimeout(onReady, 1200);
+    // INSTANT PLAYBACK (0ms latency because already preloaded and ready at currentTime = 0):
+    const p = revealEl.play();
+    if (p && typeof p.catch === 'function') {
+      p.then(() => {
+        this.hideUnmuteBadge();
+      }).catch(err => {
+        if (session !== this.sessionId) return;
+        if (err.name === 'AbortError') return;
+        console.warn('Unmuted reveal playback failed, retrying muted:', err);
+        revealEl.muted = true;
+        revealEl.play().catch(() => {});
+      });
     }
   }
 
@@ -770,12 +861,25 @@ class VideoStageController {
       this.audioEl.onended = null;
       this.audioEl.onerror = null;
     }
+    if (this.audioRevealEl) {
+      this.audioRevealEl.pause();
+      this.audioRevealEl.muted = true;
+      this.audioRevealEl.onended = null;
+      this.audioRevealEl.onerror = null;
+    }
     if (this.videoEl) {
       this.videoEl.onended = null;
       this.videoEl.onerror = null;
       this.videoEl.onstalled = null;
       this.videoEl.onwaiting = null;
       this.videoEl.pause();
+    }
+    if (this.videoRevealEl) {
+      this.videoRevealEl.onended = null;
+      this.videoRevealEl.onerror = null;
+      this.videoRevealEl.onstalled = null;
+      this.videoRevealEl.onwaiting = null;
+      this.videoRevealEl.pause();
     }
   }
 }
