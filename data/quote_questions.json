@@ -28,8 +28,8 @@
     ],
     "explanation": "ฉากตัดยางในตำนานของแฟนฉัน เสียงจริงของน้อยหน่า (โฟกัส จีระกุล) ในภาพยนตร์",
     "stats": {
-      "playedCount": 13,
-      "correctCount": 2
+      "playedCount": 17,
+      "correctCount": 4
     },
     "audioUrl": "/audio/quotes/q_001_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_001_intro.mp3",
@@ -816,7 +816,7 @@
   },
   {
     "id": "q_022",
-    "status": "draft",
+    "status": "published",
     "title": "บางระจัน",
     "mediaType": "movie",
     "year": 2000,
@@ -828,30 +828,31 @@
       "classic"
     ],
     "difficulty": "easy",
-    "character": "นายจันหนวดเขี้ยว (จรัญ งามดี)",
+    "character": "นายจันหนวดเขี้ยว (ปราบต์ปฎล / วินัย ไกรบุตร)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8,
     "quoteStart": 4.5,
     "quoteEnd": 8,
-    "contextDialogue": "นายจันหนวดเขี้ยวปลุกใจชาวบ้านบางระจันให้จับอาวุธขึ้นสู้หน้าค่าย",
+    "contextDialogue": "นายจันหนวดเขี้ยวและเหล่าวีรชนบ้านบางระจันปลุกใจลูกบ้านก่อนออกศึกต้านทัพพม่า",
     "correctAnswer": "พวกกูจะสู้จนตัวตาย!",
     "options": [
       "พวกกูจะสู้จนตัวตาย!",
-      "อย่ายอมให้มันเหยียบแผ่นดินเรา!",
-      "ดาบนี้เพื่อบ้านเมืองของเรา!",
-      "ถอยไม่ได้อีกแล้วพวกเรา!"
+      "บางระจันต้องไม่แตก!",
+      "ยอมตายเสียดีกว่าอยู่อย่างทาส!",
+      "ขอปืนใหญ่เพียงกระบอกเดียวพวกกูจะสู้!"
     ],
-    "explanation": "ฉากปลุกใจสุดฮึกเหิมของภาพยนตร์ 'บางระจัน' ที่ทำรายได้ถล่มทลายและสร้างกระแสความรักชาติทั่วประเทศ",
+    "explanation": "คำขวัญวีรชนผู้กล้าแห่งประวัติศาสตร์จากภาพยนตร์ระดับตำนาน บางระจัน (2000)",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_022_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_022_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_022_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_022_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_022_quote.mp4",
+    "videoUrl": "/video/quotes/q_022_intro.mp4"
   },
   {
     "id": "q_023",
@@ -1010,7 +1011,7 @@
   },
   {
     "id": "q_027",
-    "status": "draft",
+    "status": "published",
     "title": "ร่างทรง (The Medium)",
     "mediaType": "movie",
     "year": 2021,
@@ -1023,30 +1024,31 @@
       "modern"
     ],
     "difficulty": "hard",
-    "character": "ป้านิ่ม (เอี้ยง สวนีย์ อุทุมมา)",
+    "character": "มิ้ง (ญดา นริลญา / ร่างทรง)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8,
     "quoteStart": 4.5,
     "quoteEnd": 8,
-    "contextDialogue": "ป้านิ่มให้สัมภาษณ์ทีมงานสารคดีเรื่องความเชื่อและสิ่งศักดิ์สิทธิ์ที่สถิตในสายเลือดครอบครัว",
-    "correctAnswer": "ย่าบาหยันไม่เคยทอดทิ้งพวกเรา",
+    "contextDialogue": "มิ้งร้องไห้อ้อนวอนนิ่มเมื่อเริ่มรู้สึกถึงสิ่งลี้ลับที่เข้าครอบงำร่างกายและจิตใจ",
+    "correctAnswer": "หนูไม่อยากเป็นร่างทรง!",
     "options": [
-      "ย่าบาหยันไม่เคยทอดทิ้งพวกเรา",
-      "สิ่งที่มองไม่เห็นไม่ได้แปลว่าไม่มีจริง",
-      "กรรมของบรรพบุรุษมันกำลังเอาคืน",
-      "ข้าสัมผัสถึงย่าบาหยันไม่ได้อีกแล้ว"
+      "หนูไม่อยากเป็นร่างทรง!",
+      "ย่าบาหยันไม่ได้มาดี!",
+      "ช่วยหนูด้วย มันอยู่ในตัวหนู!",
+      "พิธีนี้มันจะช่วยหนูได้จริงเหรอ"
     ],
-    "explanation": "หนังสยองขวัญร่วมทุนไทย-เกาหลี กำกับโดย โต้ง บรรจง และโปรดิวซ์โดย นา ฮงจิน กวาดคำชมและรางวัลระดับนานาชาติมากมาย",
+    "explanation": "ฉากสะเทือนอารมณ์สุดหลอนของ มิ้ง ในภาพยนตร์สยองขวัญระดับนานาชาติ ร่างทรง (The Medium)",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_027_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_027_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_027_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_027_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_027_quote.mp4",
+    "videoUrl": "/video/quotes/q_027_intro.mp4"
   },
   {
     "id": "q_028",
@@ -1398,7 +1400,7 @@
   },
   {
     "id": "q_037",
-    "status": "draft",
+    "status": "published",
     "title": "มาตาลดา (To The Moon and Back)",
     "mediaType": "drama",
     "year": 2023,
@@ -1410,30 +1412,31 @@
       "modern"
     ],
     "difficulty": "medium",
-    "character": "มาตาลดา (เต้ย จรินทร์พร จุนเกียรติ)",
+    "character": "เกริกพล / พ่อเกรซ (ชาย ชาตโยดม / มาตาลดา)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8,
     "quoteStart": 4.5,
     "quoteEnd": 8,
-    "contextDialogue": "มาตาลดาปลอบประโลมคุณหมอปุริมที่มีบาดแผลทางใจในครอบครัวด้วยทัศนคติพลังบวก",
-    "correctAnswer": "ความรักไม่เคยทำให้ใครเจ็บปวด",
+    "contextDialogue": "พ่อเกรซกอดมาตาลดาวัยเด็กและสัญญาว่าจะเลี้ยงดูให้เธอเติบโตเป็นคนที่ใจดีที่สุดในโลก",
+    "correctAnswer": "พ่อสัญญานะลูก",
     "options": [
-      "ความรักไม่เคยทำให้ใครเจ็บปวด",
-      "โลกนี้ใจดีกับคนใจดีเสมอนะคะคุณหมอ",
-      "คนเราทุกคนสมควรที่จะได้รับความรักนะคะ",
-      "ใจดีกับตัวเองให้มากๆ นะคะหมอปุริม"
+      "พ่อสัญญานะลูก",
+      "ความใจดีจะคุ้มครองมาตาเสมอ",
+      "โลกนี้ใจร้าย แต่มาตาต้องใจดีนะ",
+      "พลังวิเศษของหนูคือรอยยิ้ม"
     ],
-    "explanation": "ละครฮีลใจแห่งปี 2023 ละครไทยที่กวาดกระแสชื่นชมทั่วโลกออนไลน์ด้วยเนื้อหาที่อบอุ่นและส่งเสริมความเข้าใจในความหลากหลาย LGBTQ+",
+    "explanation": "ประโยคอบอุ่นหัวใจที่สร้างกระแสฟีเวอร์ทั่วประเทศจากละคร มาตาลดา",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_037_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_037_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_037_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_037_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_037_quote.mp4",
+    "videoUrl": "/video/quotes/q_037_intro.mp4"
   },
   {
     "id": "q_038",
@@ -1514,7 +1517,7 @@
   },
   {
     "id": "q_040",
-    "status": "draft",
+    "status": "published",
     "title": "คินน์พอร์ช เดอะซีรีส์ (KinnPorsche The Series)",
     "mediaType": "y_series",
     "year": 2022,
@@ -1526,30 +1529,31 @@
       "modern"
     ],
     "difficulty": "hard",
-    "character": "คินน์ (มาย ภาคภูมิ ร่มไทรทอง)",
+    "character": "คินน์ (มาย ภาคภูมิ / KinnPorsche The Series)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8,
     "quoteStart": 4.5,
     "quoteEnd": 8,
-    "contextDialogue": "คินน์ทายาทตระกูลมาเฟียยื่นคำขาดและออกคำสั่งกับพอร์ชบอดี้การ์ดคู่ใจ",
-    "correctAnswer": "มึงเป็นบอดี้การ์ดของกูคนเดียว",
+    "contextDialogue": "คินน์ หัวหน้ามาเฟียตระกูลหลัก สั่งสอนพอร์ชบอดี้การ์ดคนใหม่ที่กล้าปากดีใส่เขา",
+    "correctAnswer": "แล้วก็เจ้านายมึงด้วย!",
     "options": [
-      "มึงเป็นบอดี้การ์ดของกูคนเดียว",
-      "ชีวิตของมึงอยู่ในกำมือของกู",
-      "อย่าคิดจะหนีไปไหนเด็ดขาด",
-      "ในโลกของกู มีแต่มึงที่กูไว้ใจได้"
+      "แล้วก็เจ้านายมึงด้วย!",
+      "หน้าที่ของมึงคือปกป้องกูด้วยชีวิต",
+      "อย่าคิดหนีจากตระกูลหลัก",
+      "อยู่ในดงมาเฟียต้องโหดกว่าศัตรู"
     ],
-    "explanation": "ซีรีส์วายแอ็กชันมาเฟียฟอร์มยักษ์ที่โด่งดังไปทั่วโลก ติดเทรนด์ทวิตเตอร์อันดับ 1 ของโลกทุกสัปดาห์ที่ออกอากาศ",
+    "explanation": "ฉากปะทะคารมสุดเข้มข้นระหว่าง คินน์ กับ พอร์ช ใน KinnPorsche The Series",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_040_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_040_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_040_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_040_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_040_quote.mp4",
+    "videoUrl": "/video/quotes/q_040_intro.mp4"
   },
   {
     "id": "q_041",
@@ -2070,31 +2074,32 @@
       "classic"
     ],
     "difficulty": "medium",
-    "character": "ดำ (ชาติชาย งามสรรพ์)",
+    "character": "เสือดำ (ชาติชาย งามสรรพ์ / ฟ้าทะลายโจร)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "เสือดเหตุการณ์ความรักต้องห้ามระหว่างโจรหนุ่มกับลูกสาวขุนนางชั้นสูง",
-    "correctAnswer": "ความรักของเรา มันเหมือนดั่งโชคชะตาที่ไม่มีวันบรรจบ",
+    "contextDialogue": "เสือดำรำพึงถึงชะตากรรมความรักต่างชนชั้นที่ต้องเผชิญกับคมกระสุนและความอยุติธรรม",
+    "correctAnswer": "ระทมจมอยู่ผู้เดียวไม่มีใครเมตตา",
     "options": [
-      "ความรักของเรา มันเหมือนดั่งโชคชะตาที่ไม่มีวันบรรจบ",
-      "ลูกผู้ชายอย่างฉัน มีแต่ปืนกับหัวใจที่แตกสลาย",
-      "ลาก่อนรำเพย ชาตินี้เราคงมิอาจครองคู่",
-      "อย่ารอฉันเลยรำเพย ฉันเป็นแค่เสือดำ"
+      "ระทมจมอยู่ผู้เดียวไม่มีใครเมตตา",
+      "ความรักของโจรเสือดำไม่มีวันสมหวัง",
+      "สัญญาใต้ต้นไทรยังคงตราตรึง",
+      "ฟ้าทะลายโจรไม่อาจลบล้างรอยแค้น"
     ],
-    "explanation": "ผลงานระดับขึ้นหิ้งของ วิศิษฏ์ ศาสนเที่ยง ภาพยนตร์ไทยเรื่องแรกที่ได้ฉายในเทศกาลหนังเมืองคานส์",
+    "explanation": "บทกวีและเพลงหวานปนขมจากภาพยนตร์คลาสสิก ฟ้าทะลายโจร (Tears of the Black Tiger)",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_054_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_054_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_054_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_054_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_054_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_054_intro.mp4"
   },
   {
     "id": "q_055",
@@ -2203,8 +2208,8 @@
     ],
     "explanation": "ภาพยนตร์ยอดเยี่ยมเจ้าของวลี 'เชื่อในสิ่งที่เฮ็ด เฮ็ดในสิ่งที่เชื่อ' กำกับโดย จิระ มะลิกุล",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 2,
+      "correctCount": 2
     },
     "audioUrl": "/audio/quotes/q_057_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_057_intro.mp3",
@@ -2226,31 +2231,32 @@
       "romantic"
     ],
     "difficulty": "medium",
-    "character": "แผน (ศุภกรณ์ กิจสุวรรณ)",
+    "character": "ไอ้แผน (ศุภกรณ์ กิจสุวรรณ / มนต์รักทรานซิสเตอร์)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "แผนบอกลาคนรักก่อนจะโดนเกณฑ์ทหารและชีวิตพลิกผันเข้าสู่เมืองกรุง",
-    "correctAnswer": "สะเดาจ๋า แผนร้องเพลงนี้เพื่อสะเดาคนเดียวนะจ๊ะ",
+    "contextDialogue": "ไอ้แผนเปรียบเทียบความรักที่เขามีต่อสะเดาเหมือนเสียงเพลงจากวิทยุที่เปิดคลออยู่เสมอ",
+    "correctAnswer": "มันก็เหมือนเสียงเพลงจากวิทยุทรานซิสเตอร์",
     "options": [
-      "สะเดาจ๋า แผนร้องเพลงนี้เพื่อสะเดาคนเดียวนะจ๊ะ",
-      "วิทยุทรานซิสเตอร์เครื่องนี้ มันคือตัวแทนของฉันนะสะเดา",
-      "รอฉันนะสะเดา ฉันจะเป็นนักร้องดังกลับมาหาเธอ",
-      "ถึงแผนจะยากจน แต่หัวใจแผนมีแต่สะเดานะ"
+      "มันก็เหมือนเสียงเพลงจากวิทยุทรานซิสเตอร์",
+      "พี่แผนจะร้องเพลงให้สะเดาฟังตลอดไป",
+      "คนจนก็มีหัวใจนะสะเดา",
+      "เสียงเพลงเท่านั้นที่ไม่เคยทอดทิ้งพี่"
     ],
-    "explanation": "สร้างจากนวนิยายของ วัฒน์ วรรลยางกูร กำกับโดย เป็นเอก รัตนเรือง",
+    "explanation": "ประโยคเปรียบเปรยแสนคลาสสิกจากภาพยนตร์ มนต์รักทรานซิสเตอร์",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_058_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_058_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_058_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_058_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_058_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_058_intro.mp4"
   },
   {
     "id": "q_059",
@@ -3320,8 +3326,8 @@
     ],
     "explanation": "ภาพยนตร์รักหลายคู่ต้อนรับปิดเทอมใหญ่ กำกับโดย ย้ง ทรงยศ สุขมากอนันต์",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 1,
+      "correctCount": 1
     },
     "audioUrl": "/audio/quotes/q_086_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_086_intro.mp3",
@@ -4635,8 +4641,8 @@
     ],
     "explanation": "ภาพยนตร์รักเรียกน้ำตาอันดับหนึ่งตลอดกาลของไทย กำกับโดย ผอูน จันทรศิริ",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 1,
+      "correctCount": 1
     },
     "audioUrl": "/audio/quotes/q_120_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_120_intro.mp3",
@@ -5273,31 +5279,32 @@
       "drama"
     ],
     "difficulty": "medium",
-    "character": "บั๊กโจ้ (มาช่า วัฒนพานิช)",
+    "character": "โบ๊ท / ปั๋ง (รักหมดแก้ว)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "เจ๊บาร์เทนเดอร์รุ่นใหญ่เปิดใจให้คำปรึกษาปัญหาหัวใจแก่แก๊งขี้เมาประจำร้าน",
-    "correctAnswer": "ความรักกับเหล้า... มันเหมือนกันตรงที่ ตอนกินมันหวานชื่นใจ แต่ตอนสร่างมันปวดหัวแทบตาย!",
+    "contextDialogue": "เพื่อนร่วมวงเหล้าเตือนสติในค่ำคืนที่เต็มไปด้วยความเจ็บปวดจากความรัก",
+    "correctAnswer": "แล้วคิดว่าความรักบนโลกนี้มันมีจริงเหรอ",
     "options": [
-      "ความรักกับเหล้า... มันเหมือนกันตรงที่ ตอนกินมันหวานชื่นใจ แต่ตอนสร่างมันปวดหัวแทบตาย!",
-      "หมดแก้วเพื่อลืมคนเก่า แล้วยกอีกแก้วเพื่อต้อนรับคนใหม่เว้ย!",
-      "คนเรามันไม่เมาหรอก ถ้าใจมันไม่อยากเมา",
-      "ร้านเหล้าไม่ใช่ที่แก้ปัญหา แต่มันคือที่หลบภัยชั่วคราว"
+      "แล้วคิดว่าความรักบนโลกนี้มันมีจริงเหรอ",
+      "กินเหล้าเพื่อลืมเธอแต่ยิ่งดื่มยิ่งจำ",
+      "ความรักมันก็เหมือนน้ำแข็ง... ยิ่งปล่อยไว้ยิ่งละลาย",
+      "แก้วนี้แด่คนอกหักทุกคนในร้าน!"
     ],
-    "explanation": "ภาพยนตร์โรแมนติกดราม่าสายปาร์ตี้และมิตรภาพรอบวงเหล้า",
+    "explanation": "ประโยคคำถามเด็ดจากภาพยนตร์ รักหมดแก้ว (Love on The Rocks)",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_137_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_137_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_137_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_137_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_137_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_137_intro.mp4"
   },
   {
     "id": "q_138",
@@ -5697,31 +5704,32 @@
       "romantic"
     ],
     "difficulty": "easy",
-    "character": "ตั๊ก (แดน วรเวช ดานุวงศ์)",
+    "character": "ตั๊ก (แดน วรเวช) / ส.ค.ส. สวีทตี้",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "ตั๊ก หนุ่มกวนอารมณ์ดีปลอบใจเพื่อนๆ ในคืนวันส่งท้ายปีเก่าต้อนรับปีใหม่",
-    "correctAnswer": "ความรักมันไม่มีเหตุผลหรอกครับ... ถ้ามีเหตุผล เขาเรียกว่าผลประโยชน์!",
+    "contextDialogue": "คำบอกความรู้สึกในคืนก่อนวันปีใหม่ที่แสนอบอุ่นและโรแมนติก",
+    "correctAnswer": "ถ้าฉันคิดถึงเธอ... เธอจะคิดถึงฉันไหม",
     "options": [
-      "ความรักมันไม่มีเหตุผลหรอกครับ... ถ้ามีเหตุผล เขาเรียกว่าผลประโยชน์!",
-      "ปีใหม่นี้ ใครไม่มีคู่ มารวมตัวกันที่ร้านหมูกระทะเลยเว้ย!",
-      "อกหักข้ามปี มันเจ็บกว่าโดนแฟนบอกเลิกวันสงกรานต์เยอะครับ",
-      "ถ้าใจเราสู้ ซานตาคลอสก็ช่วยหาแฟนให้เราไม่ได้หรอก"
+      "ถ้าฉันคิดถึงเธอ... เธอจะคิดถึงฉันไหม",
+      "ปีใหม่นี้ขอให้หัวใจไม่เหงาอีกต่อไป",
+      "ความรักไม่ต้องการเหตุผล... แค่ต้องการเธอ",
+      "เราเป็นแฟนกันตั้งแต่วันนี้เลยได้ไหม"
     ],
-    "explanation": "ภาพยนตร์รวมดาราสุดฮิตตระกูลสวีทตี้ของ ยอร์ช ฤกษ์ชัย พวงเพ็ชร์",
+    "explanation": "ประโยคสารภาพความรู้สึกจากภาพยนตร์คอมเมดี้โรแมนติก ส.ค.ส. สวีทตี้",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_148_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_148_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_148_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_148_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_148_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_148_intro.mp4"
   },
   {
     "id": "q_149",
@@ -5735,31 +5743,32 @@
       "romantic"
     ],
     "difficulty": "easy",
-    "character": "ง้องแง้ง (โก๊ะตี๋ อารามบอย)",
+    "character": "วาเลนไทน์ สวีทตี้",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "ง้องแง้ง บ่นความน้อยเนื้อต่ำใจในวันแห่งความรักกลางโรงพยาบาล",
-    "correctAnswer": "วันวาเลนไทน์มีไว้ให้คนมีคู่ขายดอกไม้... ส่วนคนโสดอย่างเรามีไว้นอนร้องไห้ดูซีรีส์!",
+    "contextDialogue": "คำบรรยายเปิดเรื่องเทศกาลแห่งความรักสุดชุลมุนของหนุ่มสาว",
+    "correctAnswer": "ทุกวาเลนไทน์นี้มีความรัก",
     "options": [
-      "วันวาเลนไทน์มีไว้ให้คนมีคู่ขายดอกไม้... ส่วนคนโสดอย่างเรามีไว้นอนร้องไห้ดูซีรีส์!",
-      "กุหลาบแดงดอกละร้อย ซื้อข้าวกะเพราไข่ดาวกินได้สองจานเลยนะเว้ย!",
-      "รักแท้แพ้ความใกล้ชิด หรือรักแท้แพ้คนมีตังค์กันแน่วะ!",
-      "ใครบอกว่าความรักชนะทุกอย่าง ลองเอาหนี้บัตรเครดิตมาสู้สิ!"
+      "ทุกวาเลนไทน์นี้มีความรัก",
+      "ดอกกุหลาบแดงไม่สำคัญเท่าคนข้างๆ",
+      "วาเลนไทน์นี้คนโสดต้องรอด!",
+      "รักแท้ไม่ต้องรอเทศกาล"
     ],
-    "explanation": "มุกตลกจิกกัดเทศกาลวาเลนไทน์สุดฮาในสไตล์ ยอร์ช ฤกษ์ชัย",
+    "explanation": "ประโยคเปิดของภาพยนตร์รักสุดฮิต วาเลนไทน์ สวีทตี้",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_149_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_149_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_149_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_149_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_149_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_149_intro.mp4"
   },
   {
     "id": "q_150",
@@ -5774,31 +5783,32 @@
       "trending"
     ],
     "difficulty": "easy",
-    "character": "โชน (ก้อง ห้วยไร่)",
+    "character": "โชน (ก้อง ห้วยไร่ / ฮักแพง)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "โชน นักร้องหนุ่มอีสานปลุกใจชาวบ้านและส่งเสียงเพลงหมอลำบอกรักสาว",
-    "correctAnswer": "เสียงแคนเสียงพิณมันอยู่ในสายเลือดคนอีสาน... ถ้าใจเราฮักกัน ระยะทางก็บ่แม่นปัญหา!",
+    "contextDialogue": "โชนบอกความรู้สึกและความผูกพันที่มีต่อคนรักและพี่น้องบ้านเดียวกัน",
+    "correctAnswer": "บ่ต้องบอกกะฮู้ว่าฮักแพงกันหลายปานได๋",
     "options": [
-      "เสียงแคนเสียงพิณมันอยู่ในสายเลือดคนอีสาน... ถ้าใจเราฮักกัน ระยะทางก็บ่แม่นปัญหา!",
-      "ฮักแพงกันไว้เด้อพี่น้อง ดนตรีหมอลำสิพาพวกเฮาไปฮอดฝั่งฝัน",
-      "เงินทองมันของนอกกาย หัวใจคนฮักกันสำคัญที่สุด",
-      "คนอีสานบ่เคยทิ้งถิ่นฐาน มีแต่สิกลับมาพัฒนาบ้านเฮา"
+      "บ่ต้องบอกกะฮู้ว่าฮักแพงกันหลายปานได๋",
+      "เสียงพิณเสียงแคนกล่อมใจไทอีสาน",
+      "หัวใจดวงนี้มอบให้สาวบ้านนา",
+      "ฮักแพงกันไว้เด้อพี่น้อง"
     ],
-    "explanation": "ภาพยนตร์เพลงอีสานรวมซูเปอร์สตาร์ร้อยล้าน ก้อง ห้วยไร่, เบิ้ล ปทุมราช, แซ็ค ชุมแพ",
+    "explanation": "ประโยคกินใจภาษาอีสานจากภาพยนตร์ลูกทุ่ง ฮักแพง",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_150_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_150_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_150_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_150_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_150_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_150_intro.mp4"
   },
   {
     "id": "q_151",
@@ -5927,31 +5937,32 @@
       "legendary"
     ],
     "difficulty": "medium",
-    "character": "เซ็น (จีจ้า ญาณิน)",
+    "character": "เซน (จีจ้า ญาณิน / ช็อคโกแลต)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "เซ็น เด็กสาวออทิสติกที่มีพรสวรรค์มวยไทยออกทวงหนี้เพื่อหาเงินรักษาแม่ที่ป่วยเป็นมะเร็ง",
-    "correctAnswer": "อย่าทำแม่ฉัน... เอาเงินค่ารักษาแม่คืนมานะ!",
+    "contextDialogue": "เซน เด็กสาวออทิสติกยอดฝีมือมวยไทย บุกทวงหนี้พวกแก๊งมาเฟียเพื่อนำเงินมารักษาแม่ที่ป่วยหนัก",
+    "correctAnswer": "เอาเงินมารักษาแม่!",
     "options": [
-      "อย่าทำแม่ฉัน... เอาเงินค่ารักษาแม่คืนมานะ!",
-      "ฉันจำเพลงดาบมวยไทยจากทีวีได้หมด ใครรังแกแม่ต้องเจ็บ!",
-      "พวกคนเลวที่ยืมเงินแม่ไป ต้องจ่ายคืนมาเดี๋ยวนี้!",
-      "แม่เจ็บ เซ็นก็เจ็บเหมือนกันนะแม่"
+      "เอาเงินมารักษาแม่!",
+      "อย่ามารังแกคนไม่มีทางสู้!",
+      "เงินก้อนนี้เป็นของแม่ฉัน!",
+      "ข้าจะไม่ยอมแพ้พวกเจ้า!"
     ],
-    "explanation": "ผลงานแจ้งเกิดราชินีนักบู๊หญิงไทย จีจ้า ญาณิน โดย ปรัชญา ปิ่นแก้ว",
+    "explanation": "ประโยคสำคัญที่จุดชนวนการต่อสู้สุดมันส์ของ จีจ้า ญาณิน ในภาพยนตร์ ช็อคโกแลต",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_154_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_154_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_154_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_154_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_154_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_154_intro.mp4"
   },
   {
     "id": "q_155",
@@ -6044,31 +6055,32 @@
       "classic"
     ],
     "difficulty": "easy",
-    "character": "องค์ดำวัยเยาว์ (น้องเก้า ปรัชฌา)",
+    "character": "องค์ดำ (พระนเรศวรวัยเยาว์)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "พระองค์ดำตอนเป็นองค์ประกัน ณ เมืองหงสาวดีตอบโต้มังสามเกียดในลานชนไก่",
-    "correctAnswer": "ข้าเป็นเชลย แต่ข้ามิใช่ทาส... สักวันหนึ่งข้าจะนำความเป็นไทกลับคืนสู่อโยธยา!",
+    "contextDialogue": "องค์ดำขณะทรงตกเป็นองค์ประกัน ณ เมืองหงสาวดี ทรงตั้งจิตอธิษฐานต่อพระพุทธรูปเพื่อแผ่นดินไทย",
+    "correctAnswer": "สักวันหนึ่งข้าจะนำคนไทยกลับคืนอยุธยา!",
     "options": [
-      "ข้าเป็นเชลย แต่ข้ามิใช่ทาส... สักวันหนึ่งข้าจะนำความเป็นไทกลับคืนสู่อโยธยา!",
-      "หงสาวดีกว้างใหญ่เพียงใด ก็มิอาจขังหัวใจรักชาติของข้าได้!",
-      "ไก่ชนของข้า ชนะไก่ของมังสามเกียดแล้ว!",
-      "ข้ามิเคยยอมก้มหัวให้ใคร นอกจากแผ่นดินแม่"
+      "สักวันหนึ่งข้าจะนำคนไทยกลับคืนอยุธยา!",
+      "อยุธยาจะไม่ยอมตกเป็นเบี้ยล่างใคร",
+      "แผ่นดินนี้เป็นของบรรพบุรุษไทย",
+      "เลือดไทยทุกหยดพร้อมสู้เพื่อเอกราช"
     ],
-    "explanation": "มหากาพย์ภาพยนตร์ประวัติศาสตร์ชาติไทย ตอน องค์ประกันหงสา",
+    "explanation": "ประโยคมุ่งมั่นเด็ดเดี่ยวจาก ตำนานสมเด็จพระนเรศวรมหาราช ภาค ๑ องค์ประกันหงสา",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_157_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_157_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_157_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_157_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_157_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_157_intro.mp4"
   },
   {
     "id": "q_158",
@@ -6083,31 +6095,32 @@
       "classic"
     ],
     "difficulty": "easy",
-    "character": "สมเด็จพระนเรศวร (ผู้พันเบิร์ด พ.ท.วันชนะ สวัสดี)",
+    "character": "สมเด็จพระนเรศวรมหาราช",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "สมเด็จพระนเรศวรทรงหลั่งน้ำสิโนทกประกาศอิสรภาพ ณ เมืองแครง",
-    "correctAnswer": "ตั้งแต่วันนี้เป็นต้นไป... กรุงศรีอยุธยา ขาดทางไมตรีกับกรุงหงสาวดี มิได้เป็นเมืองขึ้นกันสืบไป!",
+    "contextDialogue": "พระนเรศวรทรงหลั่งน้ำทักษิโณทกประกาศอิสรภาพ ณ เมืองแครง ตัดขาดจากหงสาวดี",
+    "correctAnswer": "มิให้เป็นเมืองขึ้นของหงสาวดีอีกต่อไป!",
     "options": [
-      "ตั้งแต่วันนี้เป็นต้นไป... กรุงศรีอยุธยา ขาดทางไมตรีกับกรุงหงสาวดี มิได้เป็นเมืองขึ้นกันสืบไป!",
-      "หลั่งน้ำทักษิโณทกนี้ เพื่อประกาศอิสรภาพแห่งแผ่นดินสยาม!",
-      "เราจักมิยอมส่งส่วยหรือก้มหัวให้หงสาวดีอีกต่อไป!",
-      "ศึกครั้งนี้ เราจะสู้จนตัวตายเพื่อรักษาแผ่นดินเกิด"
+      "มิให้เป็นเมืองขึ้นของหงสาวดีอีกต่อไป!",
+      "อยุธยาจงเจริญ!",
+      "พวกเราจะไม่ก้มหัวให้อริราชศัตรู!",
+      "ดาบนี้เพื่อผืนแผ่นดินสยาม!"
     ],
-    "explanation": "ฉากประวัติศาสตร์สำคัญอันทรงเกียรติสูงสุดของชาติไทย",
+    "explanation": "วรรคทองประวัติศาสตร์แห่งการประกาศอิสรภาพจาก ตำนานสมเด็จพระนเรศวรมหาราช ภาค ๒",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_158_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_158_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_158_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_158_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_158_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_158_intro.mp4"
   },
   {
     "id": "q_159",
@@ -6122,31 +6135,32 @@
       "classic"
     ],
     "difficulty": "easy",
-    "character": "สมเด็จพระนเรศวร (ผู้พันเบิร์ด พ.อ.วันชนะ สวัสดี)",
+    "character": "สมเด็จพระนเรศวรมหาราช",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
-    "contextDialogue": "สมเด็จพระนเรศวรทรงตรัสท้าทายพระมหาอุปราชาชนช้างกลางสมรภูมิศึกหนองสาหร่าย",
-    "correctAnswer": "พระเจ้าพี่ เราจะยืนอยู่บนคอช้างให้เป็นที่รื่นรมย์แก่ไพร่พลไย... มากระทำยุทธหัตถีด้วยกันเถิด!",
+    "contextDialogue": "พระนเรศวรทรงตรัสท้าพระมหาอุปราชาชนช้างยุทธหัตถีกลางสมรภูมิรบ",
+    "correctAnswer": "มาทำยุทธหัตถีด้วยกันเถิด!",
     "options": [
-      "พระเจ้าพี่ เราจะยืนอยู่บนคอช้างให้เป็นที่รื่นรมย์แก่ไพร่พลไย... มากระทำยุทธหัตถีด้วยกันเถิด!",
-      "การยุทธหัตถีนี้ จะเป็นเกียรติยศไว้แก่กษัตริย์ในกาลข้างหน้า!",
-      "ไพร่พลจงถอยไป นี่คือการประลองเกียรติยศของสองกษัตริย์!",
-      "ฟันด้วยพระแสงของ้าวขาดสะพายแล่ง ณ ดอนเจดีย์"
+      "มาทำยุทธหัตถีด้วยกันเถิด!",
+      "การศึกครั้งนี้จักเป็นเกียรติยศสืบไป!",
+      "แผ่นดินสยามจักไม่ปราชัย!",
+      "ขอเชิญเจ้าพี่ออกมารบกันตัวต่อตัว!"
     ],
-    "explanation": "ฉากมหายุทธหัตถีที่ยิ่งใหญ่ที่สุดในประวัติศาสตร์ภาพยนตร์ไทย",
+    "explanation": "ประโยคยุทธหัตถีอันยิ่งใหญ่ในประวัติศาสตร์ชาติไทย จาก ตำนานสมเด็จพระนเรศวรมหาราช ภาค ๕",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_159_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_159_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_159_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_159_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_159_quote.mp4",
+    "status": "published",
+    "videoUrl": "/video/quotes/q_159_intro.mp4"
   },
   {
     "id": "q_160",
