@@ -57,8 +57,16 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Serve static frontend files with optimized caching and byte-range streaming for video/audio
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+  maxAge: '1h',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.mp4') || filePath.endsWith('.mp3')) {
+      res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+      res.setHeader('Accept-Ranges', 'bytes');
+    }
+  }
+}));
 
 // Auth Helper
 function getAuthUser(req) {

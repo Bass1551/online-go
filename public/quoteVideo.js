@@ -130,6 +130,20 @@ class VideoStageController {
     if (this.unmutePrompt) this.unmutePrompt.style.display = 'none';
   }
 
+  preloadVideo(url) {
+    if (!url) return;
+    if (!this._preloadedUrls) this._preloadedUrls = new Set();
+    if (this._preloadedUrls.has(url)) return;
+    this._preloadedUrls.add(url);
+    try {
+      const v = document.createElement('video');
+      v.preload = 'auto';
+      v.src = url;
+      v.muted = true;
+      v.load();
+    } catch (e) {}
+  }
+
   loadQuestion(question, mode = 'question', onEnded) {
     this.stop();
     this.sessionId = (this.sessionId || 0) + 1;
@@ -140,6 +154,11 @@ class VideoStageController {
     this.isMutedInterval = false;
     this.suspenseStartTime = 0;
     this.hideSuspenseBadge();
+
+    // Auto-preload reveal video while question is active
+    if (mode === 'question' && question.quoteVideoUrl) {
+      this.preloadVideo(question.quoteVideoUrl);
+    }
 
     // Check if video clip URL is provided for current mode
     const videoSrc = this.mode === 'reveal'
@@ -186,11 +205,16 @@ class VideoStageController {
     this.videoEl.style.display = 'block';
     if (this.canvas) this.canvas.style.display = 'none';
 
-    // Set src & preload
-    this.videoEl.src = videoSrc;
-    this.videoEl.preload = 'auto';
+    // Set src & preload smoothly without trashing already buffered content
+    const currentSrc = this.videoEl.currentSrc || this.videoEl.src || '';
+    const isAlreadyLoaded = currentSrc && (currentSrc.endsWith(videoSrc) || currentSrc === videoSrc);
+    if (!isAlreadyLoaded) {
+      this.videoEl.src = videoSrc;
+      this.videoEl.preload = 'auto';
+      this.videoEl.load();
+    }
     this.videoEl.volume = this.volume;
-    this.videoEl.currentTime = 0;
+    try { this.videoEl.currentTime = 0; } catch (e) {}
 
     let hasHandledEnded = false;
     const triggerEnded = () => {
@@ -261,12 +285,12 @@ class VideoStageController {
       triggerAudioFallback('network/decode error');
     };
 
-    // Stall detection: if video doesn't make progress within 12 seconds, fall back to audio
+    // Stall detection: if video doesn't make progress within 15 seconds, fall back to audio
     const resetStallTimer = () => {
       if (this.stallFallbackTimer) clearTimeout(this.stallFallbackTimer);
       this.stallFallbackTimer = setTimeout(() => {
         triggerAudioFallback('stall timeout');
-      }, 12000);
+      }, 15000);
     };
 
     this.videoEl.onstalled = () => {
@@ -278,33 +302,50 @@ class VideoStageController {
       resetStallTimer();
     };
 
-    // Load & play
+    const startPlay = () => {
+      if (session !== this.sessionId) return;
+      this.videoEl.muted = false;
+      const playPromise = this.videoEl.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.then(() => {
+          // Playing OK with audio
+          this.hideUnmuteBadge();
+        }).catch(err => {
+          if (session !== this.sessionId) return;
+          if (err.name === 'AbortError') return;
+
+          console.warn('Unmuted video play prevented by browser policy, playing muted video:', err);
+          // CRITICAL: NEVER hide the video! Play video muted so user sees the clip on screen!
+          this.videoEl.muted = true;
+          this.showUnmuteBadge();
+          const retryMuted = this.videoEl.play();
+          if (retryMuted && typeof retryMuted.catch === 'function') {
+            retryMuted.catch(err2 => {
+              if (session !== this.sessionId || err2.name === 'AbortError') return;
+              console.error('Muted video playback also failed:', err2);
+              triggerAudioFallback('autoplay prevented completely');
+            });
+          }
+        });
+      }
+    };
+
     resetStallTimer();
-    this.videoEl.load();
-
-    this.videoEl.muted = false;
-    const playPromise = this.videoEl.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-      playPromise.then(() => {
-        // Playing OK with audio
-        this.hideUnmuteBadge();
-      }).catch(err => {
-        if (session !== this.sessionId) return;
-        if (err.name === 'AbortError') return;
-
-        console.warn('Unmuted video play prevented by browser policy, playing muted video:', err);
-        // CRITICAL: NEVER hide the video! Play video muted so user sees the clip on screen!
-        this.videoEl.muted = true;
-        this.showUnmuteBadge();
-        const retryMuted = this.videoEl.play();
-        if (retryMuted && typeof retryMuted.catch === 'function') {
-          retryMuted.catch(err2 => {
-            if (session !== this.sessionId || err2.name === 'AbortError') return;
-            console.error('Muted video playback also failed:', err2);
-            triggerAudioFallback('autoplay prevented completely');
-          });
-        }
-      });
+    // Smooth start: if buffer already decoded, play immediately; otherwise wait for canplay/loadeddata
+    if (this.videoEl.readyState >= 2) {
+      startPlay();
+    } else {
+      let started = false;
+      const onReady = () => {
+        if (started) return;
+        started = true;
+        this.videoEl.removeEventListener('canplay', onReady);
+        this.videoEl.removeEventListener('loadeddata', onReady);
+        startPlay();
+      };
+      this.videoEl.addEventListener('canplay', onReady, { once: true });
+      this.videoEl.addEventListener('loadeddata', onReady, { once: true });
+      setTimeout(onReady, 400);
     }
   }
 

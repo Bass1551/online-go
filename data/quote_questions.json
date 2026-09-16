@@ -28,7 +28,7 @@
     ],
     "explanation": "ฉากตัดยางในตำนานของแฟนฉัน เสียงจริงของน้อยหน่า (โฟกัส จีระกุล) ในภาพยนตร์",
     "stats": {
-      "playedCount": 2,
+      "playedCount": 3,
       "correctCount": 0
     },
     "audioUrl": "/audio/quotes/q_001_intro.mp3",
@@ -301,8 +301,8 @@
     ],
     "explanation": "ประโยคเต๊าะสายรุกในตำนานของ สารวัตร (ไบรท์ วชิรวิชญ์) ถึง ไทน์ (วิน เมธวิน)",
     "stats": {
-      "playedCount": 1,
-      "correctCount": 1
+      "playedCount": 3,
+      "correctCount": 3
     },
     "audioUrl": "/audio/quotes/q_008_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_008_intro.mp3",
@@ -659,7 +659,7 @@
   },
   {
     "id": "q_018",
-    "status": "draft",
+    "status": "published",
     "title": "กวน มึน โฮ",
     "mediaType": "movie",
     "year": 2010,
@@ -670,35 +670,35 @@
       "comedy",
       "legendary"
     ],
-    "difficulty": "easy",
+    "difficulty": "medium",
     "character": "ด่าง (เต๋อ ฉันทวิชช์)",
     "clipDuration": 12,
     "muteStart": 4.5,
-    "muteEnd": 8,
+    "muteEnd": 12,
     "quoteStart": 4.5,
-    "quoteEnd": 8,
-    "contextDialogue": "ด่างชวนหญิงสาวคนไทยที่ไม่รู้จักชื่อเที่ยวเกาหลีด้วยกัน โดยตั้งกฎขึ้นมาเพื่อความสบายใจของทั้งสองฝ่าย",
-    "correctAnswer": "เราไม่ต้องรู้จักชื่อกันหรอก",
+    "quoteEnd": 12,
+    "contextDialogue": "เมย์ (หนูนา) คุยกับ ด่าง (เต๋อ) ตอนอยู่ที่เกาหลีว่าเราสองคนไม่ต้องรู้จักชื่อกัน...",
+    "correctAnswer": "อยู่เมืองนอกแบบนี้จะทำอะไรก็ได้ ไม่มีใครรู้จักเรา",
     "options": [
-      "เราไม่ต้องรู้จักชื่อกันหรอก",
-      "ทริปนี้เรามาแชร์ค่ากินกันนะ",
-      "ยินดีที่ไม่รู้จักนะคุณ",
-      "อย่าหลงรักผมก็แล้วกัน"
+      "อยู่เมืองนอกแบบนี้จะทำอะไรก็ได้ ไม่มีใครรู้จักเรา",
+      "แต่ผมอยากรู้ชื่อคุณจริงๆ นะคุณกวนมึนโฮ",
+      "งั้นผมขอเรียกคุณว่าคนสวยได้ไหมครับ",
+      "แล้วเราจะกลับเมืองไทยด้วยกันได้ยังไง"
     ],
-    "explanation": "ประโยคคอนเซ็ปต์หลักของเรื่อง 'กวน มึน โฮ' ที่พระเอกนางเอกตกลงกันว่าจะเที่ยวด้วยกันโดยไม่บอกชื่อจริง ไม่ถามเรื่องส่วนตัว จนกลายเป็นจุดเริ่มต้นของความรัก",
+    "explanation": "บทสนทนาสุดไอคอนิกของ ด่าง (เต๋อ ฉันทวิชช์) และ เมย์ (หนูนา หนึ่งธิดา) ใน กวน มึน โฮ",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_018_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_018_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_018_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_018_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_018_quote.mp4"
   },
   {
     "id": "q_019",
-    "status": "draft",
+    "status": "published",
     "title": "เพื่อนสนิท",
     "mediaType": "movie",
     "year": 2005,
@@ -707,34 +707,33 @@
       "movie",
       "romantic",
       "drama",
-      "legendary",
-      "classic"
+      "legendary"
     ],
     "difficulty": "medium",
-    "character": "ดากานดา (นุ่น ศิรพันธ์)",
-    "clipDuration": 12,
-    "muteStart": 4.5,
-    "muteEnd": 8,
-    "quoteStart": 4.5,
-    "quoteEnd": 8,
-    "contextDialogue": "เมื่อไข่ย้อยรวบรวมความกล้าบอกรักดากานดาเพื่อนสนิทในวันจบการศึกษา ดากานดาจึงหันมาตอบด้วยน้ำเสียงสั่นเครือ",
-    "correctAnswer": "แกมาทำอะไรเอาป่านนี้",
+    "character": "ไข่ย้อย (ซันนี่ สุวรรณเมธานนท์)",
+    "clipDuration": 13,
+    "muteStart": 7.2,
+    "muteEnd": 13.5,
+    "quoteStart": 7.2,
+    "quoteEnd": 13.5,
+    "contextDialogue": "ไข่ย้อยนั่งเขียนจดหมายเล่าเรื่องราวถึงดากานดาจากเกาะพะงัน...",
+    "correctAnswer": "การที่เป็นเพื่อนกับแก",
     "options": [
-      "แกมาทำอะไรเอาป่านนี้",
-      "ทำไมแกเพิ่งมาบอกฉันตอนนี้",
-      "เราเป็นเพื่อนกันดีที่สุดแล้วไข่ย้อย",
-      "แกแกล้งพูดเล่นใช่ไหม"
+      "การที่เป็นเพื่อนกับแก",
+      "ความรักของเราสองคน",
+      "ความทรงจำในวัยเรียน",
+      "รูปวาดที่แกเคยวาดให้"
     ],
-    "explanation": "ประโยคเจ็บลึกในตำนานของเด็กสถาปัตย์ มช. เมื่อไข่ย้อยบอกรักช้าเกินไปในวันที่ดากานดามีคนอื่นแล้ว กลายเป็นวลีฮิตของคำว่า 'เฟรนด์โซน' ยุคแรก",
+    "explanation": "ฉากเปิดจดหมายสุดซึ้งของ ไข่ย้อย (ซันนี่ สุวรรณเมธานนท์) ถึง ดากานดา (นุ่น ศิรพันธ์) ในภาพยนตร์ เพื่อนสนิท",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_019_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_019_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_019_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_019_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_019_quote.mp4"
   },
   {
     "id": "q_020",
@@ -933,7 +932,7 @@
   },
   {
     "id": "q_025",
-    "status": "draft",
+    "status": "published",
     "title": "ฟรีแลนซ์..ห้ามป่วย ห้ามพัก ห้ามรักหมอ",
     "mediaType": "movie",
     "year": 2015,
@@ -941,39 +940,38 @@
       "all",
       "movie",
       "drama",
-      "comedy",
-      "trending",
-      "modern"
+      "romantic",
+      "trending"
     ],
     "difficulty": "medium",
-    "character": "ยุ่น (ซันนี่ สุวรรณเมธานนท์)",
-    "clipDuration": 12,
-    "muteStart": 4.5,
-    "muteEnd": 8,
-    "quoteStart": 4.5,
-    "quoteEnd": 8,
-    "contextDialogue": "ยุ่นพูดถึงปรัชญาการทำงานกราฟิกแบบโต้รุ่งไม่หลับไม่นอนให้กับลูกค้าคนสำคัญ",
-    "correctAnswer": "คนเรามันไม่ตายเพราะการอดนอนหรอก",
+    "character": "หมออิม (ใหม่ ดาวิกา)",
+    "clipDuration": 9,
+    "muteStart": 5,
+    "muteEnd": 9,
+    "quoteStart": 5,
+    "quoteEnd": 9,
+    "contextDialogue": "หมออิมตรวจร่างกายยุ่นที่โรงพยาบาล แล้วทักว่าเมื่อคืนไม่ได้นอนมาใช่ไหม...",
+    "correctAnswer": "มองตาก็รู้",
     "options": [
-      "คนเรามันไม่ตายเพราะการอดนอนหรอก",
-      "งานเสร็จแล้วค่อยนอนก็ได้",
-      "ฟรีแลนซ์ไม่มีคำว่าพักผ่อน",
-      "ส่งงานตรงเวลาสำคัญกว่าชีวิต"
+      "มองตาก็รู้",
+      "หน้าตาดูไม่ได้เลย",
+      "เห็นขอบตาดำปี๋",
+      "ดูลายมือก็รู้"
     ],
-    "explanation": "ผลงานกำกับของ เต๋อ นวพล ถ่ายทอดชีวิตฟรีแลนซ์ที่โหมงานหนักจนร่างกายพัง จนได้พบกับหมออิม (ใหม่ ดาวิกา) ที่โรงพยาบาลรัฐ",
+    "explanation": "ประโยคเด็ดชวนใจเต้นของ หมออิม (ใหม่ ดาวิกา โฮร์เน่) ถึง ยุ่น (ซันนี่ สุวรรณเมธานนท์) ใน ฟรีแลนซ์..ห้ามป่วย ห้ามพัก ห้ามรักหมอ",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_025_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_025_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_025_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_025_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_025_quote.mp4"
   },
   {
     "id": "q_026",
-    "status": "draft",
+    "status": "published",
     "title": "ไอฟาย..แต๊งกิ้ว..เลิฟยู้",
     "mediaType": "movie",
     "year": 2014,
@@ -982,33 +980,33 @@
       "movie",
       "comedy",
       "romantic",
-      "legendary"
+      "trending"
     ],
     "difficulty": "easy",
     "character": "ยิม (ซันนี่ สุวรรณเมธานนท์)",
     "clipDuration": 12,
-    "muteStart": 4.5,
-    "muteEnd": 8,
-    "quoteStart": 4.5,
-    "quoteEnd": 8,
-    "contextDialogue": "ช่างเทคนิคโรงงานสุดห้าวอย่างยิม มาดักรอครูเพลงติวเตอร์สาวสวยเพื่อขอให้สอนภาษาอังกฤษให้",
-    "correctAnswer": "สอนภาษาอังกฤษให้ผมหน่อย",
+    "muteStart": 7.6,
+    "muteEnd": 12,
+    "quoteStart": 7.6,
+    "quoteEnd": 12,
+    "contextDialogue": "ยิมกำลังทดสอบสัมภาษณ์ภาษาอังกฤษ เมื่อถูกทักทายว่า 'How are you?'...",
+    "correctAnswer": "I fine thank you!",
     "options": [
-      "สอนภาษาอังกฤษให้ผมหน่อย",
-      "ผมอยากพูดฝรั่งได้เหมือนเค้า",
-      "ช่วยติวสอบไปอเมริกาให้ผมที",
-      "คิดชั่วโมงละเท่าไหร่บอกมาเลย"
+      "I fine thank you!",
+      "I am very hungry!",
+      "I don't know why!",
+      "I want to go home!"
     ],
-    "explanation": "ภาพยนตร์โรแมนติกคอมเมดี้ทำเงินกว่า 300 ล้านบาท นำแสดงโดย ซันนี่ และ ไอซ์ ปรีชญา กับท่าเต้นเพลง 'ABC ชักกระตุก' อันโด่งดัง",
+    "explanation": "ฉากสัมภาษณ์งานภาษาอังกฤษสุดฮาของ ยิม (ซันนี่ สุวรรณเมธานนท์) ในภาพยนตร์ร้อยล้าน ไอฟาย..แต๊งกิ้ว..เลิฟยู้",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_026_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_026_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_026_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_026_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_026_quote.mp4"
   },
   {
     "id": "q_027",
@@ -1208,43 +1206,41 @@
   },
   {
     "id": "q_032",
-    "status": "draft",
+    "status": "published",
     "title": "เลือดข้นคนจาง (In Family We Trust)",
-    "mediaType": "series",
+    "mediaType": "drama",
     "year": 2018,
     "categories": [
       "all",
-      "series",
       "drama",
-      "legendary",
       "trending",
-      "modern"
+      "legendary"
     ],
-    "difficulty": "easy",
-    "character": "ภัสสร (แหม่ม คัทลียา แมคอินทอช)",
-    "clipDuration": 12,
+    "difficulty": "hard",
+    "character": "ภัสสร (แหม่ม คัทลียา)",
+    "clipDuration": 9,
     "muteStart": 4.5,
-    "muteEnd": 8,
+    "muteEnd": 9.5,
     "quoteStart": 4.5,
-    "quoteEnd": 8,
-    "contextDialogue": "ภัสสรเปิดศึกเผชิญหน้ากับคนในตระกูลจิระอนันต์หลังเหตุการณ์สังหารประเสริฐพี่ชายคนโต",
-    "correctAnswer": "ใครฆ่าประเสริฐ?",
+    "quoteEnd": 9.5,
+    "contextDialogue": "เต๋าเค้นถามแม่ในห้องสอบสวนว่าแม่เป็นคนฆ่าประเสริฐใช่ไหม...",
+    "correctAnswer": "แม่เป็นคนฆ่าตัวกูต่างหากล่ะ!",
     "options": [
-      "ใครฆ่าประเสริฐ?",
-      "ทำไมทุกคนต้องมองว่าฉันเป็นคนทำ!",
-      "กงสีนี้ไม่มีความยุติธรรมให้ลูกผู้หญิงเลย",
-      "เต้ยไม่ได้ทำอะไรผิดนะป๊า!"
+      "แม่เป็นคนฆ่าตัวกูต่างหากล่ะ!",
+      "ใครฆ่าประเสริฐกันแน่!",
+      "แม่ไม่ได้ทำจริงๆ เชื่อแม่สิ!",
+      "ตำรวจเขากำลังใส่ร้ายแม่!"
     ],
-    "explanation": "ประโยคคำถามสร้างปรากฏการณ์ระดับชาติ 'ใครฆ่าประเสริฐ?' ที่คนไทยทั้งประเทศร่วมกันสืบสวนหาตัวคนร้ายทุกสัปดาห์",
+    "explanation": "ฉากระเบิดอารมณ์สุดเข้มข้นของ ภัสสร (แหม่ม คัทลียา แมคอินทอช) ในห้องสอบสวนซีรีส์ เลือดข้นคนจาง",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_032_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_032_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_032_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_032_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_032_quote.mp4"
   },
   {
     "id": "q_033",
@@ -1713,7 +1709,7 @@
   },
   {
     "id": "q_045",
-    "status": "draft",
+    "status": "published",
     "title": "บอดี้การ์ดหน้าเหลี่ยม",
     "mediaType": "movie",
     "year": 2004,
@@ -1721,34 +1717,34 @@
       "all",
       "movie",
       "comedy",
-      "legendary",
-      "classic"
+      "action",
+      "legendary"
     ],
     "difficulty": "easy",
     "character": "คำเหลา (หม่ำ จ๊กมก)",
     "clipDuration": 12,
-    "muteStart": 4.5,
-    "muteEnd": 8,
-    "quoteStart": 4.5,
-    "quoteEnd": 8,
-    "contextDialogue": "คำเหลาบอดี้การ์ดสายฮาคุยโวโอ้อวดฝีมือการอารักขาเจ้านาย",
-    "correctAnswer": "กูนี่แหละบอดี้การ์ดอันดับหนึ่ง!",
+    "muteStart": 6.5,
+    "muteEnd": 12,
+    "quoteStart": 6.5,
+    "quoteEnd": 12,
+    "contextDialogue": "คำเหลาไปเยี่ยมบอดี้การ์ดที่โรงพยาบาล เห็นเพื่อนกำลังเอาเบ็ดมาตกปลาในกระป๋อง...",
+    "correctAnswer": "หนักนะมึงอ่ะ เป็นเอามาก!",
     "options": [
-      "กูนี่แหละบอดี้การ์ดอันดับหนึ่ง!",
-      "ระดับคำเหลา ไม่มีคำว่าพลาด!",
-      "ใครกล้าแตะต้องคุณชาย ต้องข้ามศพกูไปก่อน!",
-      "ทำงานด้วยใจ หน้าเหลี่ยมแต่ใจหล่อ!"
+      "หนักนะมึงอ่ะ เป็นเอามาก!",
+      "ปลาตายหมดแล้วมั้งเนี่ย!",
+      "ไปหาหมอเถอะนะกูไหว้ล่ะ!",
+      "อยากกินต้มยำปลากระป๋องเหรอ!"
     ],
-    "explanation": "ผลงานกำกับเรื่องแรกของ หม่ำ จ๊กมก ที่ทำรายได้สูงเป็นประวัติการณ์กับฉากแอ็กชันสุดฮาและมุกตลกคาเฟ่ระดับตำนาน",
+    "explanation": "มุกตลกในตำนานที่โรงพยาบาลของ คำเหลา (หม่ำ จ๊กมก) ใน บอดี้การ์ดหน้าเหลี่ยม",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 1,
+      "correctCount": 1
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_045_intro.mp3",
+    "introAudioUrl": "/audio/quotes/q_045_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_045_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_045_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_045_quote.mp4"
   },
   {
     "id": "q_046",

@@ -621,6 +621,12 @@
       try { videoStage.videoEl.load(); } catch (e) {}
     }
 
+    // Preload next question's intro video in the background for zero-latency transitions
+    const nextQ = quoteSingleQuestions[index + 1];
+    if (nextQ && nextQ.introVideoUrl && videoStage?.preloadVideo) {
+      videoStage.preloadVideo(nextQ.introVideoUrl);
+    }
+
     singleInterstitialTimer = setTimeout(() => {
       singleInterstitialTimer = null;
       overlay.style.display = 'none';
