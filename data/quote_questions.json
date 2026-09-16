@@ -28,7 +28,7 @@
     ],
     "explanation": "ฉากตัดยางในตำนานของแฟนฉัน เสียงจริงของน้อยหน่า (โฟกัส จีระกุล) ในภาพยนตร์",
     "stats": {
-      "playedCount": 5,
+      "playedCount": 6,
       "correctCount": 1
     },
     "audioUrl": "/audio/quotes/q_001_intro.mp3",
@@ -106,8 +106,8 @@
     ],
     "explanation": "มุกออกเสียงชื่อ มาร์ค สุดกวนของพี่มาก (มาริโอ้ เมาเร่อ) กับแก๊งเพื่อนสี่เกลอ",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 1,
+      "correctCount": 1
     },
     "audioUrl": "/audio/quotes/q_003_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_003_intro.mp3",
@@ -262,8 +262,8 @@
     ],
     "explanation": "ฉากความรู้สึกที่ลึกซึ้งและละมุนของ โอ้เอ๋ว (พีพี กฤษฏ์) กับ เต๋ (บิวกิ้น) ใน แปลรักฉันด้วยใจเธอ",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 2,
+      "correctCount": 2
     },
     "audioUrl": "/audio/quotes/q_007_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_007_intro.mp3",
@@ -737,7 +737,7 @@
   },
   {
     "id": "q_020",
-    "status": "draft",
+    "status": "published",
     "title": "รักแห่งสยาม",
     "mediaType": "movie",
     "year": 2007,
@@ -769,11 +769,11 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_020_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_020_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_020_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_020_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_020_quote.mp4"
   },
   {
     "id": "q_021",
@@ -893,7 +893,7 @@
   },
   {
     "id": "q_024",
-    "status": "draft",
+    "status": "published",
     "title": "ต้มยำกุ้ง",
     "mediaType": "movie",
     "year": 2005,
@@ -924,11 +924,11 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_024_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_024_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_024_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_024_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_024_quote.mp4"
   },
   {
     "id": "q_025",
@@ -1359,7 +1359,7 @@
   },
   {
     "id": "q_036",
-    "status": "draft",
+    "status": "published",
     "title": "วันทอง",
     "mediaType": "drama",
     "year": 2021,
@@ -1378,9 +1378,9 @@
     "quoteStart": 4.5,
     "quoteEnd": 8,
     "contextDialogue": "วันทองยืนกล่าวความอัดอั้นต่อหน้าบัลลังก์สมเด็จพระพันวษาในศาลตัดสินประหารชีวิต",
-    "correctAnswer": "ข้าไม่ได้เป็นหญิงสองใจ แต่พวกท่านไม่เคยให้ข้าเลือก!",
+    "correctAnswer": "หม่อมฉันวันทอง มิใช่หญิงสองใจ!",
     "options": [
-      "ข้าไม่ได้เป็นหญิงสองใจ แต่พวกท่านไม่เคยให้ข้าเลือก!",
+      "หม่อมฉันวันทอง มิใช่หญิงสองใจ!",
       "หญิงอย่างข้า มีสิทธิ์เลือกชีวิตตัวเองบ้างหรือไม่",
       "หากการรักเดียวใจเดียวเป็นบาป ก็จงประหารข้าเสียเถิด",
       "พวกท่านตีตราผู้หญิงว่าเป็นกาลกิณีมาโดยตลอด"
@@ -1390,11 +1390,11 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_036_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_036_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_036_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_036_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_036_quote.mp4"
   },
   {
     "id": "q_037",
@@ -1972,12 +1972,12 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_051_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_051_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_051_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_051_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_051_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_052",
@@ -2011,12 +2011,12 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_052_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_052_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_052_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_052_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_052_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_053",
@@ -3972,11 +3972,11 @@
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
     "contextDialogue": "ปาล์ม สารภาพความอัดอั้นตันใจที่ต้องทนอยู่ในสถานะ Friend Zone ข้ามทวีปมาสิบปี",
-    "correctAnswer": "การเป็นเพื่อนแก มันคือการยืนอยู่หน้าประตูนรก แต่กูก็ยอมยืนมาตั้ง 10 ปีนะกิ๊ง",
+    "correctAnswer": "ถ้าไม่เป็นเพื่อนแล้ว... เป็นอะไรดีวะ",
     "options": [
-      "การเป็นเพื่อนแก มันคือการยืนอยู่หน้าประตูนรก แต่กูก็ยอมยืนมาตั้ง 10 ปีนะกิ๊ง",
+      "ถ้าไม่เป็นเพื่อนแล้ว... เป็นอะไรดีวะ",
+      "การเป็นเพื่อนแก มันคือการยืนอยู่หน้าประตูนรกนะกิ๊ง",
       "ถ้ากูข้ามเส้นไปแล้ว กูจะกลับมาเป็นเพื่อนมึงไม่ได้อีกแล้วนะ",
-      "กูบินข้ามประเทศมาหาก็เพราะกูรักมึง ไม่ใช่เพราะเป็นเพื่อน!",
       "ช่วยเลิกมองกูเป็นเพื่อนสนิทสักทีได้ไหมวะ"
     ],
     "explanation": "ภาพยนตร์โรแมนติกคอมเมดี้ทำเงินร้อยล้านของ GDH นำแสดงโดย นาย ณภัทร และ ใบเฟิร์น พิมพ์ชนก",
@@ -3984,12 +3984,12 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_103_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_103_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_103_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_103_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_103_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_104",
@@ -8091,24 +8091,24 @@
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
     "contextDialogue": "ธีร์ ทะเลาะกับภรรยาเรื่องการกู้เงินซื้อบ้านเดี่ยวในหมู่บ้านจัดสรรลัดดาแลนด์",
-    "correctAnswer": "หมู่บ้านนี้... กูซื้อด้วยเงินเก็บทั้งชีวิต เพื่อให้ครอบครัวเรามีบ้านเป็นของตัวเองนะปาน!",
+    "correctAnswer": "กูไม่ออก! ออกแล้วกูจะเอาอะไรแดก!",
     "options": [
-      "หมู่บ้านนี้... กูซื้อด้วยเงินเก็บทั้งชีวิต เพื่อให้ครอบครัวเรามีบ้านเป็นของตัวเองนะปาน!",
-      "กูเป็นหัวหน้าครอบครัว กูไม่ยอมให้ใครมาดูถูกว่ากูไม่มีปัญญามีบ้าน!",
-      "ศพสาวใช้ในตู้เย็นข้างบ้าน มันไม่เกี่ยวกับบ้านเราสักหน่อย!",
-      "ย้ายมาเชียงใหม่เพื่อเริ่มชีวิตใหม่ แล้วทำไมมันกลายเป็นนรกแบบนี้วะ!"
+      "กูไม่ออก! ออกแล้วกูจะเอาอะไรแดก!",
+      "หมู่บ้านนี้... กูซื้อด้วยเงินเก็บทั้งชีวิตนะปาน!",
+      "กูเป็นหัวหน้าครอบครัว กูไม่ยอมให้ใครมาดูถูก!",
+      "ย้ายมาเชียงใหม่เพื่อเริ่มชีวิตใหม่ แล้วทำไมกลายเป็นนรกแบบนี้วะ!"
     ],
     "explanation": "ภาพยนตร์สยองขวัญดราม่าครอบครัวยอดเยี่ยม กวาด 6 รางวัลสุพรรณหงส์ กำกับโดย โสภณ ศักดาพิศิษฏ์",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_210_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_210_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_210_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_210_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_210_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_211",
@@ -8336,12 +8336,12 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_216_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_216_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_216_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_216_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_216_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_217",
