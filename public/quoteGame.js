@@ -614,13 +614,6 @@
     overlay.style.display = 'flex';
     window.gameAudio?.playWhoosh?.();
 
-    // Pre-warm video buffer so playback starts immediately when interstitial disappears
-    if (q.introVideoUrl && videoStage?.videoEl) {
-      videoStage.videoEl.src = q.introVideoUrl;
-      videoStage.videoEl.preload = 'auto';
-      try { videoStage.videoEl.load(); } catch (e) {}
-    }
-
     // Preload next question's intro video in the background for zero-latency transitions
     const nextQ = quoteSingleQuestions[index + 1];
     if (nextQ && nextQ.introVideoUrl && videoStage?.preloadVideo) {
@@ -635,7 +628,7 @@
         currentSingleDeadline = Date.now() + 15000;
         startQTimer(() => handleQAnswer(null, '', null));
       });
-    }, 1500);
+    }, 700);
   }
 
   function startQTimer(onTimeout) {

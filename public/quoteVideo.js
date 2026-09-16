@@ -59,23 +59,18 @@ class VideoStageController {
   }
 
   unlockAudio() {
+    if (this.videoEl && this.isPlaying) {
+      this.videoEl.muted = false;
+      this.videoEl.volume = this.volume;
+      this.hideUnmuteBadge();
+      return;
+    }
     if (this.audioEl) {
       try {
         const p = this.audioEl.play();
         if (p && typeof p.then === 'function') {
           p.then(() => {
-            this.audioEl.pause();
-          }).catch(() => {});
-        }
-      } catch (e) {}
-    }
-    if (this.videoEl) {
-      try {
-        this.videoEl.muted = false;
-        const p = this.videoEl.play();
-        if (p && typeof p.then === 'function') {
-          p.then(() => {
-            this.videoEl.pause();
+            if (!this.isPlaying) this.audioEl.pause();
           }).catch(() => {});
         }
       } catch (e) {}
@@ -145,15 +140,20 @@ class VideoStageController {
   }
 
   loadQuestion(question, mode = 'question', onEnded) {
-    this.stop();
     this.sessionId = (this.sessionId || 0) + 1;
     const session = this.sessionId;
+    this.isPlaying = false;
+    this.isMutedInterval = false;
     this.currentQuestion = question;
     this.mode = mode;
     this.onEndedCallback = onEnded;
-    this.isMutedInterval = false;
     this.suspenseStartTime = 0;
     this.hideSuspenseBadge();
+    this.hideUnmuteBadge();
+
+    if (this.muteTimeout) { clearTimeout(this.muteTimeout); this.muteTimeout = null; }
+    if (this.fallbackTimeout) { clearTimeout(this.fallbackTimeout); this.fallbackTimeout = null; }
+    if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
 
     // Auto-preload reveal video while question is active
     if (mode === 'question' && question.quoteVideoUrl) {
@@ -182,30 +182,27 @@ class VideoStageController {
     this.isPlaying = true;
     this.hideSuspenseBadge();
 
-    // Strict Mutual Exclusivity: completely silence and clear audioEl
+    // Silence audio element completely so it never double-plays
     if (this.audioEl) {
       this.audioEl.pause();
       this.audioEl.muted = true;
       this.audioEl.onended = null;
       this.audioEl.onerror = null;
-      this.audioEl.removeAttribute('src');
-      try { this.audioEl.load(); } catch (e) {}
     }
 
-    // Clear old video handlers and timers to avoid residual callbacks from previous question
+    // Clear old video handlers and timers
     this.videoEl.onended = null;
     this.videoEl.onerror = null;
     this.videoEl.oncanplay = null;
     this.videoEl.onstalled = null;
     this.videoEl.onwaiting = null;
-    this.videoEl.pause();
     if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
 
-    // Make sure video is visible and canvas is hidden!
+    // Make sure video is visible and canvas is hidden
     this.videoEl.style.display = 'block';
     if (this.canvas) this.canvas.style.display = 'none';
 
-    // Set src & preload smoothly without trashing already buffered content
+    // Set src smoothly if not already assigned
     const currentSrc = this.videoEl.currentSrc || this.videoEl.src || '';
     const isAlreadyLoaded = currentSrc && (currentSrc.endsWith(videoSrc) || currentSrc === videoSrc);
     if (!isAlreadyLoaded) {
@@ -232,8 +229,8 @@ class VideoStageController {
 
     const doFreezeOrEnd = () => {
       if (session !== this.sessionId) return;
+      this.videoEl.pause();
       if (this.mode === 'question') {
-        this.videoEl.pause();
         this.isMutedInterval = true;
         this.suspenseStartTime = performance.now();
         window.gameAudio?.playMuteIndicator?.();
@@ -265,16 +262,9 @@ class VideoStageController {
       if (this.stallFallbackTimer) { clearTimeout(this.stallFallbackTimer); this.stallFallbackTimer = null; }
       this.hideSuspenseBadge();
       this.hideUnmuteBadge();
-      // Mutual Exclusivity: pause, mute, remove src, load videoEl before starting audio
       if (this.videoEl) {
         this.videoEl.pause();
         this.videoEl.muted = true;
-        this.videoEl.onended = null;
-        this.videoEl.onerror = null;
-        this.videoEl.onstalled = null;
-        this.videoEl.onwaiting = null;
-        this.videoEl.removeAttribute('src');
-        try { this.videoEl.load(); } catch (e) {}
         this.videoEl.style.display = 'none';
       }
       if (this.canvas) this.canvas.style.display = 'block';
@@ -282,6 +272,10 @@ class VideoStageController {
     };
 
     this.videoEl.onerror = () => {
+      if (session !== this.sessionId) return;
+      const err = this.videoEl.error;
+      if (!this.videoEl.src || this.videoEl.src === window.location.href) return;
+      if (err && err.code === 1) return; // MEDIA_ERR_ABORTED
       triggerAudioFallback('network/decode error');
     };
 
@@ -308,14 +302,12 @@ class VideoStageController {
       const playPromise = this.videoEl.play();
       if (playPromise && typeof playPromise.catch === 'function') {
         playPromise.then(() => {
-          // Playing OK with audio
           this.hideUnmuteBadge();
         }).catch(err => {
           if (session !== this.sessionId) return;
           if (err.name === 'AbortError') return;
 
           console.warn('Unmuted video play prevented by browser policy, playing muted video:', err);
-          // CRITICAL: NEVER hide the video! Play video muted so user sees the clip on screen!
           this.videoEl.muted = true;
           this.showUnmuteBadge();
           const retryMuted = this.videoEl.play();
@@ -331,7 +323,7 @@ class VideoStageController {
     };
 
     resetStallTimer();
-    // Smooth start: if buffer already decoded, play immediately; otherwise wait for canplay/loadeddata
+    // Start immediately if ready, or wait for buffer event
     if (this.videoEl.readyState >= 2) {
       startPlay();
     } else {
@@ -345,7 +337,7 @@ class VideoStageController {
       };
       this.videoEl.addEventListener('canplay', onReady, { once: true });
       this.videoEl.addEventListener('loadeddata', onReady, { once: true });
-      setTimeout(onReady, 400);
+      setTimeout(onReady, 1200);
     }
   }
 
@@ -737,13 +729,6 @@ class VideoStageController {
       this.audioEl.muted = true;
       this.audioEl.onended = null;
       this.audioEl.onerror = null;
-      this.audioEl.removeAttribute('src');
-      try {
-        if (this.audioEl.readyState > 0) {
-          this.audioEl.currentTime = 0;
-        }
-        this.audioEl.load();
-      } catch (e) {}
     }
     if (this.videoEl) {
       this.videoEl.onended = null;
@@ -751,18 +736,6 @@ class VideoStageController {
       this.videoEl.onstalled = null;
       this.videoEl.onwaiting = null;
       this.videoEl.pause();
-      this.videoEl.muted = true;
-      this.videoEl.removeAttribute('src');
-      try {
-        if (this.videoEl.readyState > 0) {
-          this.videoEl.currentTime = 0;
-        }
-        this.videoEl.load();
-      } catch (e) {}
-      this.videoEl.style.display = 'none';
-    }
-    if (this.canvas) {
-      this.canvas.style.display = 'none';
     }
   }
 }
