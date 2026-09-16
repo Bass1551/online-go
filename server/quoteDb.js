@@ -248,11 +248,13 @@ class QuoteDatabase {
       quoteStart: q.quoteStart || q.muteStart,
       quoteEnd: q.quoteEnd || q.muteEnd,
       contextDialogue: q.contextDialogue,
-      // INTRO MEDIA ONLY - Reveal audio/video is strictly withheld until REVEAL phase!
+      // MEDIA URLS - Intro and Quote media provided for instant preloading and zero-latency reveal
       audioUrl: q.introAudioUrl || q.audioUrl || '',
       introAudioUrl: q.introAudioUrl || q.audioUrl || '',
+      quoteAudioUrl: q.quoteAudioUrl || '',
       videoUrl: q.introVideoUrl || '',
       introVideoUrl: q.introVideoUrl || '',
+      quoteVideoUrl: q.quoteVideoUrl || '',
       choices: choices,
       // Backward compatibility for legacy clients that read string options
       options: choices.map(c => c.text)

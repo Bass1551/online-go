@@ -136,6 +136,9 @@ class VideoStageController {
       v.src = url;
       v.muted = true;
       v.load();
+      if (typeof fetch === 'function') {
+        fetch(url, { mode: 'no-cors' }).catch(() => {});
+      }
     } catch (e) {}
   }
 
@@ -211,7 +214,33 @@ class VideoStageController {
       this.videoEl.load();
     }
     this.videoEl.volume = this.volume;
-    try { this.videoEl.currentTime = 0; } catch (e) {}
+
+    // Calculate seamless start offset for reveal:
+    // Jump directly to right before the cutoff point so the speech connects seamlessly
+    // without repeating the entire 4-5s intro from the beginning!
+    let startOffset = 0;
+    if (this.mode === 'reveal') {
+      const cutoff = parseFloat(this.currentQuestion?.quoteStart || this.currentQuestion?.muteStart || this.introDuration || 3.5);
+      if (!isNaN(cutoff) && cutoff > 0.8) {
+        startOffset = Math.max(0, cutoff - 0.6);
+      }
+    }
+
+    const applyOffset = () => {
+      try {
+        if (startOffset > 0 && this.videoEl.duration && startOffset < this.videoEl.duration) {
+          this.videoEl.currentTime = startOffset;
+        } else if (this.mode === 'question') {
+          this.videoEl.currentTime = 0;
+        }
+      } catch (e) {}
+    };
+
+    if (this.videoEl.readyState >= 1) {
+      applyOffset();
+    } else {
+      this.videoEl.addEventListener('loadedmetadata', applyOffset, { once: true });
+    }
 
     let hasHandledEnded = false;
     const triggerEnded = () => {
@@ -358,7 +387,15 @@ class VideoStageController {
     }
     if (this.canvas) this.canvas.style.display = 'block';
 
-    this.currentTime = 0;
+    let startOffset = 0;
+    if (this.mode === 'reveal') {
+      const cutoff = parseFloat(this.currentQuestion?.quoteStart || this.currentQuestion?.muteStart || this.introDuration || 3.5);
+      if (!isNaN(cutoff) && cutoff > 0.8) {
+        startOffset = Math.max(0, cutoff - 0.6);
+      }
+    }
+
+    this.currentTime = startOffset;
     this.introDuration = this.mode === 'reveal' ? 3.0 : 3.5;
     this.duration = this.mode === 'reveal' ? 3.0 : (this.introDuration + 1.2);
 
@@ -389,6 +426,9 @@ class VideoStageController {
           if (d && !isNaN(d) && isFinite(d) && d > 0.5) {
             this.introDuration = d;
             this.duration = this.mode === 'question' ? (d + 1.2) : d;
+          }
+          if (startOffset > 0 && d && startOffset < d) {
+            this.audioEl.currentTime = startOffset;
           }
         };
 
