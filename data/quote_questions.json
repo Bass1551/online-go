@@ -28,7 +28,7 @@
     ],
     "explanation": "ฉากตัดยางในตำนานของแฟนฉัน เสียงจริงของน้อยหน่า (โฟกัส จีระกุล) ในภาพยนตร์",
     "stats": {
-      "playedCount": 6,
+      "playedCount": 7,
       "correctCount": 1
     },
     "audioUrl": "/audio/quotes/q_001_intro.mp3",
@@ -378,8 +378,8 @@
     ],
     "explanation": "ฉายาในตำนานของ ศักรินทร์ ดาวร้าย ตัวตึงแห่งซิทคอมเป็นต่อ",
     "stats": {
-      "playedCount": 2,
-      "correctCount": 2
+      "playedCount": 4,
+      "correctCount": 4
     },
     "audioUrl": "/audio/quotes/q_010_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_010_intro.mp3",
@@ -491,8 +491,8 @@
     ],
     "explanation": "ฉากในตำนานหน้าห้องน้ำปั๊มของ แนตตี้ (พีค ภัทรศยา) ใน ไดอารี่ตุ๊ดซี่ส์ เดอะ ซีรีส์",
     "stats": {
-      "playedCount": 0,
-      "correctCount": 0
+      "playedCount": 1,
+      "correctCount": 1
     },
     "audioUrl": "/audio/quotes/q_013_intro.mp3",
     "introAudioUrl": "/audio/quotes/q_013_intro.mp3",
@@ -1128,7 +1128,7 @@
   },
   {
     "id": "q_030",
-    "status": "draft",
+    "status": "published",
     "title": "มหา'ลัย เหมืองแร่",
     "mediaType": "movie",
     "year": 2005,
@@ -1140,30 +1140,30 @@
       "classic"
     ],
     "difficulty": "hard",
-    "character": "นายฝรั่ง (เอ็ดเวิร์ด แวน สโลเทน)",
+    "character": "พี่สอง / ช่างสัก (ค่อม ชวนชื่น)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8,
     "quoteStart": 4.5,
     "quoteEnd": 8,
     "contextDialogue": "นายฝรั่งสั่งสอนอาจินต์ เด็กหนุ่มที่ถูกรีไทร์จากจุฬาฯ มาเริ่มชีวิตใหม่ที่เหมืองแร่กะโชน",
-    "correctAnswer": "ชีวิตคนเรามันก็เหมือนแร่ดีบุก",
+    "correctAnswer": "มึงคิดจะสัก... ดูอารมณ์ช่างด้วย!",
     "options": [
-      "ชีวิตคนเรามันก็เหมือนแร่ดีบุก",
-      "ที่นี่ไม่มีใครสนหรอกว่ามึงมาจากไหน",
-      "ทำงานให้คุ้มข้าวสุกนะอาจินต์",
-      "เหมืองแร่แห่งนี้คือมหาวิทยาลัยชีวิตจริง"
+      "มึงคิดจะสัก... ดูอารมณ์ช่างด้วย!",
+      "มึงจะบ้าเหรอไอ้สอง!",
+      "เจ็บไหมล่ะมึง ไม่เจ็บหรอกกูทายาชาให้แล้ว",
+      "มวยไทยสไตล์สายส่ายหน้า ยิ่งหลบยิ่งโดนเตะ"
     ],
     "explanation": "ผลงานวรรณกรรมของ อาจินต์ ปัญจพรรค์ ดัดแปลงเป็นภาพยนตร์ชั้นครูโดย เก้ง จิระ มะลิกุล ได้รับรางวัลสุพรรณหงส์ภาพยนตร์ยอดเยี่ยม",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_030_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_030_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_030_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_030_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_030_quote.mp4"
   },
   {
     "id": "q_031",
@@ -1244,7 +1244,7 @@
   },
   {
     "id": "q_033",
-    "status": "draft",
+    "status": "published",
     "title": "กรงกรรม",
     "mediaType": "drama",
     "year": 2019,
@@ -1255,30 +1255,30 @@
       "trending"
     ],
     "difficulty": "medium",
-    "character": "ย้อย (ใหม่ เจริญปุระ)",
+    "character": "ย้อย / ม้าย้อย (ใหม่ เจริญปุระ)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8,
     "quoteStart": 4.5,
     "quoteEnd": 8,
     "contextDialogue": "แม่ย้อยตวาดใส่เรณูสะใภ้ใหญ่ที่แอบแต่งงานเข้ามาในบ้านแบ้ ชุมแสง",
-    "correctAnswer": "มึงมันนังแพศยา ชุมแสงต้องลุกเป็นไฟ!",
+    "correctAnswer": "ร้านนี้จ่ายสด งดเชื่อ เบื่อทวงเว้ย!",
     "options": [
-      "มึงมันนังแพศยา ชุมแสงต้องลุกเป็นไฟ!",
-      "กูไม่มีวันนับผู้หญิงหากินอย่างมึงเป็นสะใภ้!",
-      "เงินทองของบ้านนี้มึงอย่าหวังจะได้แตะ!",
-      "ชาติชั่วอย่างมึง ออกไปจากบ้านกูเดี๋ยวนี้!"
+      "ร้านนี้จ่ายสด งดเชื่อ เบื่อทวงเว้ย!",
+      "กูคือแม่ย้อยแห่งชุมแสง!",
+      "อีเรณู อีผู้หญิงหากิน มึงไม่มีวันได้เชิดหน้าชูตา!",
+      "ใครจะมาเป็นสะใภ้บ้านนี้ ต้องผ่านกูคนเดียว!"
     ],
     "explanation": "ละครดราม่าแห่งปีที่กวาดเรตติ้งถล่มทลาย การปะทะคารมระหว่าง แม่ย้อย (ใหม่ เจริญปุระ) และ เรณู (เบลล่า ราณี)",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_033_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_033_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_033_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_033_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_033_quote.mp4"
   },
   {
     "id": "q_034",
@@ -1748,7 +1748,7 @@
   },
   {
     "id": "q_046",
-    "status": "draft",
+    "status": "published",
     "title": "ส่ม ภัค เสี่ยน",
     "mediaType": "movie",
     "year": 2017,
@@ -1760,30 +1760,30 @@
       "trending"
     ],
     "difficulty": "medium",
-    "character": "เสี่ยน (โตโน่ ภาคิน คำวิลัยศักดิ์)",
+    "character": "จาลอด (ด้งเด้ง ณัฐวุฒิ แสนยะบุตร)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8,
     "quoteStart": 4.5,
     "quoteEnd": 8,
     "contextDialogue": "เสี่ยนหนุ่มอีสานบ้านนาสารภาพรักกับสาวภัคที่ตนเองแอบชอบมานาน",
-    "correctAnswer": "ข้อยฮักเจ้าหลายเด้อภัค",
+    "correctAnswer": "ข้อยมักครูแก้วเด้อ!",
     "options": [
-      "ข้อยฮักเจ้าหลายเด้อภัค",
-      "กลับมาหาอ้ายเถิดนะคนดี",
-      "เจ้าเป็นผู้สาวที่งามที่สุดในบ้านเฮา",
-      "อ้ายสิเฮ็ดทุกอย่างเพื่อเจ้า"
+      "ข้อยมักครูแก้วเด้อ!",
+      "ข้อยสิจีบสาวให้ครบ 100 คน!",
+      "คนไทบ้านเฮา กินข้าวเหนียวส้มตำ แต่ฮักไผฮักจริงเด้อ",
+      "ครูแก้วอย่าเพิ่งมีแฟนเด้อ รอข้อยก่อน"
     ],
     "explanation": "หนังรักตลกสำเนียงอีสานที่สร้างความประทับใจและทำเงินทะลุ 200 ล้านบาททั่วประเทศ กำกับโดย เอ็ม บุษราคัม",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": ""
+    "audioUrl": "/audio/quotes/q_046_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_046_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_046_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_046_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_046_quote.mp4"
   },
   {
     "id": "q_047",
@@ -2050,12 +2050,12 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_053_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_053_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_053_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_053_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_053_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_054",
@@ -2167,12 +2167,12 @@
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_056_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_056_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_056_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_056_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_056_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_057",
@@ -3577,31 +3577,31 @@
       "legendary"
     ],
     "difficulty": "easy",
-    "character": "เสือ (เต๋อ ฉันทวิชช์ ธนะเสวี)",
+    "character": "น้องเผือก / อาไท (สุภทัต โอภาส)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
     "contextDialogue": "เสือ วางเดิมพันอนาคตหน้าที่การงานและความรักกับจิ๊บ แฟนสาวผู้จัดการสาขา",
-    "correctAnswer": "ใครทวงเงินตู้เอทีเอ็มคืนได้น้อยกว่า คนนั้นต้องลาออกจากธนาคาร!",
+    "correctAnswer": "พี่ครับ... ปืนกระบอกนี้ ยิงคนตายไหมครับ?",
     "options": [
-      "ใครทวงเงินตู้เอทีเอ็มคืนได้น้อยกว่า คนนั้นต้องลาออกจากธนาคาร!",
-      "เรื่องงานกูไม่เคยยอมใคร แม้แต่เมียในอนาคตอย่างจิ๊บ!",
-      "ตู้เอทีเอ็มพ่นเงินได้ แต่กูพ่นความรักให้มึงได้คนเดียวนะเว้ย",
-      "ถ้ามึงคิดว่ามึงแน่ เจอกันที่ชลบุรีเลยไอ้เสือ!"
+      "พี่ครับ... ปืนกระบอกนี้ ยิงคนตายไหมครับ?",
+      "ใครทวงเงินตู้เอทีเอ็มคืนได้น้อยกว่า คนนั้นต้องลาออก!",
+      "คิดว่าผู้หญิงอย่างฉันจะยอมแพ้นายง่ายๆ เหรอ",
+      "ตู้เอทีเอ็มมันพ่นเงินออกมาสองเท่าจริงๆ นะพี่!"
     ],
     "explanation": "ภาพยนตร์โรแมนติกคอมเมดี้ทำรายได้กว่า 150 ล้านบาท กำกับโดย เมษ ธราธร",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_093_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_093_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_093_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_093_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_093_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_094",
@@ -6391,31 +6391,31 @@
       "trending"
     ],
     "difficulty": "easy",
-    "character": "ดา อินทร (เป้ อารักษ์ อมรศุภศิริ)",
+    "character": "รูแปง บุรณพนธ์ (ภูมิ รังษีธนานนท์)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
     "contextDialogue": "ดา อินทร รุ่นพี่ขาใหญ่เตือนสติรุ่นน้องเรื่องการตีกันระหว่างสถาบัน",
-    "correctAnswer": "มึงรักสถาบัน หรือมึงรักความสะใจของตัวเองกันแน่วะ!",
+    "correctAnswer": "เดินมาอย่างจ๊าบเลยนะนายอ่ะ... แดกน้ำหน่อยป่ะ!",
     "options": [
+      "เดินมาอย่างจ๊าบเลยนะนายอ่ะ... แดกน้ำหน่อยป่ะ!",
       "มึงรักสถาบัน หรือมึงรักความสะใจของตัวเองกันแน่วะ!",
-      "อินทรอาชีวะ ไม่เคยรังแกใครก่อน แต่ใครมาหยามเราไม่ยอม!",
-      "ศักดิ์ศรีบนเสื้อช็อป มันแลกกับอนาคตและชีวิตของเพื่อนไม่ได้หรอก",
-      "ถ้ามึงยังไม่หยุดตีกัน มึงจะไม่มีวันได้ใส่ชุดรับปริญญา"
+      "กูชื่อ รูแปง บุรณพนธ์ จำชื่อกูไว้ให้ดี!",
+      "เจอพวกอินทรที่ไหน หวดให้เรียบอย่าให้เหลือ!"
     ],
     "explanation": "ภาพยนตร์สะท้อนชีวิตเด็กอาชีวะยุค 90 ทำรายได้ทะลุ 170 ล้านบาท กำกับโดย พุฒิพงษ์ นาคทอง",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_166_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_166_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_166_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_166_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_166_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_167",
@@ -9855,31 +9855,31 @@
       "trending"
     ],
     "difficulty": "easy",
-    "character": "ศักรินทร์ (พีช พชร จิราธิวัฒน์)",
+    "character": "พี่ปรีชา (ค่อม ชวนชื่น)",
     "clipDuration": 12,
     "muteStart": 4.5,
     "muteEnd": 8.5,
     "quoteStart": 4.5,
     "quoteEnd": 8.5,
     "contextDialogue": "ศักรินทร์ หนุ่มสู้ชีวิตที่ต้องโกหกแม่และคนทั้งหมู่บ้านว่าทำงานเป็นนายแบงก์",
-    "correctAnswer": "แม่คิดว่าผมใส่สูทไปทำงานแบงก์... แต่จริงๆ ผมคือศักรินทร์ วินมอเตอร์ไซค์สุดเฟี้ยวครับ!",
+    "correctAnswer": "มึงยิงกูทำไมเนี่ยไอ้สัส!",
     "options": [
-      "แม่คิดว่าผมใส่สูทไปทำงานแบงก์... แต่จริงๆ ผมคือศักรินทร์ วินมอเตอร์ไซค์สุดเฟี้ยวครับ!",
-      "สับเกียร์หกแซงทุกไฟแดง แต่ระวังอย่าให้แม่จับได้!",
-      "งานสุจริตขับวินส่งคน ทำไมสังคมต้องมองว่าไม่มีเกียรติด้วยครับ",
-      "เจอสาวที่แอบชอบมาซ้อนท้าย หัวใจผมเต้นเร็วกว่ารอบเครื่องยนต์อีก!"
+      "มึงยิงกูทำไมเนี่ยไอ้สัส!",
+      "ไอ้ศักดิ์! มึงจะขับวินหรือมึงจะไปขับยานอวกาศวะ",
+      "ด่าใครไม่เคยโกรธ แต่ถ้าด่าไอ้สัสเมื่อไหร่ฮากระจาย",
+      "วินเบอร์หนึ่งต้องหลบไป วินรุ่นใหญ่อย่างกูจะแซง"
     ],
     "explanation": "ภาพยนตร์คอเมดี้ร้อยล้านขวัญใจคนไทย กำกับโดย พฤกษ์ เอมะรุจิ",
     "stats": {
       "playedCount": 0,
       "correctCount": 0
     },
-    "audioUrl": "",
-    "introAudioUrl": "",
-    "quoteAudioUrl": "",
-    "introVideoUrl": "",
-    "quoteVideoUrl": "",
-    "status": "draft"
+    "audioUrl": "/audio/quotes/q_256_quote.mp3",
+    "introAudioUrl": "/audio/quotes/q_256_intro.mp3",
+    "quoteAudioUrl": "/audio/quotes/q_256_quote.mp3",
+    "introVideoUrl": "/video/quotes/q_256_intro.mp4",
+    "quoteVideoUrl": "/video/quotes/q_256_quote.mp4",
+    "status": "published"
   },
   {
     "id": "q_257",
